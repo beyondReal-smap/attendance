@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="ko">
       <body
         className={`${inter.variable} antialiased`}
-        style={{ fontFamily: 'SUITE Variable, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+        style={{ fontFamily: 'Noto Sans KR, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         {children}
       </body>

@@ -74,6 +74,11 @@ export async function initDatabase() {
     } catch (e: any) {
       if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
     }
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
 
     // Attendance 테이블 생성
     await sql`
