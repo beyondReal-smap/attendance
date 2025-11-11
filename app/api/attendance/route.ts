@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { AttendanceType } from '@/types';
+import dayjs from 'dayjs';
+import { getDateRange, isWorkingDay } from '@/lib/holidays';
+import { getAttendanceTimeInfo, getLeaveUsage, isLeaveType, isAnnualLeaveType } from '@/lib/attendance-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,8 +22,8 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await sql`
-      SELECT date, type
-      FROM attendance
+      SELECT date, type, reason, start_time, end_time
+      FROM atnd_attendance
       WHERE user_id = ${session.userId}
         AND YEAR(date) = ${year}
         AND MONTH(date) = ${month}
@@ -28,8 +31,11 @@ export async function GET(request: NextRequest) {
     `;
 
     const attendances = result.rows.map(row => ({
-      date: row.date.toISOString().split('T')[0],
+      date: dayjs(row.date).format('YYYY-MM-DD'),
       type: row.type as AttendanceType,
+      reason: row.reason || null,
+      startTime: row.start_time || null,
+      endTime: row.end_time || null,
     }));
 
     return NextResponse.json(attendances);
@@ -45,26 +51,127 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || !session.isAdmin) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, date, type } = await request.json();
+    const { startDate, endDate, type, reason, startTime, endTime } = await request.json();
 
-    if (!userId || !date || !type) {
+    if (!startDate || !endDate || !type) {
       return NextResponse.json(
-        { error: 'userId, date, and type are required' },
+        { error: 'startDate, endDate, and type are required' },
         { status: 400 }
       );
     }
 
-    await sql`
-      INSERT INTO attendance (user_id, date, type)
-      VALUES (${userId}, ${date}, ${type})
-      ON DUPLICATE KEY UPDATE type = ${type}
-    `;
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    const dateRange = getDateRange(start, end);
+    const workingDays = dateRange.filter(d => isWorkingDay(d));
+    
+    // 시간 정보 가져오기 (시차가 아닌 경우 자동 설정)
+    const timeInfo = getAttendanceTimeInfo(type);
+    const finalStartTime = startTime || timeInfo.startTime;
+    const finalEndTime = endTime || timeInfo.endTime;
 
-    return NextResponse.json({ success: true });
+    // 기존 근태 확인 - 같은 날짜에 이미 등록된 근태가 있는지 확인
+    const leaveUsage = getLeaveUsage(type);
+    let totalLeaveUsage = 0;
+    
+    for (const date of workingDays) {
+      const dateStr = date.format('YYYY-MM-DD');
+      const existingResult = await sql`
+        SELECT id, type FROM atnd_attendance
+        WHERE user_id = ${session.userId} AND date = ${dateStr}
+      `;
+      
+      // 같은 날짜에 이미 근태가 있으면 에러
+      if (existingResult.rows.length > 0) {
+        return NextResponse.json(
+          { error: `${dateStr}에 이미 근태가 등록되어 있습니다. 기존 근태를 삭제한 후 다시 등록해주세요.` },
+          { status: 400 }
+        );
+      }
+      
+      if (isLeaveType(type) && isWorkingDay(date)) {
+        totalLeaveUsage += leaveUsage;
+      }
+    }
+
+    // 연차/체휴인 경우 사용량 확인
+    if (isAnnualLeaveType(type) && totalLeaveUsage > 0) {
+      const userResult = await sql`
+        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
+        FROM atnd_users
+        WHERE id = ${session.userId}
+      `;
+      
+      if (userResult.rows.length === 0) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const user = userResult.rows[0];
+      const remaining = user.annual_leave_total - user.annual_leave_used;
+      if (remaining < totalLeaveUsage) {
+        return NextResponse.json(
+          { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
+          { status: 400 }
+        );
+      }
+    } else if (type === '체휴' && totalLeaveUsage > 0) {
+      const userResult = await sql`
+        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
+        FROM atnd_users
+        WHERE id = ${session.userId}
+      `;
+      
+      if (userResult.rows.length === 0) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const user = userResult.rows[0];
+      const remaining = user.comp_leave_total - user.comp_leave_used;
+      if (remaining < totalLeaveUsage) {
+        return NextResponse.json(
+          { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 기간 내 모든 날짜에 근태 등록
+    for (const date of workingDays) {
+      const dateStr = date.format('YYYY-MM-DD');
+      
+      await sql`
+        INSERT INTO atnd_attendance (user_id, date, type, reason, start_time, end_time)
+        VALUES (${session.userId}, ${dateStr}, ${type}, ${reason || null}, ${finalStartTime || null}, ${finalEndTime || null})
+      `;
+    }
+
+    // 연차/체휴 사용량 업데이트
+    if (totalLeaveUsage > 0) {
+      if (isAnnualLeaveType(type)) {
+        await sql`
+          UPDATE atnd_users
+          SET annual_leave_used = annual_leave_used + ${totalLeaveUsage}
+          WHERE id = ${session.userId}
+        `;
+      } else if (type === '체휴') {
+        await sql`
+          UPDATE atnd_users
+          SET comp_leave_used = comp_leave_used + ${totalLeaveUsage}
+          WHERE id = ${session.userId}
+        `;
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      days: workingDays.length,
+      leaveUsage: totalLeaveUsage,
+      dates: workingDays.map(d => d.format('YYYY-MM-DD'))
+    });
   } catch (error: any) {
     console.error('Error creating attendance:', error);
     if (error.code === 'ER_DUP_ENTRY') {
@@ -74,7 +181,7 @@ export async function POST(request: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: 'Failed to create attendance' },
+      { error: error.message || 'Failed to create attendance' },
       { status: 500 }
     );
   }
@@ -94,7 +201,42 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
     }
 
-    await sql`DELETE FROM attendance WHERE id = ${id}`;
+    // 삭제 전 근태 정보 확인
+    const attendanceResult = await sql`
+      SELECT user_id, date, type
+      FROM atnd_attendance
+      WHERE id = ${id}
+    `;
+
+    if (attendanceResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Attendance not found' }, { status: 404 });
+    }
+
+    const attendance = attendanceResult.rows[0];
+    const date = dayjs(attendance.date);
+    const attendanceType = attendance.type as AttendanceType;
+    
+    // 먼저 근태 삭제
+    await sql`DELETE FROM atnd_attendance WHERE id = ${id}`;
+    
+    // 연차/체휴인 경우 사용량 차감 (삭제 후 처리)
+    if (isLeaveType(attendanceType) && isWorkingDay(date)) {
+      const leaveUsage = getLeaveUsage(attendanceType);
+      
+      if (isAnnualLeaveType(attendanceType)) {
+        await sql`
+          UPDATE atnd_users
+          SET annual_leave_used = GREATEST(0, annual_leave_used - ${leaveUsage})
+          WHERE id = ${attendance.user_id}
+        `;
+      } else if (attendanceType === '체휴') {
+        await sql`
+          UPDATE atnd_users
+          SET comp_leave_used = GREATEST(0, comp_leave_used - ${leaveUsage})
+          WHERE id = ${attendance.user_id}
+        `;
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -106,3 +248,134 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || !session.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, type, reason, startTime, endTime } = await request.json();
+
+    if (!id || !type) {
+      return NextResponse.json(
+        { error: 'id and type are required' },
+        { status: 400 }
+      );
+    }
+
+    // 기존 근태 정보 확인
+    const existingResult = await sql`
+      SELECT user_id, date, type
+      FROM atnd_attendance
+      WHERE id = ${id}
+    `;
+
+    if (existingResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Attendance not found' }, { status: 404 });
+    }
+
+    const existing = existingResult.rows[0];
+    const date = dayjs(existing.date);
+    const oldType = existing.type as AttendanceType;
+    const newType = type as AttendanceType;
+
+    // 시간 정보 가져오기
+    const timeInfo = getAttendanceTimeInfo(newType);
+    const finalStartTime = startTime || timeInfo.startTime;
+    const finalEndTime = endTime || timeInfo.endTime;
+
+    // 타입이 변경된 경우에만 사용량 업데이트
+    if (oldType !== newType) {
+      const isWorking = isWorkingDay(date);
+      
+      // 기존 타입의 사용량 차감
+      if (isLeaveType(oldType) && isWorking) {
+        const oldUsage = getLeaveUsage(oldType);
+        
+        if (isAnnualLeaveType(oldType)) {
+          await sql`
+            UPDATE atnd_users
+            SET annual_leave_used = GREATEST(0, annual_leave_used - ${oldUsage})
+            WHERE id = ${existing.user_id}
+          `;
+        } else if (oldType === '체휴') {
+          await sql`
+            UPDATE atnd_users
+            SET comp_leave_used = GREATEST(0, comp_leave_used - ${oldUsage})
+            WHERE id = ${existing.user_id}
+          `;
+        }
+      }
+
+      // 새 타입의 사용량 추가
+      if (isLeaveType(newType) && isWorking) {
+        const newUsage = getLeaveUsage(newType);
+        
+        // 사용 가능 여부 확인
+        if (isAnnualLeaveType(newType)) {
+          const userResult = await sql`
+            SELECT annual_leave_total, annual_leave_used
+            FROM atnd_users
+            WHERE id = ${existing.user_id}
+          `;
+          
+          if (userResult.rows.length > 0) {
+            const user = userResult.rows[0];
+            const remaining = user.annual_leave_total - user.annual_leave_used;
+            if (remaining < newUsage) {
+              return NextResponse.json(
+                { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
+                { status: 400 }
+              );
+            }
+          }
+          
+          await sql`
+            UPDATE atnd_users
+            SET annual_leave_used = annual_leave_used + ${newUsage}
+            WHERE id = ${existing.user_id}
+          `;
+        } else if (newType === '체휴') {
+          const userResult = await sql`
+            SELECT comp_leave_total, comp_leave_used
+            FROM atnd_users
+            WHERE id = ${existing.user_id}
+          `;
+          
+          if (userResult.rows.length > 0) {
+            const user = userResult.rows[0];
+            const remaining = user.comp_leave_total - user.comp_leave_used;
+            if (remaining < newUsage) {
+              return NextResponse.json(
+                { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
+                { status: 400 }
+              );
+            }
+          }
+          
+          await sql`
+            UPDATE atnd_users
+            SET comp_leave_used = comp_leave_used + ${newUsage}
+            WHERE id = ${existing.user_id}
+          `;
+        }
+      }
+    }
+
+    // 근태 정보 업데이트
+    await sql`
+      UPDATE atnd_attendance
+      SET type = ${newType}, reason = ${reason || null}, start_time = ${finalStartTime || null}, end_time = ${finalEndTime || null}
+      WHERE id = ${id}
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    return NextResponse.json(
+      { error: 'Failed to update attendance' },
+      { status: 500 }
+    );
+  }
+}

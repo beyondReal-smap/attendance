@@ -1,25 +1,292 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/ko';
+import { FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
 import { AttendanceType } from '@/types';
+import AttendanceModal from '@/components/AttendanceModal';
+
+dayjs.locale('ko');
 
 interface Attendance {
   date: string;
   type: AttendanceType;
+  reason?: string | null;
 }
+
+const MobileCalendar = memo(({ 
+  selectedDay, 
+  onDayClick, 
+  attendances,
+  onMonthChange
+}: { 
+  selectedDay: Dayjs | null; 
+  onDayClick: (day: Dayjs) => void;
+  attendances: Attendance[];
+  onMonthChange?: (year: number, month: number) => void;
+}) => {
+  const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationDirection, setAnimationDirection] = useState<'left' | 'right'>('right');
+  
+  const daysInMonth = currentMonth.daysInMonth();
+  const firstDayOfMonth = currentMonth.startOf('month').day();
+  const today = dayjs();
+
+  // 총 42개의 셀(6주 × 7일)을 고정으로 사용
+  const totalCells = 42;
+  const emptyCellsAtStart = firstDayOfMonth;
+  
+  const attendanceMap = useMemo(() => {
+    return attendances.reduce((acc, attendance) => {
+      acc[attendance.date] = attendance.type;
+      return acc;
+    }, {} as Record<string, AttendanceType>);
+  }, [attendances]);
+
+  const getAttendanceColor = (type: AttendanceType | null): string => {
+    switch (type) {
+      case '연차':
+        return 'bg-blue-600 text-white';
+      case '오전반차':
+      case '오후반차':
+        return 'bg-blue-400 text-white';
+      case '오전반반차A':
+      case '오전반반차B':
+      case '오후반반차A':
+      case '오후반반차B':
+        return 'bg-blue-300 text-white';
+      case '체휴':
+        return 'bg-emerald-600 text-white';
+      case '근무':
+        return 'bg-gray-700 text-white';
+      case '시차':
+        return 'bg-amber-600 text-white';
+      default:
+        return 'bg-white text-gray-700 hover:bg-gray-50';
+    }
+  };
+
+  const getAttendanceIcon = (type: AttendanceType | null): string => {
+    switch (type) {
+      case '연차': return '✈️';
+      case '오전반차': return '🌅';
+      case '오후반차': return '🌆';
+      case '오전반반차A': return '🌄';
+      case '오전반반차B': return '☀️';
+      case '오후반반차A': return '🌤️';
+      case '오후반반차B': return '🌙';
+      case '체휴': return '🏠';
+      case '근무': return '💼';
+      case '시차': return '⏰';
+      default: return '';
+    }
+  };
+
+  const handlePrevMonth = () => {
+    setAnimationDirection('left');
+    setIsAnimating(true);
+    setTimeout(() => {
+      const newMonth = currentMonth.subtract(1, 'month');
+      setCurrentMonth(newMonth);
+      setIsAnimating(false);
+      if (onMonthChange) {
+        onMonthChange(newMonth.year(), newMonth.month() + 1);
+      }
+    }, 150);
+  };
+
+  const handleNextMonth = () => {
+    setAnimationDirection('right');
+    setIsAnimating(true);
+    setTimeout(() => {
+      const newMonth = currentMonth.add(1, 'month');
+      setCurrentMonth(newMonth);
+      setIsAnimating(false);
+      if (onMonthChange) {
+        onMonthChange(newMonth.year(), newMonth.month() + 1);
+      }
+    }, 150);
+  };
+
+  const handleToday = () => {
+    setAnimationDirection('right');
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentMonth(today);
+      onDayClick(today);
+      setIsAnimating(false);
+    }, 150);
+  };
+
+  const renderCalendarDays = () => {
+    const days = [];
+
+    // 총 42개의 셀 생성 (6주 × 7일)
+    for (let i = 0; i < totalCells; i++) {
+      const dayIndex = i - emptyCellsAtStart;
+
+      // 빈 칸 (월의 시작 전)
+      if (dayIndex < 0) {
+        days.push(<div key={`empty-start-${i}`} className="h-12"></div>);
+        continue;
+      }
+
+      // 빈 칸 (월의 끝 후)
+      if (dayIndex >= daysInMonth) {
+        days.push(<div key={`empty-end-${i}`} className="h-12"></div>);
+        continue;
+      }
+
+      // 현재 달의 날짜
+      const currentDate = currentMonth.date(dayIndex + 1);
+      const dateString = currentDate.format('YYYY-MM-DD');
+      const isSelected = selectedDay?.isSame(currentDate, 'day');
+      const isToday = today.isSame(currentDate, 'day');
+      const attendanceType = attendanceMap[dateString] || null;
+      const colors = getAttendanceColor(attendanceType);
+      const icon = getAttendanceIcon(attendanceType);
+
+      days.push(
+        <motion.button
+          key={dayIndex + 1}
+          onClick={() => onDayClick(currentDate)}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className={`
+            h-12 w-full rounded-lg flex flex-col items-center justify-center text-sm font-semibold
+            transition-all duration-200 relative
+            ${colors}
+            ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+            ${isToday && !isSelected ? 'ring-2 ring-gray-300' : ''}
+            ${!attendanceType ? 'border border-gray-200' : ''}
+          `}
+        >
+          <span className={`${attendanceType ? 'text-white' : 'text-gray-800'} text-sm`}>
+            {dayIndex + 1}
+          </span>
+          {attendanceType && (
+            <span className="text-xs mt-0.5">{icon}</span>
+          )}
+        </motion.button>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-200">
+      {/* 캘린더 헤더 */}
+      <div className="flex items-center justify-between mb-5">
+        <motion.button
+          onClick={handlePrevMonth}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          disabled={isAnimating}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FiChevronLeft className="w-5 h-5 text-gray-700" />
+        </motion.button>
+        
+        <div className="text-center">
+          <motion.h2 
+            key={currentMonth.format('YYYY-MM')}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-lg font-bold text-gray-900"
+          >
+            {currentMonth.format('YYYY년 M월')}
+          </motion.h2>
+          <motion.button
+            onClick={handleToday}
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-1"
+            disabled={isAnimating}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            오늘
+          </motion.button>
+        </div>
+        
+        <motion.button
+          onClick={handleNextMonth}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          disabled={isAnimating}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FiChevronRight className="w-5 h-5 text-gray-700" />
+        </motion.button>
+      </div>
+
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 gap-1.5 mb-2">
+        {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+          <div key={day} className={`h-8 flex items-center justify-center text-xs font-semibold ${
+            index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600'
+          }`}>
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* 캘린더 그리드 */}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentMonth.format('YYYY-MM')}
+          initial={{ 
+            opacity: 0, 
+            x: animationDirection === 'right' ? 50 : -50 
+          }}
+          animate={{ 
+            opacity: 1, 
+            x: 0 
+          }}
+          exit={{ 
+            opacity: 0, 
+            x: animationDirection === 'right' ? -50 : 50 
+          }}
+          transition={{ 
+            duration: 0.3,
+            ease: [0.25, 0.46, 0.45, 0.94]
+          }}
+          className="grid grid-cols-7 gap-1.5"
+        >
+          {renderCalendarDays()}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+});
+
+MobileCalendar.displayName = 'MobileCalendar';
 
 export default function CalendarPage() {
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ name: string; isAdmin: boolean } | null>(null);
+  const [user, setUser] = useState<{ 
+    name: string; 
+    isAdmin: boolean;
+    annualLeaveTotal: number;
+    annualLeaveUsed: number;
+    annualLeaveRemaining: number;
+    compLeaveTotal: number;
+    compLeaveUsed: number;
+    compLeaveRemaining: number;
+  } | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUserAndAttendances();
-  }, [currentDate]);
+  }, [currentMonth]);
 
   const fetchUserAndAttendances = async () => {
     try {
@@ -31,8 +298,8 @@ export default function CalendarPage() {
       const userData = await userRes.json();
       setUser(userData);
 
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
+      const year = currentMonth.year();
+      const month = currentMonth.month() + 1;
       const res = await fetch(`/api/attendance?year=${year}&month=${month}`);
       if (res.ok) {
         const data = await res.json();
@@ -51,139 +318,199 @@ export default function CalendarPage() {
     router.refresh();
   };
 
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  const getAttendanceForDate = (date: Date): AttendanceType | null => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const attendance = attendances.find(a => a.date === dateStr);
-    return attendance ? attendance.type : null;
-  };
-
-  const getAttendanceColor = (type: AttendanceType | null): string => {
-    switch (type) {
-      case '연차': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case '체휴': return 'bg-purple-100 text-purple-800 border-purple-300';
-      case '근무': return 'bg-green-100 text-green-800 border-green-300';
-      case '시차': return 'bg-orange-100 text-orange-800 border-orange-300';
-      default: return 'bg-gray-50 text-gray-600 border-gray-200';
+  const handleDayClick = (day: Dayjs) => {
+    // 이미 선택된 날짜를 다시 클릭하면 모달 열기
+    if (selectedDate && selectedDate.isSame(day, 'day')) {
+      setIsModalOpen(true);
+    } else {
+      // 새로운 날짜 선택
+      setSelectedDate(day);
     }
   };
 
-  const changeMonth = (direction: number) => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
+  const handleSaveAttendance = async (data: {
+    startDate: string;
+    endDate: string;
+    type: AttendanceType;
+    reason: string;
+    days: number;
+  }) => {
+    const res = await fetch('/api/attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '근태 등록에 실패했습니다.');
+    }
+
+    // 데이터 새로고침
+    await fetchUserAndAttendances();
+  };
+
+  const handleMonthChange = (year: number, month: number) => {
+    setCurrentMonth(dayjs().year(year).month(month - 1));
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">로딩 중...</div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-sm text-gray-600">로딩 중...</div>
+        </div>
       </div>
     );
   }
 
+  const selectedAttendance = selectedDate ? attendances.find(a => a.date === selectedDate.format('YYYY-MM-DD')) : null;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
         {/* Header */}
-        <div className="bg-indigo-600 text-white p-6">
+        <div className="bg-white border-b border-gray-200 px-5 py-4">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">{user?.name}님의 근태</h1>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
+              <p className="text-xs text-gray-500 mt-0.5">근태 관리</p>
+            </div>
             <div className="flex gap-2">
               {user?.isAdmin && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="px-3 py-1 bg-white text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-50 transition"
+                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all"
                 >
                   관리자
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="px-3 py-1 bg-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-800 transition"
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all"
               >
                 로그아웃
               </button>
             </div>
           </div>
 
-          {/* Month Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="p-2 hover:bg-indigo-700 rounded-lg transition"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 className="text-xl font-semibold">
-              {format(currentDate, 'yyyy년 M월')}
-            </h2>
-            <button
-              onClick={() => changeMonth(1)}
-              className="p-2 hover:bg-indigo-700 rounded-lg transition"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+          {/* 연차/체휴 잔여 수 */}
+          {user && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                <div className="text-xs text-blue-600 font-medium mb-1">연차</div>
+                <div className="flex items-baseline gap-1">
+                  <div className="text-2xl font-bold text-blue-700">
+                    {user.annualLeaveRemaining}
+                  </div>
+                  <div className="text-xs text-blue-500">
+                    / {user.annualLeaveTotal}일
+                  </div>
+                </div>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                <div className="text-xs text-emerald-600 font-medium mb-1">체휴</div>
+                <div className="flex items-baseline gap-1">
+                  <div className="text-2xl font-bold text-emerald-700">
+                    {user.compLeaveRemaining}
+                  </div>
+                  <div className="text-xs text-emerald-500">
+                    / {user.compLeaveTotal}일
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Calendar Grid */}
-        <div className="p-4">
-          {/* Day Labels */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-              <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
-                {day}
-              </div>
-            ))}
-          </div>
+        {/* Calendar */}
+        <div className="p-5">
+          <MobileCalendar
+            selectedDay={selectedDate}
+            onDayClick={handleDayClick}
+            attendances={attendances}
+            onMonthChange={handleMonthChange}
+          />
 
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-1">
-            {daysInMonth.map((day) => {
-              const attendance = getAttendanceForDate(day);
-              const isCurrentDay = isToday(day);
-              
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`aspect-square p-1 rounded-lg border-2 ${getAttendanceColor(attendance)} ${
-                    isCurrentDay ? 'ring-2 ring-indigo-500 ring-offset-1' : ''
-                  }`}
-                >
-                  <div className="text-xs font-medium mb-1">
-                    {format(day, 'd')}
-                  </div>
-                  {attendance && (
-                    <div className="text-[10px] font-semibold truncate">
-                      {attendance}
-                    </div>
-                  )}
+          {/* 해당 달의 근태 리스트 */}
+          <div className="mt-6 pt-6 border-t border-gray-200 bg-gray-50/50 rounded-lg p-4 -mx-5">
+            <h3 className="text-lg font-black text-gray-900 mb-3">
+              {currentMonth.format('M월')} 근태 내역
+            </h3>
+            <div className="max-h-[280px] overflow-y-auto scrollbar-hide">
+              {attendances.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 text-sm">
+                  등록된 근태가 없습니다
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">범례</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {(['연차', '체휴', '근무', '시차'] as AttendanceType[]).map((type) => (
-                <div key={type} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded border ${getAttendanceColor(type)}`} />
-                  <span className="text-sm text-gray-600">{type}</span>
+              ) : (
+                <div className="space-y-2">
+                  {attendances.map((attendance) => {
+                    const getColor = () => {
+                      switch (attendance.type) {
+                        case '연차': return 'bg-blue-600 border-blue-600';
+                        case '오전반차':
+                        case '오후반차': return 'bg-blue-400 border-blue-400';
+                        case '오전반반차A':
+                        case '오전반반차B':
+                        case '오후반반차A':
+                        case '오후반반차B': return 'bg-blue-300 border-blue-300';
+                        case '체휴': return 'bg-emerald-600 border-emerald-600';
+                        case '근무': return 'bg-gray-700 border-gray-700';
+                        case '시차': return 'bg-amber-600 border-amber-600';
+                      }
+                    };
+                    const getIcon = () => {
+                      switch (attendance.type) {
+                        case '연차': return '✈️';
+                        case '오전반차': return '🌅';
+                        case '오후반차': return '🌆';
+                        case '오전반반차A': return '🌄';
+                        case '오전반반차B': return '☀️';
+                        case '오후반반차A': return '🌤️';
+                        case '오후반반차B': return '🌙';
+                        case '체휴': return '🏠';
+                        case '근무': return '💼';
+                        case '시차': return '⏰';
+                      }
+                    };
+                    const date = dayjs(attendance.date);
+                    return (
+                      <div
+                        key={attendance.date}
+                        className={`flex items-center justify-between p-3 rounded-lg ${getColor()} text-white border`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="font-semibold text-base min-w-[70px]">
+                            {date.format('M/D')}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getIcon()}</span>
+                            <span className="font-semibold text-base">{attendance.type}</span>
+                          </div>
+                        </div>
+                        {attendance.reason && (
+                          <div className="text-sm opacity-90 max-w-[45%] truncate ml-2" title={attendance.reason}>
+                            {attendance.reason}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* 근태 등록 모달 */}
+      <AttendanceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        selectedDate={selectedDate}
+        onSave={handleSaveAttendance}
+      />
     </div>
   );
 }
-

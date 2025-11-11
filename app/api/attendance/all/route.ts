@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { AttendanceType } from '@/types';
+import dayjs from 'dayjs';
 
 export async function GET() {
   try {
@@ -16,9 +17,10 @@ export async function GET() {
         a.user_id as "userId",
         u.name as "userName",
         a.date,
-        a.type
-      FROM attendance a
-      JOIN users u ON a.user_id = u.id
+        a.type,
+        a.reason
+      FROM atnd_attendance a
+      JOIN atnd_users u ON a.user_id = u.id
       ORDER BY a.date DESC, u.name ASC
     `;
 
@@ -26,8 +28,9 @@ export async function GET() {
       id: row.id.toString(),
       userId: row.userId.toString(),
       userName: row.userName,
-      date: row.date.toISOString().split('T')[0],
+      date: dayjs(row.date).format('YYYY-MM-DD'),
       type: row.type as AttendanceType,
+      reason: row.reason || null,
     }));
 
     return NextResponse.json(attendances);

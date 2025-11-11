@@ -38,38 +38,92 @@ export async function initDatabase() {
   try {
     // Users 테이블 생성
     await sql`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS atnd_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(100) NOT NULL,
         is_admin TINYINT(1) DEFAULT 0,
+        annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수',
+        annual_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 연차 수',
+        comp_leave_total INT DEFAULT 0 COMMENT '부여된 체휴 수',
+        comp_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 체휴 수',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
+    
+    // 기존 atnd_users 테이블에 컬럼 추가 (이미 존재하는 경우)
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN annual_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 연차 수'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN comp_leave_total INT DEFAULT 0 COMMENT '부여된 체휴 수'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN comp_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 체휴 수'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
 
     // Attendance 테이블 생성
     await sql`
-      CREATE TABLE IF NOT EXISTS attendance (
+      CREATE TABLE IF NOT EXISTS atnd_attendance (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         date DATE NOT NULL,
-        type VARCHAR(10) NOT NULL CHECK (type IN ('연차', '체휴', '근무', '시차')),
+        type VARCHAR(20) NOT NULL,
+        reason TEXT COMMENT '근태사유',
+        start_time TIME COMMENT '시작시간',
+        end_time TIME COMMENT '종료시간',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE KEY unique_user_date (user_id, date)
+        FOREIGN KEY (user_id) REFERENCES atnd_users(id) ON DELETE CASCADE
       )
     `;
+    
+    // 기존 atnd_attendance 테이블에 컬럼 추가 (이미 존재하는 경우)
+    try {
+      await sql`ALTER TABLE atnd_attendance ADD COLUMN reason TEXT COMMENT '근태사유'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    
+    try {
+      await sql`ALTER TABLE atnd_attendance ADD COLUMN start_time TIME COMMENT '시작시간'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    
+    try {
+      await sql`ALTER TABLE atnd_attendance ADD COLUMN end_time TIME COMMENT '종료시간'`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
+    }
+    
+    // UNIQUE KEY 제거 (같은 날짜에 여러 근태 등록 가능하도록)
+    try {
+      await sql`ALTER TABLE atnd_attendance DROP INDEX unique_user_date`;
+    } catch (e: any) {
+      if (!e.message?.includes('check that it exists')) console.error('Index drop error:', e);
+    }
 
     // 기본 관리자 계정 생성 (username: admin, password: admin123)
     const adminExists = await sql`
-      SELECT id FROM users WHERE username = 'admin'
+      SELECT id FROM atnd_users WHERE username = 'admin'
     `;
     
     if (adminExists.rows.length === 0) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
       await sql`
-        INSERT INTO users (username, password, name, is_admin)
+        INSERT INTO atnd_users (username, password, name, is_admin)
         VALUES ('admin', ${hashedPassword}, '관리자', 1)
       `;
     }

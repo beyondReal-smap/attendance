@@ -42,7 +42,7 @@ export async function loginUser(username: string, password: string): Promise<Ses
   try {
     const result = await sql`
       SELECT id, username, password, name, is_admin
-      FROM users
+      FROM atnd_users
       WHERE username = ${username}
     `;
 
