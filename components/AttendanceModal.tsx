@@ -20,9 +20,10 @@ interface AttendanceModalProps {
     reason: string;
     days: number;
   }) => Promise<void>;
+  onAlert?: (title: string, message: string, type: 'info' | 'success' | 'error' | 'warning') => void;
 }
 
-export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave }: AttendanceModalProps) {
+export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave, onAlert }: AttendanceModalProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [type, setType] = useState<AttendanceType>('연차');
@@ -77,12 +78,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startDate || !endDate || !reason.trim()) {
-      alert('모든 필드를 입력해주세요.');
+      if (onAlert) onAlert('오류', '모든 필드를 입력해주세요.', 'error');
       return;
     }
 
     if (type === '시차' && (!startTime || !endTime)) {
-      alert('시차 근태는 시작시간과 종료시간을 입력해야 합니다.');
+      if (onAlert) onAlert('오류', '시차 근태는 시작시간과 종료시간을 입력해야 합니다.', 'error');
       return;
     }
 
@@ -92,7 +93,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
 
     // 반차나 반반차가 아닌 경우에만 종료일자 검증
     if (timeInfo.days >= 1 && end.isBefore(start)) {
-      alert('종료일자는 시작일자보다 이후여야 합니다.');
+      if (onAlert) onAlert('오류', '종료일자는 시작일자보다 이후여야 합니다.', 'error');
       return;
     }
 
@@ -117,7 +118,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
       onClose();
     } catch (error) {
       console.error('Error saving attendance:', error);
-      alert('근태 등록에 실패했습니다.');
+      if (onAlert) onAlert('오류', '근태 등록에 실패했습니다.', 'error');
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { AttendanceType } from '@/types';
 import { DatePickerCalendar } from '@/components/DatePickerCalendar';
+import AlertModal from '@/components/AlertModal';
 import dayjs from 'dayjs';
 import { FiCalendar } from 'react-icons/fi';
 
@@ -53,6 +54,12 @@ export default function AdminPage() {
   const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState(false);
   const [userToChangePassword, setUserToChangePassword] = useState<User | null>(null);
   const [newUserPassword, setNewUserPassword] = useState('');
+
+  // Alert 모달 상태
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'success' | 'error' | 'warning'>('info');
 
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
@@ -105,12 +112,18 @@ export default function AdminPage() {
 
   const handleAddAttendance = async () => {
     if (!selectedUserId) {
-      alert('사용자를 선택하세요.');
+      setAlertTitle('오류');
+      setAlertMessage('사용자를 선택하세요.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
     if (!reason.trim()) {
-      alert('근태사유를 입력하세요.');
+      setAlertTitle('오류');
+      setAlertMessage('근태사유를 입력하세요.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
@@ -129,16 +142,25 @@ export default function AdminPage() {
 
       if (res.ok) {
         await Promise.all([loadUsers(), loadAttendances()]);
-        alert('근태가 추가되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('근태가 추가되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
         setStartDate(format(new Date(), 'yyyy-MM-dd'));
         setEndDate(format(new Date(), 'yyyy-MM-dd'));
         setReason('');
       } else {
         const data = await res.json();
-        alert(data.error || '근태 추가에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(data.error || '근태 추가에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -159,12 +181,21 @@ export default function AdminPage() {
         setEditingUser(null);
         setAnnualLeaveTotal('');
         setCompLeaveTotal('');
-        alert('저장되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('저장되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
       } else {
-        alert('저장에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage('저장에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -188,12 +219,21 @@ export default function AdminPage() {
         await Promise.all([loadUsers(), loadAttendances()]);
         setDeleteModalOpen(false);
         setAttendanceToDelete(null);
-        alert('삭제되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('삭제되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
       } else {
-        alert('삭제에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage('삭제에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -205,7 +245,10 @@ export default function AdminPage() {
   // 사용자 추가 핸들러
   const handleAddUser = async () => {
     if (!newUserUsername.trim() || !newUserName.trim()) {
-      alert('사번과 이름을 모두 입력해주세요.');
+      setAlertTitle('오류');
+      setAlertMessage('사번과 이름을 모두 입력해주세요.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
@@ -226,16 +269,25 @@ export default function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         await loadUsers();
-        alert(`사용자가 추가되었습니다!\n사번: ${newUserUsername}\n이름: ${newUserName}\n초기 비밀번호: ${password}\n\n보안을 위해 초기 비밀번호로 로그인 후 바로 비밀번호를 변경해주세요.`);
+        setAlertTitle('성공');
+        setAlertMessage(`사용자가 추가되었습니다!\n사번: ${newUserUsername}\n이름: ${newUserName}\n초기 비밀번호: ${password}\n\n보안을 위해 초기 비밀번호로 로그인 후 바로 비밀번호를 변경해주세요.`);
+        setAlertType('success');
+        setAlertModalOpen(true);
         setNewUserUsername('');
         setNewUserName('');
         setGeneratedPassword('');
       } else {
         const error = await res.json();
-        alert(error.error || '사용자 추가에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(error.error || '사용자 추가에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -266,13 +318,22 @@ export default function AdminPage() {
         await Promise.all([loadUsers(), loadAttendances()]);
         setUserDeleteModalOpen(false);
         setUserToDelete(null);
-        alert('사용자가 삭제되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('사용자가 삭제되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
       } else {
         const data = await res.json();
-        alert(data.error || '사용자 삭제에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(data.error || '사용자 삭제에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -288,12 +349,18 @@ export default function AdminPage() {
 
   const confirmChangePassword = async () => {
     if (!userToChangePassword || !newUserPassword.trim()) {
-      alert('새 비밀번호를 입력해주세요.');
+      setAlertTitle('오류');
+      setAlertMessage('새 비밀번호를 입력해주세요.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
     if (newUserPassword.length < 6) {
-      alert('비밀번호는 최소 6자리 이상이어야 합니다.');
+      setAlertTitle('오류');
+      setAlertMessage('비밀번호는 최소 6자리 이상이어야 합니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
@@ -311,13 +378,22 @@ export default function AdminPage() {
         setPasswordChangeModalOpen(false);
         setUserToChangePassword(null);
         setNewUserPassword('');
-        alert('비밀번호가 변경되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('비밀번호가 변경되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
       } else {
         const data = await res.json();
-        alert(data.error || '비밀번호 변경에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(data.error || '비밀번호 변경에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -925,6 +1001,15 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {/* Alert 모달 */}
+          <AlertModal
+            isOpen={alertModalOpen}
+            onClose={() => setAlertModalOpen(false)}
+            title={alertTitle}
+            message={alertMessage}
+            type={alertType}
+          />
         </div>
       </div>
     </div>

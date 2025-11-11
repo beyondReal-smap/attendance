@@ -8,6 +8,7 @@ import 'dayjs/locale/ko';
 import { FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
 import { AttendanceType } from '@/types';
 import AttendanceModal from '@/components/AttendanceModal';
+import AlertModal from '@/components/AlertModal';
 
 dayjs.locale('ko');
 
@@ -287,6 +288,12 @@ export default function CalendarPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Alert 모달 상태
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'success' | 'error' | 'warning'>('info');
+
   useEffect(() => {
     fetchUserAndAttendances();
 
@@ -344,17 +351,26 @@ export default function CalendarPage() {
   // 비밀번호 변경 핸들러
   const handlePasswordChange = async () => {
     if (!newPassword || !confirmPassword) {
-      alert('모든 필드를 입력해주세요.');
+      setAlertTitle('오류');
+      setAlertMessage('모든 필드를 입력해주세요.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('새 비밀번호가 일치하지 않습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('새 비밀번호가 일치하지 않습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
     if (newPassword.length < 6) {
-      alert('비밀번호는 최소 6자리 이상이어야 합니다.');
+      setAlertTitle('오류');
+      setAlertMessage('비밀번호는 최소 6자리 이상이어야 합니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
       return;
     }
 
@@ -366,7 +382,10 @@ export default function CalendarPage() {
       });
 
       if (res.ok) {
-        alert('비밀번호가 성공적으로 변경되었습니다.');
+        setAlertTitle('성공');
+        setAlertMessage('비밀번호가 성공적으로 변경되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
         setShowPasswordChangeModal(false);
         setNewPassword('');
         setConfirmPassword('');
@@ -374,10 +393,16 @@ export default function CalendarPage() {
         localStorage.removeItem('tempPasswordLogin');
       } else {
         const data = await res.json();
-        alert(data.error || '비밀번호 변경에 실패했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(data.error || '비밀번호 변경에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
       }
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
     }
   };
 
@@ -566,6 +591,12 @@ export default function CalendarPage() {
         onClose={() => setIsModalOpen(false)}
         selectedDate={selectedDate}
         onSave={handleSaveAttendance}
+        onAlert={(title, message, type) => {
+          setAlertTitle(title);
+          setAlertMessage(message);
+          setAlertType(type);
+          setAlertModalOpen(true);
+        }}
       />
 
       {/* 비밀번호 변경 모달 */}
@@ -634,6 +665,15 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+      />
     </div>
   );
 }
