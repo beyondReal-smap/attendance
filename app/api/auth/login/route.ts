@@ -23,7 +23,13 @@ export async function POST(request: NextRequest) {
 
     await createSession(session.userId, session.username, session.name, session.isAdmin);
 
-    return NextResponse.json({ success: true });
+    // 임시 비밀번호(4자리 숫자)인지 확인
+    const isTempPassword = /^\d{4}$/.test(password);
+
+    return NextResponse.json({
+      success: true,
+      isTempPassword
+    });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

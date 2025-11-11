@@ -30,6 +30,11 @@ export default function LoginPage() {
         return;
       }
 
+      // 임시 비밀번호로 로그인한 경우 localStorage에 저장
+      if (data.isTempPassword) {
+        localStorage.setItem('tempPasswordLogin', 'true');
+      }
+
       router.push('/calendar');
       router.refresh();
     } catch (err) {

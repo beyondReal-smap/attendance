@@ -48,6 +48,11 @@ export default function AdminPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
 
+  // 사용자 추가 관련 상태
+  const [newUserUsername, setNewUserUsername] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
+
   useEffect(() => {
     checkAdminAndLoadData();
   }, []);
@@ -186,6 +191,48 @@ export default function AdminPage() {
     }
   };
 
+  // 4자리 숫자 비밀번호 생성
+  const generatePassword = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  // 사용자 추가 핸들러
+  const handleAddUser = async () => {
+    if (!newUserUsername.trim() || !newUserName.trim()) {
+      alert('사번과 이름을 모두 입력해주세요.');
+      return;
+    }
+
+    const password = generatePassword();
+    setGeneratedPassword(password);
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: newUserUsername.trim(),
+          name: newUserName.trim(),
+          password: password,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        await loadUsers();
+        alert(`사용자가 추가되었습니다!\n사번: ${newUserUsername}\n이름: ${newUserName}\n초기 비밀번호: ${password}\n\n보안을 위해 초기 비밀번호로 로그인 후 바로 비밀번호를 변경해주세요.`);
+        setNewUserUsername('');
+        setNewUserName('');
+        setGeneratedPassword('');
+      } else {
+        const error = await res.json();
+        alert(error.error || '사용자 추가에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('오류가 발생했습니다.');
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
@@ -231,6 +278,56 @@ export default function AdminPage() {
         </div>
 
         <div className="p-6 space-y-8">
+          {/* 사용자 추가 */}
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">사용자 추가</h2>
+            <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    사번
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserUsername}
+                    onChange={(e) => setNewUserUsername(e.target.value)}
+                    placeholder="사번을 입력하세요"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    이름
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    placeholder="이름을 입력하세요"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  />
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="text-sm text-blue-700">
+                  <div className="font-medium mb-1">자동 생성 비밀번호:</div>
+                  <div className="text-lg font-mono font-bold">
+                    {generatedPassword || '사용자 추가 시 자동 생성됩니다'}
+                  </div>
+                  <div className="text-xs mt-1 text-blue-600">
+                    4자리 숫자로 자동 생성되며, 첫 로그인 시 비밀번호 변경이 필요합니다.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleAddUser}
+                className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+              >
+                사용자 추가
+              </button>
+            </div>
+          </div>
+
           {/* 사용자 연차/체휴 설정 */}
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-4">사용자 연차/체휴 설정</h2>

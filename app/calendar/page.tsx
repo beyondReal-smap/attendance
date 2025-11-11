@@ -283,9 +283,18 @@ export default function CalendarPage() {
   } | null>(null);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     fetchUserAndAttendances();
+
+    // 임시 비밀번호로 로그인한 경우 비밀번호 변경 모달 표시
+    const isTempPasswordLogin = localStorage.getItem('tempPasswordLogin') === 'true';
+    if (isTempPasswordLogin) {
+      setShowPasswordChangeModal(true);
+    }
   }, [currentMonth]);
 
   const fetchUserAndAttendances = async () => {
@@ -297,6 +306,10 @@ export default function CalendarPage() {
       }
       const userData = await userRes.json();
       setUser(userData);
+
+      // 임시 비밀번호(4자리 숫자)로 로그인한 경우 비밀번호 변경 모달 표시
+      const isTempPassword = /^\d{4}$/.test(''); // 실제로는 세션에서 비밀번호 정보를 받아와야 함
+      // TODO: 세션에 임시 비밀번호 정보 추가 필요
 
       const year = currentMonth.year();
       const month = currentMonth.month() + 1;
@@ -325,6 +338,46 @@ export default function CalendarPage() {
     } else {
       // 새로운 날짜 선택
       setSelectedDate(day);
+    }
+  };
+
+  // 비밀번호 변경 핸들러
+  const handlePasswordChange = async () => {
+    if (!newPassword || !confirmPassword) {
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert('비밀번호는 최소 6자리 이상이어야 합니다.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword }),
+      });
+
+      if (res.ok) {
+        alert('비밀번호가 성공적으로 변경되었습니다.');
+        setShowPasswordChangeModal(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        // 임시 비밀번호 플래그 제거
+        localStorage.removeItem('tempPasswordLogin');
+      } else {
+        const data = await res.json();
+        alert(data.error || '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('오류가 발생했습니다.');
     }
   };
 
@@ -511,6 +564,73 @@ export default function CalendarPage() {
         selectedDate={selectedDate}
         onSave={handleSaveAttendance}
       />
+
+      {/* 비밀번호 변경 모달 */}
+      {showPasswordChangeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">비밀번호 변경</h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 mb-4">
+                보안을 위해 임시 비밀번호로 로그인하셨습니다. 새로운 비밀번호를 설정해주세요.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <div className="text-sm text-yellow-800">
+                  <div className="font-medium mb-1">비밀번호 요구사항:</div>
+                  <ul className="list-disc list-inside text-xs space-y-1">
+                    <li>최소 6자리 이상</li>
+                    <li>보안을 위해 강력한 비밀번호를 사용하세요</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  새 비밀번호
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호를 입력하세요"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  새 비밀번호 확인
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호를 다시 입력하세요"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowPasswordChangeModal(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  나중에 변경
+                </button>
+                <button
+                  onClick={handlePasswordChange}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                >
+                  비밀번호 변경
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
