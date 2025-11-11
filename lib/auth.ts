@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { Session } from '@/types';
 import bcrypt from 'bcryptjs';
-import { sql } from '@vercel/postgres';
+import { sql } from './db';
 
 export async function createSession(userId: string, username: string, name: string, isAdmin: boolean) {
   const session: Session = { userId, username, name, isAdmin };
