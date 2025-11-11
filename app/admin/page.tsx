@@ -821,7 +821,7 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <button
                               onClick={() => handleDeleteAttendance(attendance.id)}
-                              className="text-red-600 hover:text-red-700 text-xs font-medium hover:underline"
+                              className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
                             >
                               삭제
                             </button>
