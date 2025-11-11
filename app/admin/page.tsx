@@ -328,7 +328,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={handleAddUser}
-                className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+                className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
               >
                 사용자 추가
               </button>
