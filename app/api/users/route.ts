@@ -9,13 +9,23 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // is_temp_password 컬럼이 없는 경우를 대비해 먼저 추가 시도
+    try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부'`;
+    } catch (e: any) {
+      // 컬럼이 이미 존재하는 경우 무시
+      if (!e.message?.includes('Duplicate column')) {
+        console.error('Column add error:', e);
+      }
+    }
+
     const result = await sql`
       SELECT
         id,
         username,
         name,
         is_admin as "isAdmin",
-        is_temp_password as "isTempPassword",
+        COALESCE(is_temp_password, 0) as "isTempPassword",
         annual_leave_total as "annualLeaveTotal",
         annual_leave_used as "annualLeaveUsed",
         comp_leave_total as "compLeaveTotal",
@@ -82,11 +92,27 @@ export async function POST(request: Request) {
 
     // 사용자 추가 (임시 비밀번호로 설정)
     const isTempPassword = /^\d{4}$/.test(password) ? 1 : 0;
-    const result = await sql`
-      INSERT INTO atnd_users (username, name, password, is_temp_password, annual_leave_total, comp_leave_total)
-      VALUES (${username}, ${name}, ${hashedPassword}, ${isTempPassword}, 15, 0)
-      RETURNING id, username, name
-    `;
+
+    // is_temp_password 컬럼이 있는지 확인 후 INSERT
+    let result;
+    try {
+      result = await sql`
+        INSERT INTO atnd_users (username, name, password, is_temp_password, annual_leave_total, comp_leave_total)
+        VALUES (${username}, ${name}, ${hashedPassword}, ${isTempPassword}, 15, 0)
+        RETURNING id, username, name
+      `;
+    } catch (e: any) {
+      // is_temp_password 컬럼이 없는 경우
+      if (e.message?.includes('Unknown column')) {
+        result = await sql`
+          INSERT INTO atnd_users (username, name, password, annual_leave_total, comp_leave_total)
+          VALUES (${username}, ${name}, ${hashedPassword}, 15, 0)
+          RETURNING id, username, name
+        `;
+      } else {
+        throw e;
+      }
+    }
 
     const newUser = result.rows[0];
 
@@ -123,11 +149,24 @@ export async function PUT(request: Request) {
     // 비밀번호 변경인 경우
     if (newPassword) {
       const hashedPassword = await hashPassword(newPassword);
-      await sql`
-        UPDATE atnd_users
-        SET password = ${hashedPassword}, is_temp_password = 0
-        WHERE id = ${userId}
-      `;
+      try {
+        await sql`
+          UPDATE atnd_users
+          SET password = ${hashedPassword}, is_temp_password = 0
+          WHERE id = ${userId}
+        `;
+      } catch (e: any) {
+        // is_temp_password 컬럼이 없는 경우
+        if (e.message?.includes('Unknown column')) {
+          await sql`
+            UPDATE atnd_users
+            SET password = ${hashedPassword}
+            WHERE id = ${userId}
+          `;
+        } else {
+          throw e;
+        }
+      }
       return NextResponse.json({ success: true, message: '비밀번호가 변경되었습니다.' });
     }
 
