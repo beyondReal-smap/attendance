@@ -1,7 +1,7 @@
 @font-face {
-  font-family: 'SUITE Variable';
-  src: url('/SUITE-Variable.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: 'SUITE';
+  src: url('/SUITE-Regular.woff2') format('woff2');
+  font-weight: 400;
   font-display: swap;
 }
 @import "tailwindcss";
