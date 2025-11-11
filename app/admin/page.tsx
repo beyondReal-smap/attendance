@@ -233,6 +233,30 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPassword = async (userId: string) => {
+    if (!confirm('정말로 이 사용자의 비밀번호를 초기화하시겠습니까?\n초기화된 비밀번호는 4자리 숫자로 자동 생성됩니다.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`비밀번호가 성공적으로 초기화되었습니다.\n새 비밀번호: ${data.newPassword}\n\n보안을 위해 사용자에게 새 비밀번호를 알려주세요.`);
+      } else {
+        const data = await res.json();
+        alert(data.error || '비밀번호 초기화에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('오류가 발생했습니다.');
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
@@ -332,6 +356,29 @@ export default function AdminPage() {
               >
                 사용자 추가
               </button>
+
+              {/* 현재 사용자 목록 */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">현재 사용자 목록</h3>
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {users.map((user) => (
+                    <div key={user.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500">{user.username}</div>
+                        </div>
+                        <button
+                          onClick={() => handleResetPassword(user.id)}
+                          className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
+                        >
+                          비밀번호 초기화
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
