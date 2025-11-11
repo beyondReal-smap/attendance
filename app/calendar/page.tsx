@@ -427,7 +427,7 @@ export default function CalendarPage() {
         <div className="bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
+              <h1 className="text-xl font-black text-gray-900">{user?.name}</h1>
               <p className="text-xs text-gray-500 mt-0.5">근태 관리</p>
             </div>
             <div className="flex gap-2">
@@ -479,6 +479,9 @@ export default function CalendarPage() {
 
         {/* Calendar */}
         <div className="p-5">
+          <h2 className="text-lg font-black text-gray-900 mb-4">
+            근태 달력
+          </h2>
           <MobileCalendar
             selectedDay={selectedDate}
             onDayClick={handleDayClick}
