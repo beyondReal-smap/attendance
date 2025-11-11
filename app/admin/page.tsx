@@ -359,7 +359,7 @@ export default function AdminPage() {
                         setAnnualLeaveTotal(user.annualLeaveTotal.toString());
                         setCompLeaveTotal(user.compLeaveTotal.toString());
                       }}
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
+                      className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 transition"
                     >
                       수정
                     </button>
