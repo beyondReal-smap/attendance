@@ -279,9 +279,16 @@ export default function AdminPage() {
 
         <div className="p-6 space-y-8">
           {/* 사용자 추가 */}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">사용자 추가</h2>
-            <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-4">
+          <div className="bg-white rounded-xl p-6 border-2 border-blue-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">사용자 추가</h2>
+            </div>
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -329,8 +336,15 @@ export default function AdminPage() {
           </div>
 
           {/* 사용자 연차/체휴 설정 */}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">사용자 연차/체휴 설정</h2>
+          <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">사용자 연차/체휴 설정</h2>
+            </div>
             <div className="space-y-3">
               {users.map((user) => (
                 <div key={user.id} className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition">
@@ -431,9 +445,16 @@ export default function AdminPage() {
           </div>
 
           {/* Add Attendance Form */}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">근태 추가</h2>
-            <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-4">
+          <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">근태 추가</h2>
+            </div>
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -558,9 +579,16 @@ export default function AdminPage() {
           )}
 
           {/* Attendance List */}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">근태 목록</h2>
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
+            </div>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
