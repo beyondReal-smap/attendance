@@ -47,6 +47,11 @@ export default function AdminPage() {
   const [showEndCalendar, setShowEndCalendar] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
+  const [userDeleteModalOpen, setUserDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState(false);
+  const [userToChangePassword, setUserToChangePassword] = useState<User | null>(null);
+  const [newUserPassword, setNewUserPassword] = useState('');
 
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
@@ -239,6 +244,82 @@ export default function AdminPage() {
     router.refresh();
   };
 
+  // 사용자 삭제 핸들러
+  const handleDeleteUser = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setUserToDelete(user);
+      setUserDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const res = await fetch(`/api/users?userId=${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        await Promise.all([loadUsers(), loadAttendances()]);
+        setUserDeleteModalOpen(false);
+        setUserToDelete(null);
+        alert('사용자가 삭제되었습니다.');
+      } else {
+        const data = await res.json();
+        alert(data.error || '사용자 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('오류가 발생했습니다.');
+    }
+  };
+
+  // 비밀번호 변경 핸들러
+  const handleChangePassword = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setUserToChangePassword(user);
+      setPasswordChangeModalOpen(true);
+      setNewUserPassword('');
+    }
+  };
+
+  const confirmChangePassword = async () => {
+    if (!userToChangePassword || !newUserPassword.trim()) {
+      alert('새 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    if (newUserPassword.length < 6) {
+      alert('비밀번호는 최소 6자리 이상이어야 합니다.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userToChangePassword.id,
+          newPassword: newUserPassword.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        setPasswordChangeModalOpen(false);
+        setUserToChangePassword(null);
+        setNewUserPassword('');
+        alert('비밀번호가 변경되었습니다.');
+      } else {
+        const data = await res.json();
+        alert(data.error || '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('오류가 발생했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -332,6 +413,57 @@ export default function AdminPage() {
               >
                 사용자 추가
               </button>
+            </div>
+
+            {/* 사용자 리스트 */}
+            <div className="mt-8 border-t border-blue-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">등록된 사용자 목록</h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {users.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    등록된 사용자가 없습니다
+                  </div>
+                ) : (
+                  users.map((user) => (
+                    <div key={user.id} className="bg-white rounded-lg p-4 border border-blue-100 hover:border-blue-200 transition">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{user.name}</h4>
+                              <p className="text-sm text-gray-500">{user.username}</p>
+                              {user.isAdmin && (
+                                <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                  관리자
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleChangePassword(user.id)}
+                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
+                          >
+                            비밀번호 변경
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
@@ -677,6 +809,110 @@ export default function AdminPage() {
                   >
                     삭제
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 사용자 삭제 확인 모달 */}
+          {userDeleteModalOpen && userToDelete && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">사용자 삭제 확인</h3>
+                <div className="mb-6">
+                  <p className="text-sm text-gray-700 mb-3">
+                    <span className="font-semibold">{userToDelete.name}</span>님을 삭제하시겠습니까?
+                  </p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="text-sm text-red-700">
+                      <div className="font-medium mb-1">⚠️ 주의사항</div>
+                      <ul className="list-disc list-inside text-xs space-y-1">
+                        <li>사용자의 모든 근태 기록이 함께 삭제됩니다.</li>
+                        <li>삭제된 사용자는 복구할 수 없습니다.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-3">
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div><span className="font-medium text-gray-700">이름:</span> {userToDelete.name}</div>
+                      <div><span className="font-medium text-gray-700">사번:</span> {userToDelete.username}</div>
+                      {userToDelete.isAdmin && (
+                        <div><span className="font-medium text-gray-700">권한:</span> 관리자</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setUserDeleteModalOpen(false);
+                      setUserToDelete(null);
+                    }}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={confirmDeleteUser}
+                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 비밀번호 변경 모달 */}
+          {passwordChangeModalOpen && userToChangePassword && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">{userToChangePassword.name} 비밀번호 변경</h3>
+                <div className="mb-6">
+                  <p className="text-sm text-gray-700 mb-4">
+                    <span className="font-semibold">{userToChangePassword.name}</span>님의 비밀번호를 변경합니다.
+                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div className="text-sm text-blue-700">
+                      <div className="font-medium mb-1">비밀번호 요구사항:</div>
+                      <ul className="list-disc list-inside text-xs space-y-1">
+                        <li>최소 6자리 이상</li>
+                        <li>보안을 위해 강력한 비밀번호를 사용하세요</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      새 비밀번호
+                    </label>
+                    <input
+                      type="password"
+                      value={newUserPassword}
+                      onChange={(e) => setNewUserPassword(e.target.value)}
+                      placeholder="새 비밀번호를 입력하세요"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setPasswordChangeModalOpen(false);
+                        setUserToChangePassword(null);
+                        setNewUserPassword('');
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={confirmChangePassword}
+                      className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                    >
+                      변경
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

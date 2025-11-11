@@ -117,15 +117,27 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, annualLeaveTotal, compLeaveTotal } = await request.json();
+    const { userId, annualLeaveTotal, compLeaveTotal, newPassword } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
+    // 비밀번호 변경인 경우
+    if (newPassword) {
+      const hashedPassword = await hashPassword(newPassword);
+      await sql`
+        UPDATE atnd_users
+        SET password = ${hashedPassword}
+        WHERE id = ${userId}
+      `;
+      return NextResponse.json({ success: true, message: '비밀번호가 변경되었습니다.' });
+    }
+
+    // 연차/체휴 설정 변경인 경우
     await sql`
       UPDATE atnd_users
-      SET 
+      SET
         annual_leave_total = ${annualLeaveTotal ?? null},
         comp_leave_total = ${compLeaveTotal ?? null}
       WHERE id = ${userId}
@@ -136,6 +148,36 @@ export async function PUT(request: Request) {
     console.error('Error updating user:', error);
     return NextResponse.json(
       { error: 'Failed to update user' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSession();
+    if (!session || !session.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    }
+
+    // 사용자 삭제 전에 해당 사용자의 근태 기록도 삭제
+    await sql`DELETE FROM atnd_attendance WHERE user_id = ${userId}`;
+
+    // 사용자 삭제
+    await sql`DELETE FROM atnd_users WHERE id = ${userId}`;
+
+    return NextResponse.json({ success: true, message: '사용자가 삭제되었습니다.' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete user' },
       { status: 500 }
     );
   }
