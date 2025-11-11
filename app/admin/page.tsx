@@ -51,9 +51,6 @@ export default function AdminPage() {
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
   const [userDeleteModalOpen, setUserDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState(false);
-  const [userToChangePassword, setUserToChangePassword] = useState<User | null>(null);
-  const [newUserPassword, setNewUserPassword] = useState('');
 
   // Alert 모달 상태
   const [alertModalOpen, setAlertModalOpen] = useState(false);
@@ -92,20 +89,13 @@ export default function AdminPage() {
   };
 
   const loadUsers = async () => {
-    try {
-      const res = await fetch('/api/users');
-      if (res.ok) {
-        const data = await res.json();
-        console.log('Loaded users:', data);
-        setUsers(data);
-        if (data.length > 0 && !selectedUserId) {
-          setSelectedUserId(data[0].id);
-        }
-      } else {
-        console.error('Failed to load users:', res.status, res.statusText);
+    const res = await fetch('/api/users');
+    if (res.ok) {
+      const data = await res.json();
+      setUsers(data);
+      if (data.length > 0 && !selectedUserId) {
+        setSelectedUserId(data[0].id);
       }
-    } catch (error) {
-      console.error('Error loading users:', error);
     }
   };
 
@@ -344,49 +334,27 @@ export default function AdminPage() {
     }
   };
 
-  // 비밀번호 변경 핸들러
+  // 비밀번호 변경 핸들러 (자동 생성)
   const handleChangePassword = async (userId: string) => {
     const user = users.find(u => u.id === userId);
-    if (user) {
-      setUserToChangePassword(user);
-      setPasswordChangeModalOpen(true);
-      setNewUserPassword('');
-    }
-  };
+    if (!user) return;
 
-  const confirmChangePassword = async () => {
-    if (!userToChangePassword || !newUserPassword.trim()) {
-      setAlertTitle('오류');
-      setAlertMessage('새 비밀번호를 입력해주세요.');
-      setAlertType('error');
-      setAlertModalOpen(true);
-      return;
-    }
-
-    if (newUserPassword.length < 6) {
-      setAlertTitle('오류');
-      setAlertMessage('비밀번호는 최소 6자리 이상이어야 합니다.');
-      setAlertType('error');
-      setAlertModalOpen(true);
-      return;
-    }
+    // 4자리 랜덤 숫자 비밀번호 생성
+    const newPassword = generatePassword();
 
     try {
       const res = await fetch('/api/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: userToChangePassword.id,
-          newPassword: newUserPassword.trim(),
+          userId: user.id,
+          newPassword: newPassword,
         }),
       });
 
       if (res.ok) {
-        setPasswordChangeModalOpen(false);
-        setUserToChangePassword(null);
-        setNewUserPassword('');
         setAlertTitle('성공');
-        setAlertMessage('비밀번호가 변경되었습니다.');
+        setAlertMessage(`${user.name}님의 비밀번호가 ${newPassword}로 변경되었습니다.`);
         setAlertType('success');
         setAlertModalOpen(true);
       } else {
@@ -502,13 +470,12 @@ export default function AdminPage() {
             {/* 사용자 리스트 */}
             <div className="mt-8 border-t border-blue-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                등록된 사용자 목록 ({users.length}명)
+                등록된 사용자 목록
               </h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {users.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     등록된 사용자가 없습니다
-                    <div className="text-xs mt-2">users.length: {users.length}</div>
                   </div>
                 ) : (
                   users.map((user) => (
@@ -952,61 +919,6 @@ export default function AdminPage() {
                   >
                     삭제
                   </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 비밀번호 변경 모달 */}
-          {passwordChangeModalOpen && userToChangePassword && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">{userToChangePassword.name} 비밀번호 변경</h3>
-                <div className="mb-6">
-                  <p className="text-sm text-gray-700 mb-4">
-                    <span className="font-semibold">{userToChangePassword.name}</span>님의 비밀번호를 변경합니다.
-                  </p>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <div className="text-sm text-blue-700">
-                      <div className="font-medium mb-1">비밀번호 요구사항:</div>
-                      <ul className="list-disc list-inside text-xs space-y-1">
-                        <li>최소 6자리 이상</li>
-                        <li>보안을 위해 강력한 비밀번호를 사용하세요</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      새 비밀번호
-                    </label>
-                    <input
-                      type="password"
-                      value={newUserPassword}
-                      onChange={(e) => setNewUserPassword(e.target.value)}
-                      placeholder="새 비밀번호를 입력하세요"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                    />
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={() => {
-                        setPasswordChangeModalOpen(false);
-                        setUserToChangePassword(null);
-                        setNewUserPassword('');
-                      }}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
-                    >
-                      취소
-                    </button>
-                    <button
-                      onClick={confirmChangePassword}
-                      className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
-                      변경
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
