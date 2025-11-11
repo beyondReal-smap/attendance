@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS atnd_users (
   password VARCHAR(255) NOT NULL,
   name VARCHAR(100) NOT NULL,
   is_admin TINYINT(1) DEFAULT 0,
+  is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부',
   annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수',
   annual_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 연차 수',
   comp_leave_total INT DEFAULT 0 COMMENT '부여된 체휴 수',

@@ -10,11 +10,12 @@ export async function GET() {
     }
 
     const result = await sql`
-      SELECT 
-        id, 
-        username, 
-        name, 
+      SELECT
+        id,
+        username,
+        name,
         is_admin as "isAdmin",
+        is_temp_password as "isTempPassword",
         annual_leave_total as "annualLeaveTotal",
         annual_leave_used as "annualLeaveUsed",
         comp_leave_total as "compLeaveTotal",
@@ -28,12 +29,13 @@ export async function GET() {
       const annualLeaveUsed = Number(row.annualLeaveUsed) || 0;
       const compLeaveTotal = Number(row.compLeaveTotal) || 0;
       const compLeaveUsed = Number(row.compLeaveUsed) || 0;
-      
+
       return {
         id: row.id.toString(),
         username: row.username,
         name: row.name,
         isAdmin: row.isAdmin === 1,
+        isTempPassword: row.isTempPassword === 1,
         annualLeaveTotal,
         annualLeaveUsed,
         annualLeaveRemaining: annualLeaveTotal - annualLeaveUsed,
@@ -79,17 +81,12 @@ export async function POST(request: Request) {
     const hashedPassword = await hashPassword(password);
 
     // 사용자 추가 (임시 비밀번호로 설정)
+    const isTempPassword = /^\d{4}$/.test(password) ? 1 : 0;
     const result = await sql`
-      INSERT INTO atnd_users (username, name, password, annual_leave_total, comp_leave_total)
-      VALUES (${username}, ${name}, ${hashedPassword}, 15, 0)
+      INSERT INTO atnd_users (username, name, password, is_temp_password, annual_leave_total, comp_leave_total)
+      VALUES (${username}, ${name}, ${hashedPassword}, ${isTempPassword}, 15, 0)
       RETURNING id, username, name
     `;
-
-    // 임시 비밀번호 플래그 설정 (비밀번호가 4자리 숫자인 경우)
-    if (/^\d{4}$/.test(password)) {
-      // is_temp_password 필드가 있다면 업데이트 (현재 스키마에는 없으므로 주석 처리)
-      // await sql`UPDATE atnd_users SET is_temp_password = 1 WHERE id = ${result.rows[0].id}`;
-    }
 
     const newUser = result.rows[0];
 
@@ -128,7 +125,7 @@ export async function PUT(request: Request) {
       const hashedPassword = await hashPassword(newPassword);
       await sql`
         UPDATE atnd_users
-        SET password = ${hashedPassword}
+        SET password = ${hashedPassword}, is_temp_password = 0
         WHERE id = ${userId}
       `;
       return NextResponse.json({ success: true, message: '비밀번호가 변경되었습니다.' });

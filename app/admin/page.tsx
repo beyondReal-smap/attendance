@@ -13,6 +13,7 @@ interface User {
   username: string;
   name: string;
   isAdmin: boolean;
+  isTempPassword: boolean;
   annualLeaveTotal: number;
   annualLeaveUsed: number;
   annualLeaveRemaining: number;
@@ -437,11 +438,18 @@ export default function AdminPage() {
                             <div>
                               <h4 className="font-semibold text-gray-900">{user.name}</h4>
                               <p className="text-sm text-gray-500">{user.username}</p>
-                              {user.isAdmin && (
-                                <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                  관리자
-                                </span>
-                              )}
+                              <div className="flex gap-2 mt-1">
+                                {user.isAdmin && (
+                                  <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
+                                    관리자
+                                  </span>
+                                )}
+                                {user.isTempPassword && (
+                                  <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
+                                    임시비밀번호
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
