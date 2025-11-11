@@ -424,7 +424,7 @@ export default function CalendarPage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-5 py-4">
+        <div className="bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
@@ -434,7 +434,7 @@ export default function CalendarPage() {
               {user?.isAdmin && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all"
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-all"
                 >
                   관리자
                 </button>
