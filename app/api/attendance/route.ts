@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
       SELECT date, type
       FROM attendance
       WHERE user_id = ${session.userId}
-        AND EXTRACT(YEAR FROM date) = ${year}
-        AND EXTRACT(MONTH FROM date) = ${month}
+        AND YEAR(date) = ${year}
+        AND MONTH(date) = ${month}
       ORDER BY date ASC
     `;
 
@@ -61,13 +61,13 @@ export async function POST(request: NextRequest) {
     await sql`
       INSERT INTO attendance (user_id, date, type)
       VALUES (${userId}, ${date}, ${type})
-      ON CONFLICT (user_id, date) DO UPDATE SET type = ${type}
+      ON DUPLICATE KEY UPDATE type = ${type}
     `;
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error creating attendance:', error);
-    if (error.code === '23505') {
+    if (error.code === 'ER_DUP_ENTRY') {
       return NextResponse.json(
         { error: '해당 날짜에 이미 근태가 등록되어 있습니다.' },
         { status: 400 }

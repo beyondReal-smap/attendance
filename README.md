@@ -19,14 +19,24 @@ npm install
 
 ### 2. 환경 변수 설정
 
-`.env.local` 파일을 생성하고 Vercel Postgres 연결 정보를 입력하세요:
+`.env.local` 파일을 생성하고 MariaDB 연결 정보를 입력하세요:
 
 ```
-POSTGRES_URL="your_postgres_url"
-POSTGRES_USER="your_postgres_user"
-POSTGRES_HOST="your_postgres_host"
-POSTGRES_PASSWORD="your_postgres_password"
-POSTGRES_DATABASE="your_postgres_database"
+MYSQL_HOST=your_db_host
+MYSQL_PORT=3306
+MYSQL_USER=your_db_user
+MYSQL_PASSWORD=your_db_password
+MYSQL_DATABASE=your_database_name
+```
+
+또는 기존 `DB_*` 형식도 지원합니다:
+
+```
+DB_HOST=your_db_host
+DB_PORT=3306
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_database_name
 ```
 
 ### 3. 데이터베이스 초기화
@@ -66,7 +76,7 @@ npm run dev
 - Next.js 16
 - TypeScript
 - Tailwind CSS
-- Vercel Postgres
+- MariaDB/MySQL
 - date-fns
 # attendance
 # attendance
