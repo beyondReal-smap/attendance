@@ -6,6 +6,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { FiX, FiCalendar } from 'react-icons/fi';
 import { AttendanceType } from '@/types';
 import { countWorkingDays, getDateRange } from '@/lib/holidays';
+import { getAttendanceTimeInfo } from '@/lib/attendance-utils';
 import { DatePickerCalendar } from './DatePickerCalendar';
 
 interface AttendanceModalProps {
@@ -41,18 +42,37 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
     }
   }, [isOpen]);
 
+  // 근태 유형 변경 시 종료일자 자동 설정
   useEffect(() => {
-    if (startDate && endDate) {
-      const start = dayjs(startDate);
-      const end = dayjs(endDate);
-      if (start.isValid() && end.isValid() && !end.isBefore(start)) {
-        const days = countWorkingDays(start, end);
-        setWorkingDays(days);
-      } else {
-        setWorkingDays(0);
+    if (startDate) {
+      const timeInfo = getAttendanceTimeInfo(type);
+      // 반차나 반반차의 경우 종료일자를 시작일자와 같게 설정
+      if (timeInfo.days < 1 && timeInfo.days > 0) {
+        setEndDate(startDate);
       }
     }
-  }, [startDate, endDate]);
+  }, [type, startDate]);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      const timeInfo = getAttendanceTimeInfo(type);
+
+      // 반차나 반반차의 경우 고정된 일수 사용
+      if (timeInfo.days < 1 && timeInfo.days > 0) {
+        setWorkingDays(timeInfo.days);
+      } else {
+        // 그 외의 경우 기존 로직 사용
+        const start = dayjs(startDate);
+        const end = dayjs(endDate);
+        if (start.isValid() && end.isValid() && !end.isBefore(start)) {
+          const days = countWorkingDays(start, end);
+          setWorkingDays(days);
+        } else {
+          setWorkingDays(0);
+        }
+      }
+    }
+  }, [startDate, endDate, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,9 +86,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
       return;
     }
 
+    const timeInfo = getAttendanceTimeInfo(type);
     const start = dayjs(startDate);
     const end = dayjs(endDate);
-    if (end.isBefore(start)) {
+
+    // 반차나 반반차가 아닌 경우에만 종료일자 검증
+    if (timeInfo.days >= 1 && end.isBefore(start)) {
       alert('종료일자는 시작일자보다 이후여야 합니다.');
       return;
     }
@@ -134,6 +157,29 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* 근태 유형 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    근태 유형
+                  </label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as AttendanceType)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  >
+                    <option value="연차">연차 (1일)</option>
+                    <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
+                    <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
+                    <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
+                    <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
+                    <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
+                    <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
+                    <option value="체휴">체휴 (1일)</option>
+                    <option value="근무">근무</option>
+                    <option value="시차">시차 (시간 직접 입력)</option>
+                  </select>
+                </div>
+
                 {/* 날짜 선택 */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -158,11 +204,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
                     </label>
                     <button
                       type="button"
+                      disabled={getAttendanceTimeInfo(type).days < 1 && getAttendanceTimeInfo(type).days > 0}
                       onClick={() => {
                         setShowEndCalendar(true);
                         setShowStartCalendar(false);
                       }}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      className={`w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900 ${
+                        getAttendanceTimeInfo(type).days < 1 && getAttendanceTimeInfo(type).days > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     >
                       <span>{endDate || '선택하세요'}</span>
                       <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -207,32 +256,13 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave 
                       <span className="text-xs font-medium text-blue-700">근태 일수</span>
                       <span className="text-xl font-bold text-blue-700">{workingDays}일</span>
                     </div>
-                    <p className="text-xs text-blue-600 mt-1">(주말 및 공휴일 제외)</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      {getAttendanceTimeInfo(type).days < 1 && getAttendanceTimeInfo(type).days > 0
+                        ? '(고정 일수)'
+                        : '(주말 및 공휴일 제외)'}
+                    </p>
                   </div>
                 )}
-
-                {/* 근태 유형 */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    근태 유형
-                  </label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value as AttendanceType)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                  >
-                    <option value="연차">연차 (1일)</option>
-                    <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
-                    <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
-                    <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
-                    <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
-                    <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
-                    <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
-                    <option value="체휴">체휴 (1일)</option>
-                    <option value="근무">근무</option>
-                    <option value="시차">시차 (시간 직접 입력)</option>
-                  </select>
-                </div>
 
                 {/* 시차 근태 시간 입력 */}
                 {type === '시차' && (
