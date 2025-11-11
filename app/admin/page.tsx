@@ -233,30 +233,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleResetPassword = async (userId: string) => {
-    if (!confirm('정말로 이 사용자의 비밀번호를 초기화하시겠습니까?\n초기화된 비밀번호는 4자리 숫자로 자동 생성됩니다.')) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        alert(`비밀번호가 성공적으로 초기화되었습니다.\n새 비밀번호: ${data.newPassword}\n\n보안을 위해 사용자에게 새 비밀번호를 알려주세요.`);
-      } else {
-        const data = await res.json();
-        alert(data.error || '비밀번호 초기화에 실패했습니다.');
-      }
-    } catch (error) {
-      alert('오류가 발생했습니다.');
-    }
-  };
-
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
@@ -356,29 +332,6 @@ export default function AdminPage() {
               >
                 사용자 추가
               </button>
-
-              {/* 현재 사용자 목록 */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">현재 사용자 목록</h3>
-                <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {users.map((user) => (
-                    <div key={user.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-gray-900">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.username}</div>
-                        </div>
-                        <button
-                          onClick={() => handleResetPassword(user.id)}
-                          className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
-                        >
-                          비밀번호 초기화
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -406,7 +359,7 @@ export default function AdminPage() {
                         setAnnualLeaveTotal(user.annualLeaveTotal.toString());
                         setCompLeaveTotal(user.compLeaveTotal.toString());
                       }}
-                      className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 transition"
+                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
                     >
                       수정
                     </button>
@@ -480,7 +433,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => handleUpdateUserLeave(editingUser.id)}
-                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                        className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
                       >
                         저장
                       </button>
@@ -510,7 +463,7 @@ export default function AdminPage() {
                   <select
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   >
                     <option value="">선택하세요</option>
                     {users.map((user) => (
@@ -531,7 +484,7 @@ export default function AdminPage() {
                       setShowStartCalendar(true);
                       setShowEndCalendar(false);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
                   >
                     <span>{startDate || '선택하세요'}</span>
                     <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -548,7 +501,7 @@ export default function AdminPage() {
                       setShowEndCalendar(true);
                       setShowStartCalendar(false);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
                   >
                     <span>{endDate || '선택하세요'}</span>
                     <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -563,7 +516,7 @@ export default function AdminPage() {
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value as AttendanceType)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                 >
                   <option value="연차">연차 (1일)</option>
                   <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
@@ -587,7 +540,7 @@ export default function AdminPage() {
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
                   placeholder="근태사유를 입력하세요"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none resize-none text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-gray-900"
                 />
               </div>
 
