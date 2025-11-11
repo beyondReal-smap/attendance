@@ -92,13 +92,20 @@ export default function AdminPage() {
   };
 
   const loadUsers = async () => {
-    const res = await fetch('/api/users');
-    if (res.ok) {
-      const data = await res.json();
-      setUsers(data);
-      if (data.length > 0 && !selectedUserId) {
-        setSelectedUserId(data[0].id);
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Loaded users:', data);
+        setUsers(data);
+        if (data.length > 0 && !selectedUserId) {
+          setSelectedUserId(data[0].id);
+        }
+      } else {
+        console.error('Failed to load users:', res.status, res.statusText);
       }
+    } catch (error) {
+      console.error('Error loading users:', error);
     }
   };
 
@@ -494,11 +501,14 @@ export default function AdminPage() {
 
             {/* 사용자 리스트 */}
             <div className="mt-8 border-t border-blue-200 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">등록된 사용자 목록</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                등록된 사용자 목록 ({users.length}명)
+              </h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {users.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     등록된 사용자가 없습니다
+                    <div className="text-xs mt-2">users.length: {users.length}</div>
                   </div>
                 ) : (
                   users.map((user) => (
