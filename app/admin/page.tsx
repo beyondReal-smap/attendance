@@ -463,7 +463,7 @@ export default function AdminPage() {
                   <select
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900"
                   >
                     <option value="">선택하세요</option>
                     {users.map((user) => (
@@ -484,7 +484,7 @@ export default function AdminPage() {
                       setShowStartCalendar(true);
                       setShowEndCalendar(false);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
                   >
                     <span>{startDate || '선택하세요'}</span>
                     <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -501,7 +501,7 @@ export default function AdminPage() {
                       setShowEndCalendar(true);
                       setShowStartCalendar(false);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
                   >
                     <span>{endDate || '선택하세요'}</span>
                     <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -516,7 +516,7 @@ export default function AdminPage() {
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value as AttendanceType)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900"
                 >
                   <option value="연차">연차 (1일)</option>
                   <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
@@ -540,13 +540,13 @@ export default function AdminPage() {
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
                   placeholder="근태사유를 입력하세요"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none resize-none text-gray-900"
                 />
               </div>
 
               <button
                 onClick={handleAddAttendance}
-                className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                className="w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition"
               >
                 추가
               </button>
