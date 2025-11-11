@@ -179,7 +179,7 @@ const MobileCalendar = memo(({
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-200">
+    <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-200">
       {/* 캘린더 헤더 */}
       <div className="flex items-center justify-between mb-5">
         <motion.button
