@@ -167,7 +167,7 @@ const MobileCalendar = memo(({
             ${!attendanceType ? 'border border-gray-200' : ''}
           `}
         >
-          <span className={`${attendanceType ? 'text-white' : 'text-gray-800'} text-sm`}>
+          <span className={`${attendanceType ? 'text-white' : 'text-black'} text-sm`}>
             {dayIndex + 1}
           </span>
           {attendanceType && (
