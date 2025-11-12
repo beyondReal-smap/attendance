@@ -718,8 +718,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
-                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
+                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
+                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+
+                            // 선택 표시자 중앙의 상대적 위치 계산
+                            const selectorCenter = selectorTop + selectorHeight / 2;
+                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
                             const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
@@ -762,8 +769,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
-                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
+                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
+                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+
+                            // 선택 표시자 중앙의 상대적 위치 계산
+                            const selectorCenter = selectorTop + selectorHeight / 2;
+                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
                             const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
@@ -897,8 +911,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
-                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
+                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
+                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+
+                            // 선택 표시자 중앙의 상대적 위치 계산
+                            const selectorCenter = selectorTop + selectorHeight / 2;
+                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
                             const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
@@ -941,8 +962,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
-                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
+                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
+                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+
+                            // 선택 표시자 중앙의 상대적 위치 계산
+                            const selectorCenter = selectorTop + selectorHeight / 2;
+                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
                             const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
