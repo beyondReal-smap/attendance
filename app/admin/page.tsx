@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { AttendanceType } from '@/types';
 import { DatePickerCalendar } from '@/components/DatePickerCalendar';
 import AlertModal from '@/components/AlertModal';
 import dayjs from 'dayjs';
-import { FiCalendar } from 'react-icons/fi';
+import { FiCalendar, FiDownload } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
 
 interface User {
   id: string;
@@ -58,6 +59,10 @@ export default function AdminPage() {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error' | 'warning'>('info');
 
+  // 근태 목록 필터링 상태
+  const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
+  const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
+
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -105,6 +110,74 @@ export default function AdminPage() {
       const data = await res.json();
       setAttendances(data);
     }
+  };
+
+  // 필터링된 근태 데이터
+  const filteredAttendances = useMemo(() => {
+    return attendances.filter(attendance => {
+      // 월 필터링
+      const attendanceMonth = dayjs(attendance.date).format('YYYY-MM');
+      const monthMatch = attendanceMonth === selectedMonth;
+
+      // 사용자 필터링
+      const userMatch = selectedUserFilter === 'all' || attendance.userName === selectedUserFilter;
+
+      return monthMatch && userMatch;
+    });
+  }, [attendances, selectedMonth, selectedUserFilter]);
+
+  // CSV 다운로드 함수
+  const downloadCSV = () => {
+    if (filteredAttendances.length === 0) {
+      setAlertTitle('오류');
+      setAlertMessage('다운로드할 데이터가 없습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
+      return;
+    }
+
+    const csvData = filteredAttendances.map(attendance => ({
+      '사용자': attendance.userName,
+      '날짜': attendance.date,
+      '유형': attendance.type,
+      '사유': attendance.reason || ''
+    }));
+
+    const headers = ['사용자', '날짜', '유형', '사유'];
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `근태목록_${selectedMonth}_${selectedUserFilter === 'all' ? '전체' : selectedUserFilter}.csv`;
+    link.click();
+  };
+
+  // XLSX 다운로드 함수
+  const downloadXLSX = () => {
+    if (filteredAttendances.length === 0) {
+      setAlertTitle('오류');
+      setAlertMessage('다운로드할 데이터가 없습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
+      return;
+    }
+
+    const worksheetData = filteredAttendances.map(attendance => ({
+      '사용자': attendance.userName,
+      '날짜': attendance.date,
+      '유형': attendance.type,
+      '사유': attendance.reason || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '근태목록');
+
+    XLSX.writeFile(workbook, `근태목록_${selectedMonth}_${selectedUserFilter === 'all' ? '전체' : selectedUserFilter}.xlsx`);
   };
 
   const handleAddAttendance = async () => {
@@ -773,13 +846,68 @@ export default function AdminPage() {
 
           {/* Attendance List */}
           <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
               </div>
-              <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={downloadCSV}
+                  className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
+                >
+                  <FiDownload className="w-4 h-4" />
+                  CSV
+                </button>
+                <button
+                  onClick={downloadXLSX}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                >
+                  <FiDownload className="w-4 h-4" />
+                  XLSX
+                </button>
+              </div>
+            </div>
+
+            {/* 필터링 컨트롤 */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    월 선택
+                  </label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    사용자 필터
+                  </label>
+                  <select
+                    value={selectedUserFilter}
+                    onChange={(e) => setSelectedUserFilter(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                  >
+                    <option value="all">전체 사용자</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.name}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="mt-3 text-sm text-gray-600">
+                총 {filteredAttendances.length}개의 근태 기록이 필터링되었습니다.
+              </div>
             </div>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
@@ -794,14 +922,14 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {attendances.length === 0 ? (
+                    {filteredAttendances.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
-                          등록된 근태가 없습니다
+                          필터링된 근태 기록이 없습니다
                         </td>
                       </tr>
                     ) : (
-                      attendances.map((attendance) => (
+                      filteredAttendances.map((attendance) => (
                         <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
                           <td className="px-4 py-3 text-sm text-gray-900">{attendance.userName}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{attendance.date}</td>
