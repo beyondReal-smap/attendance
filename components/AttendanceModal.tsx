@@ -726,11 +726,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const containerHeight = 160; // h-40 = 160px
-                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
 
-                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
-                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
+                            // 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectorCenter = selectorTop + 16; // 선택 표시자 중앙 (top-16 + h-8/2)
+                            const relativeCenter = selectorCenter - 64 + scrollTop; // py-16 보정 (64px)
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
 
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
@@ -742,10 +743,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             {Array.from({ length: 24 }, (_, i) => (
                               <div
                                 key={i}
-                                className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                onClick={() => {
+                                  const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                                  setStartTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                                }}
+                                className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
                                   parseInt(startTime ? startTime.split(':')[0] : '9') === i
-                                    ? 'text-blue-600 font-bold'
-                                    : 'text-gray-700'
+                                    ? 'text-blue-600 font-bold bg-blue-50'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                                 style={{ scrollSnapAlign: 'center' }}
                               >
@@ -774,11 +779,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const containerHeight = 160; // h-40 = 160px
-                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
 
-                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
-                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
+                            // 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectorCenter = selectorTop + 16; // 선택 표시자 중앙 (top-16 + h-8/2)
+                            const relativeCenter = selectorCenter - 64 + scrollTop; // py-16 보정 (64px)
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
 
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
@@ -792,10 +798,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                               return (
                                 <div
                                   key={i}
-                                  className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                  onClick={() => {
+                                    const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                                    setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                                  }}
+                                  className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
                                     parseInt(startTime ? startTime.split(':')[1] : '0') === minute
-                                      ? 'text-blue-600 font-bold'
-                                      : 'text-gray-700'
+                                      ? 'text-blue-600 font-bold bg-blue-50'
+                                      : 'text-gray-700 hover:bg-gray-100'
                                   }`}
                                   style={{ scrollSnapAlign: 'center' }}
                                 >
@@ -913,11 +923,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const containerHeight = 160; // h-40 = 160px
-                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
 
-                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
-                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
+                            // 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectorCenter = selectorTop + 16; // 선택 표시자 중앙 (top-16 + h-8/2)
+                            const relativeCenter = selectorCenter - 64 + scrollTop; // py-16 보정 (64px)
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
 
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
@@ -929,10 +940,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             {Array.from({ length: 24 }, (_, i) => (
                               <div
                                 key={i}
-                                className={`h-8 flex items-center justify-center text-sm font-medium ${
-                                  parseInt(endTime ? endTime.split(':')[0] : '17') === i
-                                    ? 'text-blue-600 font-bold'
-                                    : 'text-gray-700'
+                                onClick={() => {
+                                  const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                                  setEndTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                                }}
+                                className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
+                                  parseInt(endTime ? endTime.split(':')[0] : '18') === i
+                                    ? 'text-blue-600 font-bold bg-blue-50'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                                 style={{ scrollSnapAlign: 'center' }}
                               >
@@ -961,11 +976,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const containerHeight = 160; // h-40 = 160px
-                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
+                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
 
-                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
-                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
+                            // 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectorCenter = selectorTop + 16; // 선택 표시자 중앙 (top-16 + h-8/2)
+                            const relativeCenter = selectorCenter - 64 + scrollTop; // py-16 보정 (64px)
+                            const selectedIndex = Math.round(relativeCenter / itemHeight);
 
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
