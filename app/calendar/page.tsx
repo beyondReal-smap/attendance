@@ -523,38 +523,38 @@ export default function CalendarPage() {
               {/* 왼쪽 열 */}
               <div className="space-y-3">
                 {/* 연차 */}
-                <div className="flex items-center gap-3 p-3 bg-blue-600 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-xl">✈️</span>
                   <div>
-                    <div className="font-semibold text-sm">연차</div>
-                    <div className="text-xs opacity-90">1일</div>
+                    <div className="font-semibold text-blue-900 text-sm">연차</div>
+                    <div className="text-xs text-blue-600">1일</div>
                   </div>
                 </div>
 
                 {/* 오전반차 */}
-                <div className="flex items-center gap-3 p-3 bg-blue-400 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-sky-50 rounded-lg border border-sky-200">
                   <span className="text-xl">🌅</span>
                   <div>
-                    <div className="font-semibold text-sm">오전반차</div>
-                    <div className="text-xs opacity-90">0.5일</div>
+                    <div className="font-semibold text-sky-900 text-sm">오전반차</div>
+                    <div className="text-xs text-sky-600">0.5일</div>
                   </div>
                 </div>
 
                 {/* 오후반차 */}
-                <div className="flex items-center gap-3 p-3 bg-blue-400 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg border border-cyan-200">
                   <span className="text-xl">🌆</span>
                   <div>
-                    <div className="font-semibold text-sm">오후반차</div>
-                    <div className="text-xs opacity-90">0.5일</div>
+                    <div className="font-semibold text-cyan-900 text-sm">오후반차</div>
+                    <div className="text-xs text-cyan-600">0.5일</div>
                   </div>
                 </div>
 
                 {/* 반반차 */}
-                <div className="flex items-center gap-3 p-3 bg-blue-300 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                   <span className="text-lg">🌄☀️🌤️🌙</span>
                   <div>
-                    <div className="font-semibold text-sm">반반차</div>
-                    <div className="text-xs opacity-90">0.25일</div>
+                    <div className="font-semibold text-indigo-900 text-sm">반반차</div>
+                    <div className="text-xs text-indigo-600">0.25일</div>
                   </div>
                 </div>
               </div>
@@ -562,29 +562,29 @@ export default function CalendarPage() {
               {/* 오른쪽 열 */}
               <div className="space-y-3">
                 {/* 체휴 */}
-                <div className="flex items-center gap-3 p-3 bg-emerald-600 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                   <span className="text-xl">🏠</span>
                   <div>
-                    <div className="font-semibold text-sm">체휴</div>
-                    <div className="text-xs opacity-90">1일</div>
+                    <div className="font-semibold text-emerald-900 text-sm">체휴</div>
+                    <div className="text-xs text-emerald-600">1일</div>
                   </div>
                 </div>
 
                 {/* 근무 */}
-                <div className="flex items-center gap-3 p-3 bg-gray-700 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <span className="text-xl">💼</span>
                   <div>
-                    <div className="font-semibold text-sm">근무</div>
-                    <div className="text-xs opacity-90">정상</div>
+                    <div className="font-semibold text-slate-900 text-sm">근무</div>
+                    <div className="text-xs text-slate-600">정상</div>
                   </div>
                 </div>
 
                 {/* 시차 */}
-                <div className="flex items-center gap-3 p-3 bg-amber-600 text-white rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
                   <span className="text-xl">⏰</span>
                   <div>
-                    <div className="font-semibold text-sm">시차</div>
-                    <div className="text-xs opacity-90">직접입력</div>
+                    <div className="font-semibold text-amber-900 text-sm">시차</div>
+                    <div className="text-xs text-amber-600">직접입력</div>
                   </div>
                 </div>
               </div>
