@@ -589,7 +589,7 @@ export default function AdminPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleChangePassword(user.id)}
-                            className="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
+                            className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
                           >
                             비밀번호 변경
                           </button>
@@ -967,10 +967,10 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
                               attendance.type === '연차' ? 'bg-red-100 text-red-700' :
-                              (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-yellow-100 text-yellow-700' :
-                              (attendance.type.includes('반반차')) ? 'bg-blue-100 text-blue-700' :
-                              attendance.type === '체휴' ? 'bg-green-100 text-green-700' :
-                              attendance.type === '근무' ? 'bg-indigo-100 text-indigo-700' :
+                              (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
+                              (attendance.type.includes('반반차')) ? 'bg-gray-100 text-gray-700' :
+                              attendance.type === '체휴' ? 'bg-yellow-100 text-yellow-700' :
+                              attendance.type === '근무' ? 'bg-blue-100 text-blue-700' :
                               attendance.type === '시차' ? 'bg-purple-100 text-purple-700' :
                               'bg-purple-100 text-purple-700'
                             }`}>
@@ -1159,7 +1159,7 @@ export default function AdminPage() {
                             }}
                             className={`p-3 text-sm font-medium rounded-lg transition ${
                               isSelected
-                                ? 'bg-purple-500 text-white'
+                                ? 'bg-green-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
@@ -1217,7 +1217,7 @@ export default function AdminPage() {
                           }}
                           className={`w-full p-3 text-left rounded-lg transition ${
                             selectedUserId === user.id
-                              ? 'bg-purple-500 text-white'
+                              ? 'bg-green-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
@@ -1317,8 +1317,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반차'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1338,8 +1338,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반차'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1362,8 +1362,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반반차A'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1383,8 +1383,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반반차B'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1406,8 +1406,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반반차A'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1427,8 +1427,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반반차B'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1449,8 +1449,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '체휴'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
+                            ? 'bg-yellow-500 text-white'
+                            : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1470,8 +1470,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '근무'
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1566,7 +1566,7 @@ export default function AdminPage() {
                       }}
                       className={`w-full p-3 text-left rounded-lg transition ${
                         selectedUserFilter === 'all'
-                          ? 'bg-purple-500 text-white'
+                          ? 'bg-green-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
@@ -1597,7 +1597,7 @@ export default function AdminPage() {
                           }}
                           className={`w-full p-3 text-left rounded-lg transition ${
                             selectedUserFilter === user.name
-                              ? 'bg-purple-500 text-white'
+                              ? 'bg-green-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
