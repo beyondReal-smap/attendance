@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import { FiX, FiCalendar } from 'react-icons/fi';
@@ -38,13 +38,60 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
+  // 시간 선택 피커 스크롤 위치 관리
+  const startTimeHourRef = useRef<HTMLDivElement>(null);
+  const startTimeMinuteRef = useRef<HTMLDivElement>(null);
+  const endTimeHourRef = useRef<HTMLDivElement>(null);
+  const endTimeMinuteRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isOpen && selectedDate) {
       const dateStr = selectedDate.format('YYYY-MM-DD');
       setStartDate(dateStr);
       setEndDate(dateStr);
+      // 시차 시간 초기화
+      setStartTime('09:00');
+      setEndTime('17:00');
     }
   }, [isOpen]);
+
+  // 시작시간 모달이 열릴 때 선택된 시간을 중앙에 위치시키기
+  useEffect(() => {
+    if (showStartTimeModal && startTimeHourRef.current && startTimeMinuteRef.current) {
+      const hour = parseInt(startTime.split(':')[0]);
+      const minute = parseInt(startTime.split(':')[1]);
+      const minuteIndex = minute / 5;
+
+      // 시간 스크롤 위치 설정 (선택된 시간이 중앙에 오도록)
+      setTimeout(() => {
+        if (startTimeHourRef.current) {
+          startTimeHourRef.current.scrollTop = hour * 40 - 80; // 중앙으로 위치 조정
+        }
+        if (startTimeMinuteRef.current) {
+          startTimeMinuteRef.current.scrollTop = minuteIndex * 40 - 80; // 중앙으로 위치 조정
+        }
+      }, 100);
+    }
+  }, [showStartTimeModal, startTime]);
+
+  // 종료시간 모달이 열릴 때 선택된 시간을 중앙에 위치시키기
+  useEffect(() => {
+    if (showEndTimeModal && endTimeHourRef.current && endTimeMinuteRef.current) {
+      const hour = parseInt(endTime.split(':')[0]);
+      const minute = parseInt(endTime.split(':')[1]);
+      const minuteIndex = minute / 5;
+
+      // 시간 스크롤 위치 설정 (선택된 시간이 중앙에 오도록)
+      setTimeout(() => {
+        if (endTimeHourRef.current) {
+          endTimeHourRef.current.scrollTop = hour * 40 - 80; // 중앙으로 위치 조정
+        }
+        if (endTimeMinuteRef.current) {
+          endTimeMinuteRef.current.scrollTop = minuteIndex * 40 - 80; // 중앙으로 위치 조정
+        }
+      }, 100);
+    }
+  }, [showEndTimeModal, endTime]);
 
   // 근태 유형 변경 시 종료일자 자동 설정
   useEffect(() => {
@@ -664,6 +711,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div
+                          ref={startTimeHourRef}
                           className="h-full overflow-y-auto scrollbar-hide"
                           onScroll={(e) => {
                             const scrollTop = e.currentTarget.scrollTop;
@@ -673,11 +721,16 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           }}
                         >
                           <div className="py-20">
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <div key={i} className="h-10 flex items-center justify-center text-sm font-medium text-gray-700">
-                                {i.toString().padStart(2, '0')}
-                              </div>
-                            ))}
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const isSelected = parseInt(startTime ? startTime.split(':')[0] : '9') === i;
+                              return (
+                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
+                                }`}>
+                                  {i.toString().padStart(2, '0')}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -693,6 +746,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div
+                          ref={startTimeMinuteRef}
                           className="h-full overflow-y-auto scrollbar-hide"
                           onScroll={(e) => {
                             const scrollTop = e.currentTarget.scrollTop;
@@ -704,8 +758,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="py-20">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
+                              const isSelected = parseInt(startTime ? startTime.split(':')[1] : '0') === minute;
                               return (
-                                <div key={i} className="h-10 flex items-center justify-center text-sm font-medium text-gray-700">
+                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
+                                }`}>
                                   {minute.toString().padStart(2, '0')}
                                 </div>
                               );
@@ -813,6 +870,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div
+                          ref={endTimeHourRef}
                           className="h-full overflow-y-auto scrollbar-hide"
                           onScroll={(e) => {
                             const scrollTop = e.currentTarget.scrollTop;
@@ -822,11 +880,16 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           }}
                         >
                           <div className="py-20">
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <div key={i} className="h-10 flex items-center justify-center text-sm font-medium text-gray-700">
-                                {i.toString().padStart(2, '0')}
-                              </div>
-                            ))}
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const isSelected = parseInt(endTime ? endTime.split(':')[0] : '17') === i;
+                              return (
+                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
+                                }`}>
+                                  {i.toString().padStart(2, '0')}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -842,6 +905,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div
+                          ref={endTimeMinuteRef}
                           className="h-full overflow-y-auto scrollbar-hide"
                           onScroll={(e) => {
                             const scrollTop = e.currentTarget.scrollTop;
@@ -853,8 +917,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           <div className="py-20">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
+                              const isSelected = parseInt(endTime ? endTime.split(':')[1] : '0') === minute;
                               return (
-                                <div key={i} className="h-10 flex items-center justify-center text-sm font-medium text-gray-700">
+                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
+                                }`}>
                                   {minute.toString().padStart(2, '0')}
                                 </div>
                               );
