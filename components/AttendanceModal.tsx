@@ -702,13 +702,13 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
                 {/* 시간 선택 피커 */}
                 <div className="mb-8">
-                  <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-4">
                     {/* 시간 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
+                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
                         </div>
                         <div
                           className="start-time-hour-container h-full overflow-y-auto scrollbar-hide"
@@ -720,20 +720,22 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
-                            setTimeout(() => {
-                              const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                              setStartTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                            }, 100);
+                            const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                            setStartTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
                           }}
                         >
                           <div className="py-16">
                             {Array.from({ length: 24 }, (_, i) => (
                               <div
                                 key={i}
-                                className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                  parseInt(startTime ? startTime.split(':')[0] : '9') === i
+                                    ? 'text-blue-600 font-bold'
+                                    : 'text-gray-700'
+                                }`}
                                 style={{ scrollSnapAlign: 'center' }}
                               >
                                 {i.toString().padStart(2, '0')}
@@ -744,14 +746,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       </div>
                     </div>
 
-                    <div className="text-xl font-bold text-gray-400">:</div>
+                    <div className="text-2xl font-bold text-gray-400">:</div>
 
                     {/* 분 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
+                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
                         </div>
                         <div
                           className="start-time-minute-container h-full overflow-y-auto scrollbar-hide"
@@ -763,13 +765,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
-                            setTimeout(() => {
-                              const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                              setStartTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                            }, 100);
+                            const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                            setStartTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
                           }}
                         >
                           <div className="py-16">
@@ -778,7 +778,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                               return (
                                 <div
                                   key={i}
-                                  className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                  className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                    parseInt(startTime ? startTime.split(':')[1] : '0') === minute
+                                      ? 'text-blue-600 font-bold'
+                                      : 'text-gray-700'
+                                  }`}
                                   style={{ scrollSnapAlign: 'center' }}
                                 >
                                   {minute.toString().padStart(2, '0')}
@@ -879,13 +883,13 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
                 {/* 시간 선택 피커 */}
                 <div className="mb-8">
-                  <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-4">
                     {/* 시간 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
+                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
                         </div>
                         <div
                           className="end-time-hour-container h-full overflow-y-auto scrollbar-hide"
@@ -897,20 +901,22 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
-                            setTimeout(() => {
-                              const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                              setEndTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                            }, 100);
+                            const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                            setEndTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
                           }}
                         >
                           <div className="py-16">
                             {Array.from({ length: 24 }, (_, i) => (
                               <div
                                 key={i}
-                                className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                  parseInt(endTime ? endTime.split(':')[0] : '17') === i
+                                    ? 'text-blue-600 font-bold'
+                                    : 'text-gray-700'
+                                }`}
                                 style={{ scrollSnapAlign: 'center' }}
                               >
                                 {i.toString().padStart(2, '0')}
@@ -921,14 +927,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       </div>
                     </div>
 
-                    <div className="text-xl font-bold text-gray-400">:</div>
+                    <div className="text-2xl font-bold text-gray-400">:</div>
 
                     {/* 분 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
+                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
                         </div>
                         <div
                           className="end-time-minute-container h-full overflow-y-auto scrollbar-hide"
@@ -940,13 +946,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
-                            setTimeout(() => {
-                              const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
-                              setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                            }, 100);
+                            const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                            setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
                           }}
                         >
                           <div className="py-16">
@@ -955,7 +959,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                               return (
                                 <div
                                   key={i}
-                                  className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                  className={`h-8 flex items-center justify-center text-sm font-medium ${
+                                    parseInt(endTime ? endTime.split(':')[1] : '0') === minute
+                                      ? 'text-blue-600 font-bold'
+                                      : 'text-gray-700'
+                                  }`}
                                   style={{ scrollSnapAlign: 'center' }}
                                 >
                                   {minute.toString().padStart(2, '0')}
