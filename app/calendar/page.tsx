@@ -514,72 +514,83 @@ export default function CalendarPage() {
             onMonthChange={handleMonthChange}
           />
 
-          {/* 해당 달의 근태 리스트 */}
+          {/* 근태 유형 범례 */}
           <div className="mt-6 pt-6 border-t border-gray-200 bg-gray-50/50 rounded-lg p-4 -mx-5">
-            <h3 className="text-lg font-black text-gray-900 mb-3">
-              {currentMonth.format('M월')} 근태 내역
+            <h3 className="text-lg font-black text-gray-900 mb-4">
+              근태 유형 범례
             </h3>
-            <div className="max-h-[280px] overflow-y-auto scrollbar-hide">
-              {attendances.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm">
-                  등록된 근태가 없습니다
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {/* 연차 */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span className="text-2xl">✈️</span>
+                <div>
+                  <div className="font-semibold text-blue-900 text-sm">연차</div>
+                  <div className="text-xs text-blue-600">1일</div>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {attendances.map((attendance) => {
-                    const getColor = () => {
-                      switch (attendance.type) {
-                        case '연차': return 'bg-blue-600 border-blue-600';
-                        case '오전반차':
-                        case '오후반차': return 'bg-blue-400 border-blue-400';
-                        case '오전반반차A':
-                        case '오전반반차B':
-                        case '오후반반차A':
-                        case '오후반반차B': return 'bg-blue-300 border-blue-300';
-                        case '체휴': return 'bg-emerald-600 border-emerald-600';
-                        case '근무': return 'bg-gray-700 border-gray-700';
-                        case '시차': return 'bg-amber-600 border-amber-600';
-                      }
-                    };
-                    const getIcon = () => {
-                      switch (attendance.type) {
-                        case '연차': return '✈️';
-                        case '오전반차': return '🌅';
-                        case '오후반차': return '🌆';
-                        case '오전반반차A': return '🌄';
-                        case '오전반반차B': return '☀️';
-                        case '오후반반차A': return '🌤️';
-                        case '오후반반차B': return '🌙';
-                        case '체휴': return '🏠';
-                        case '근무': return '💼';
-                        case '시차': return '⏰';
-                      }
-                    };
-                    const date = dayjs(attendance.date);
-                    return (
-                      <div
-                        key={attendance.date}
-                        className={`flex items-center justify-between p-3 rounded-lg ${getColor()} text-white border`}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="font-semibold text-base min-w-[70px]">
-                            {date.format('M/D')}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getIcon()}</span>
-                            <span className="font-semibold text-base">{attendance.type}</span>
-                          </div>
-                        </div>
-                        {attendance.reason && (
-                          <div className="text-sm opacity-90 max-w-[45%] truncate ml-2" title={attendance.reason}>
-                            {attendance.reason}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              </div>
+
+              {/* 오전반차 */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span className="text-2xl">🌅</span>
+                <div>
+                  <div className="font-semibold text-blue-900 text-sm">오전반차</div>
+                  <div className="text-xs text-blue-600">0.5일 (09:00-14:00)</div>
                 </div>
-              )}
+              </div>
+
+              {/* 오후반차 */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span className="text-2xl">🌆</span>
+                <div>
+                  <div className="font-semibold text-blue-900 text-sm">오후반차</div>
+                  <div className="text-xs text-blue-600">0.5일 (14:00-18:00)</div>
+                </div>
+              </div>
+
+              {/* 오전반반차 */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span className="text-xl">🌄 ☀️</span>
+                <div>
+                  <div className="font-semibold text-blue-900 text-sm">오전반반차</div>
+                  <div className="text-xs text-blue-600">0.25일 (A:09-11, B:11-14)</div>
+                </div>
+              </div>
+
+              {/* 오후반반차 */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span className="text-xl">🌤️ 🌙</span>
+                <div>
+                  <div className="font-semibold text-blue-900 text-sm">오후반반차</div>
+                  <div className="text-xs text-blue-600">0.25일 (A:14-16, B:16-18)</div>
+                </div>
+              </div>
+
+              {/* 체휴 */}
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                <span className="text-2xl">🏠</span>
+                <div>
+                  <div className="font-semibold text-emerald-900 text-sm">체휴</div>
+                  <div className="text-xs text-emerald-600">1일</div>
+                </div>
+              </div>
+
+              {/* 근무 */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-2xl">💼</span>
+                <div>
+                  <div className="font-semibold text-gray-900 text-sm">근무</div>
+                  <div className="text-xs text-gray-600">정상 근무</div>
+                </div>
+              </div>
+
+              {/* 시차 */}
+              <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                <span className="text-2xl">⏰</span>
+                <div>
+                  <div className="font-semibold text-amber-900 text-sm">시차</div>
+                  <div className="text-xs text-amber-600">시간 직접 입력</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
