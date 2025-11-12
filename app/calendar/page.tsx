@@ -449,7 +449,7 @@ export default function CalendarPage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
         {/* Header */}
-        <div className="bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
+        <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-xl font-black text-gray-900">{user?.name}</h1>
