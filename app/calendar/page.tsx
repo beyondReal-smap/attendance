@@ -16,6 +16,8 @@ interface Attendance {
   date: string;
   type: AttendanceType;
   reason?: string | null;
+  startTime?: string;
+  endTime?: string;
 }
 
 const MobileCalendar = memo(({ 
@@ -471,7 +473,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-1">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
@@ -556,9 +558,14 @@ export default function CalendarPage() {
                           return attendanceMonth === currentMonth.format('YYYY-MM') && a.type === '시차';
                         })
                         .reduce((total, a) => {
-                          // 시차 근태의 경우 startTime과 endTime을 이용해 근무 시간 계산
-                          // 간단하게 시차 근태 수 * 8시간으로 계산
-                          return total + 8;
+                          // 시차 근태의 경우 startTime과 endTime을 이용해 실제 근무 시간 계산
+                          if (a.startTime && a.endTime) {
+                            const start = dayjs(`2000-01-01 ${a.startTime}`);
+                            const end = dayjs(`2000-01-01 ${a.endTime}`);
+                            const hours = end.diff(start, 'hour', true); // 소수점 포함 시간 계산
+                            return total + hours;
+                          }
+                          return total + 8; // startTime/endTime이 없는 경우 기본값
                         }, 0)}시간
                     </span>
                   </div>
@@ -582,7 +589,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 근태 유형 범례 */}
-        <div className="mt-4 p-5 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-8">
+        <div className="mt-4 p-5 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-4">
             <h3 className="text-lg font-black text-gray-900 mb-4">
               근태 유형 범례
             </h3>
