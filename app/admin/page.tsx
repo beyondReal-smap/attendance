@@ -66,6 +66,10 @@ export default function AdminPage() {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
 
+  // 근태 추가 모달 상태
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showTypeModal, setShowTypeModal] = useState(false);
+
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -729,46 +733,56 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사용자
                   </label>
-                  <select
-                    value={selectedUserId}
-                    onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  <button
+                    type="button"
+                    onClick={() => setShowUserModal(true)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
-                    <option value="">선택하세요</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} ({user.username})
-                      </option>
-                    ))}
-                  </select>
+                    <span>
+                      {selectedUserId
+                        ? users.find(u => u.id === selectedUserId)?.name + ' (' + users.find(u => u.id === selectedUserId)?.username + ')'
+                        : '선택하세요'
+                      }
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     근태 유형
                   </label>
-                  <select
-                    value={selectedType}
-                    onChange={(e) => {
-                      setSelectedType(e.target.value as AttendanceType);
-                      // 반차나 반반차 선택시 종료일자 초기화
-                      if (['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(e.target.value)) {
-                        setEndDate(startDate);
-                      }
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  <button
+                    type="button"
+                    onClick={() => setShowTypeModal(true)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
-                    <option value="연차">연차 (1일)</option>
-                    <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
-                    <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
-                    <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
-                    <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
-                    <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
-                    <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
-                    <option value="체휴">체휴 (1일)</option>
-                    <option value="근무">근무</option>
-                    <option value="시차">시차 (시간 직접 입력)</option>
-                  </select>
+                    <span>
+                      {selectedType
+                        ? (() => {
+                            const labels: Record<string, string> = {
+                              '연차': '연차 (1일)',
+                              '오전반차': '오전반차 (0.5일)',
+                              '오후반차': '오후반차 (0.5일)',
+                              '오전반반차A': '오전반반차A (0.25일)',
+                              '오전반반차B': '오전반반차B (0.25일)',
+                              '오후반반차A': '오후반반차A (0.25일)',
+                              '오후반반차B': '오후반반차B (0.25일)',
+                              '체휴': '체휴 (1일)',
+                              '근무': '근무',
+                              '시차': '시차 (시간 직접 입력)'
+                            };
+                            return labels[selectedType] || selectedType;
+                          })()
+                        : '선택하세요'
+                      }
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
@@ -799,8 +813,8 @@ export default function AdminPage() {
                     onClick={() => {
                       // 반차나 반반차는 종료일자 선택 불가
                       if (!['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)) {
-                        setShowEndCalendar(true);
-                        setShowStartCalendar(false);
+                      setShowEndCalendar(true);
+                      setShowStartCalendar(false);
                       }
                     }}
                     disabled={['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)}
@@ -867,12 +881,12 @@ export default function AdminPage() {
           <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
               </div>
               <div className="flex gap-2">
                 <button
@@ -1043,8 +1057,8 @@ export default function AdminPage() {
                         <li>사용자의 모든 근태 기록이 함께 삭제됩니다.</li>
                         <li>삭제된 사용자는 복구할 수 없습니다.</li>
                       </ul>
-                    </div>
-                  </div>
+        </div>
+      </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-3">
                     <div className="text-sm text-gray-600 space-y-1">
                       <div><span className="font-medium text-gray-700">이름:</span> {userToDelete.name}</div>
@@ -1052,7 +1066,7 @@ export default function AdminPage() {
                       {userToDelete.isAdmin && (
                         <div><span className="font-medium text-gray-700">권한:</span> 관리자</div>
                       )}
-                    </div>
+    </div>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -1164,6 +1178,360 @@ export default function AdminPage() {
                   <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 월: {dayjs(selectedMonth).format('YYYY년 M월')}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 근태 추가 - 사용자 선택 모달 */}
+          {showUserModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">사용자 선택</h3>
+                    <button
+                      onClick={() => setShowUserModal(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      근태를 추가할 사용자를 선택하세요
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {users.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => {
+                            setSelectedUserId(user.id);
+                            setShowUserModal(false);
+                          }}
+                          className={`w-full p-3 text-left rounded-lg transition ${
+                            selectedUserId === user.id
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
+                              {user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-medium">{user.name}</div>
+                              <div className="text-xs opacity-75">{user.username}</div>
+                            </div>
+                            {user.isAdmin && (
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                selectedUserId === user.id
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                관리자
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 현재 선택 표시 */}
+                  <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-sm font-medium text-blue-700">
+                      선택된 사용자: {
+                        selectedUserId
+                          ? users.find(u => u.id === selectedUserId)?.name || '알 수 없음'
+                          : '없음'
+                      }
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 근태 추가 - 유형 선택 모달 */}
+          {showTypeModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">근태 유형 선택</h3>
+                    <button
+                      onClick={() => setShowTypeModal(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      근태 유형을 선택하세요
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {/* 연차 */}
+                      <button
+                        onClick={() => {
+                          setSelectedType('연차');
+                          setShowTypeModal(false);
+                        }}
+                        className={`w-full p-3 text-left rounded-lg transition ${
+                          selectedType === '연차'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">✈️</span>
+                          <div>
+                            <div className="font-medium">연차</div>
+                            <div className="text-xs opacity-75">1일</div>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* 반차 */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('오전반차');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오전반차'
+                              ? 'bg-sky-500 text-white'
+                              : 'bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🌅</span>
+                            <div>
+                              <div className="font-medium text-sm">오전반차</div>
+                              <div className="text-xs opacity-75">0.5일</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('오후반차');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오후반차'
+                              ? 'bg-cyan-500 text-white'
+                              : 'bg-cyan-50 text-cyan-900 border border-cyan-200 hover:bg-cyan-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🌆</span>
+                            <div>
+                              <div className="font-medium text-sm">오후반차</div>
+                              <div className="text-xs opacity-75">0.5일</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* 반반차 */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('오전반반차A');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오전반반차A'
+                              ? 'bg-indigo-500 text-white'
+                              : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🌄</span>
+                            <div>
+                              <div className="font-medium text-sm">오전반반차A</div>
+                              <div className="text-xs opacity-75">0.25일</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('오전반반차B');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오전반반차B'
+                              ? 'bg-indigo-500 text-white'
+                              : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">☀️</span>
+                            <div>
+                              <div className="font-medium text-sm">오전반반차B</div>
+                              <div className="text-xs opacity-75">0.25일</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('오후반반차A');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오후반반차A'
+                              ? 'bg-violet-500 text-white'
+                              : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🌤️</span>
+                            <div>
+                              <div className="font-medium text-sm">오후반반차A</div>
+                              <div className="text-xs opacity-75">0.25일</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('오후반반차B');
+                            setEndDate(startDate);
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-3 text-left rounded-lg transition ${
+                            selectedType === '오후반반차B'
+                              ? 'bg-violet-500 text-white'
+                              : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🌙</span>
+                            <div>
+                              <div className="font-medium text-sm">오후반반차B</div>
+                              <div className="text-xs opacity-75">0.25일</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* 체휴 */}
+                      <button
+                        onClick={() => {
+                          setSelectedType('체휴');
+                          setShowTypeModal(false);
+                        }}
+                        className={`w-full p-3 text-left rounded-lg transition ${
+                          selectedType === '체휴'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">🏠</span>
+                          <div>
+                            <div className="font-medium">체휴</div>
+                            <div className="text-xs opacity-75">1일</div>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* 근무 */}
+                      <button
+                        onClick={() => {
+                          setSelectedType('근무');
+                          setShowTypeModal(false);
+                        }}
+                        className={`w-full p-3 text-left rounded-lg transition ${
+                          selectedType === '근무'
+                            ? 'bg-slate-500 text-white'
+                            : 'bg-slate-50 text-slate-900 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">💼</span>
+                          <div>
+                            <div className="font-medium">근무</div>
+                            <div className="text-xs opacity-75">정상 근무</div>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* 시차 */}
+                      <button
+                        onClick={() => {
+                          setSelectedType('시차');
+                          setShowTypeModal(false);
+                        }}
+                        className={`w-full p-3 text-left rounded-lg transition ${
+                          selectedType === '시차'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">⏰</span>
+                          <div>
+                            <div className="font-medium">시차</div>
+                            <div className="text-xs opacity-75">시간 직접 입력</div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 현재 선택 표시 */}
+                  <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="text-sm font-medium text-purple-700">
+                      선택된 유형: {
+                        selectedType
+                          ? (() => {
+                              const labels: Record<string, string> = {
+                                '연차': '연차 (1일)',
+                                '오전반차': '오전반차 (0.5일)',
+                                '오후반차': '오후반차 (0.5일)',
+                                '오전반반차A': '오전반반차A (0.25일)',
+                                '오전반반차B': '오전반반차B (0.25일)',
+                                '오후반반차A': '오후반반차A (0.25일)',
+                                '오후반반차B': '오후반반차B (0.25일)',
+                                '체휴': '체휴 (1일)',
+                                '근무': '근무',
+                                '시차': '시차 (시간 직접 입력)'
+                              };
+                              return labels[selectedType] || selectedType;
+                            })()
+                          : '없음'
+                      }
                     </div>
                   </div>
                 </div>
