@@ -33,6 +33,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [showStartTimeModal, setShowStartTimeModal] = useState(false);
+  const [showEndTimeModal, setShowEndTimeModal] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
@@ -283,25 +285,31 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       <label className="block text-xs font-medium text-gray-700 mb-1.5">
                         시작시간
                       </label>
-                      <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        required
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowStartTimeModal(true)}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{startTime || '선택하세요'}</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1.5">
                         종료시간
                       </label>
-                      <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        required
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEndTimeModal(true)}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{endTime || '선택하세요'}</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -611,6 +619,130 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       return labels[type] || type;
                     })()
                   }
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 시작시간 선택 모달 */}
+      {showStartTimeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">시작시간 선택</h3>
+                <button
+                  onClick={() => setShowStartTimeModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <FiX className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="mb-6">
+                <div className="text-sm font-medium text-gray-700 mb-3">
+                  시작시간을 선택하세요
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+                  {Array.from({ length: 24 }, (_, i) => i).map(hour => (
+                    [0, 15, 30, 45].map(minute => {
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                      return (
+                        <button
+                          key={`${hour}-${minute}`}
+                          onClick={() => {
+                            setStartTime(timeString);
+                            setShowStartTimeModal(false);
+                          }}
+                          className={`p-2 text-center rounded-lg transition text-sm ${
+                            startTime === timeString
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {timeString}
+                        </button>
+                      );
+                    })
+                  )).flat()}
+                </div>
+              </div>
+
+              {/* 현재 선택 표시 */}
+              <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-sm font-medium text-blue-700">
+                  선택된 시간: {startTime || '없음'}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 종료시간 선택 모달 */}
+      {showEndTimeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">종료시간 선택</h3>
+                <button
+                  onClick={() => setShowEndTimeModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <FiX className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="mb-6">
+                <div className="text-sm font-medium text-gray-700 mb-3">
+                  종료시간을 선택하세요
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+                  {Array.from({ length: 24 }, (_, i) => i).map(hour => (
+                    [0, 15, 30, 45].map(minute => {
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                      return (
+                        <button
+                          key={`${hour}-${minute}`}
+                          onClick={() => {
+                            setEndTime(timeString);
+                            setShowEndTimeModal(false);
+                          }}
+                          className={`p-2 text-center rounded-lg transition text-sm ${
+                            endTime === timeString
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {timeString}
+                        </button>
+                      );
+                    })
+                  )).flat()}
+                </div>
+              </div>
+
+              {/* 현재 선택 표시 */}
+              <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-sm font-medium text-blue-700">
+                  선택된 시간: {endTime || '없음'}
                 </div>
               </div>
             </div>
