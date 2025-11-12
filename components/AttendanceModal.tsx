@@ -649,39 +649,99 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
             <div className="p-4">
               <div className="mb-6">
-                <div className="text-sm font-medium text-gray-700 mb-3">
-                  시작시간을 선택하세요
+                <div className="text-sm font-medium text-gray-700 mb-4">
+                  시간을 선택하세요
                 </div>
-                <div className="grid grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-                  {Array.from({ length: 24 }, (_, i) => i).map(hour => (
-                    [0, 15, 30, 45].map(minute => {
-                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                      return (
-                        <button
-                          key={`${hour}-${minute}`}
-                          onClick={() => {
-                            setStartTime(timeString);
-                            setShowStartTimeModal(false);
-                          }}
-                          className={`p-2 text-center rounded-lg transition text-sm ${
-                            startTime === timeString
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {timeString}
-                        </button>
-                      );
-                    })
-                  )).flat()}
+
+                {/* 시간 선택 스크롤 */}
+                <div className="mb-6">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">시간</label>
+                  <div className="flex items-center justify-center">
+                    <select
+                      value={startTime ? parseInt(startTime.split(':')[0]) : 9}
+                      onChange={(e) => {
+                        const hour = parseInt(e.target.value);
+                        const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                        setStartTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                      }}
+                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i} className="text-center py-1">
+                          {i.toString().padStart(2, '0')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
+                {/* 분 선택 스크롤 */}
+                <div className="mb-6">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">분</label>
+                  <div className="flex items-center justify-center">
+                    <select
+                      value={startTime ? parseInt(startTime.split(':')[1]) : 0}
+                      onChange={(e) => {
+                        const minute = parseInt(e.target.value);
+                        const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                        setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                      }}
+                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
+                    >
+                      {Array.from({ length: 60 }, (_, i) => (
+                        <option key={i} value={i} className="text-center py-1">
+                          {i.toString().padStart(2, '0')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 선택 완료 버튼 */}
+                <button
+                  onClick={() => {
+                    // 시작시간 선택 시 종료시간 자동 설정 (+8시간)
+                    if (startTime) {
+                      const [hours, minutes] = startTime.split(':').map(Number);
+                      const startDateTime = new Date();
+                      startDateTime.setHours(hours, minutes, 0, 0);
+
+                      const endDateTime = new Date(startDateTime);
+                      endDateTime.setHours(startDateTime.getHours() + 8);
+
+                      const endHours = endDateTime.getHours();
+                      const endMinutes = endDateTime.getMinutes();
+                      setEndTime(`${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`);
+                    }
+                    setShowStartTimeModal(false);
+                  }}
+                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition"
+                >
+                  선택 완료
+                </button>
               </div>
 
               {/* 현재 선택 표시 */}
               <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-sm font-medium text-blue-700">
-                  선택된 시간: {startTime || '없음'}
+                  선택된 시작시간: {startTime || '없음'}
                 </div>
+                {startTime && (
+                  <div className="text-xs text-blue-600 mt-1">
+                    종료시간: {(() => {
+                      const [hours, minutes] = startTime.split(':').map(Number);
+                      const startDateTime = new Date();
+                      startDateTime.setHours(hours, minutes, 0, 0);
+
+                      const endDateTime = new Date(startDateTime);
+                      endDateTime.setHours(startDateTime.getHours() + 8);
+
+                      const endHours = endDateTime.getHours();
+                      const endMinutes = endDateTime.getMinutes();
+                      return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                    })()} (자동 설정)
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -711,38 +771,69 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
             <div className="p-4">
               <div className="mb-6">
-                <div className="text-sm font-medium text-gray-700 mb-3">
-                  종료시간을 선택하세요
+                <div className="text-sm font-medium text-gray-700 mb-4">
+                  시간을 선택하세요
                 </div>
-                <div className="grid grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-                  {Array.from({ length: 24 }, (_, i) => i).map(hour => (
-                    [0, 15, 30, 45].map(minute => {
-                      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                      return (
-                        <button
-                          key={`${hour}-${minute}`}
-                          onClick={() => {
-                            setEndTime(timeString);
-                            setShowEndTimeModal(false);
-                          }}
-                          className={`p-2 text-center rounded-lg transition text-sm ${
-                            endTime === timeString
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {timeString}
-                        </button>
-                      );
-                    })
-                  )).flat()}
+
+                {/* 시간 선택 스크롤 */}
+                <div className="mb-6">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">시간</label>
+                  <div className="flex items-center justify-center">
+                    <select
+                      value={endTime ? parseInt(endTime.split(':')[0]) : 17}
+                      onChange={(e) => {
+                        const hour = parseInt(e.target.value);
+                        const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                        setEndTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                      }}
+                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i} className="text-center py-1">
+                          {i.toString().padStart(2, '0')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
+                {/* 분 선택 스크롤 */}
+                <div className="mb-6">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">분</label>
+                  <div className="flex items-center justify-center">
+                    <select
+                      value={endTime ? parseInt(endTime.split(':')[1]) : 0}
+                      onChange={(e) => {
+                        const minute = parseInt(e.target.value);
+                        const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                        setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                      }}
+                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
+                    >
+                      {Array.from({ length: 60 }, (_, i) => (
+                        <option key={i} value={i} className="text-center py-1">
+                          {i.toString().padStart(2, '0')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 선택 완료 버튼 */}
+                <button
+                  onClick={() => {
+                    setShowEndTimeModal(false);
+                  }}
+                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition"
+                >
+                  선택 완료
+                </button>
               </div>
 
               {/* 현재 선택 표시 */}
               <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-sm font-medium text-blue-700">
-                  선택된 시간: {endTime || '없음'}
+                  선택된 종료시간: {endTime || '없음'}
                 </div>
               </div>
             </div>
