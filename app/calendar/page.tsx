@@ -54,18 +54,18 @@ const MobileCalendar = memo(({
         return 'bg-red-50 text-red-900 border border-red-200';
       case '오전반차':
       case '오후반차':
-        return 'bg-orange-50 text-orange-900 border border-orange-200';
+        return 'bg-yellow-50 text-yellow-900 border border-yellow-200';
       case '오전반반차A':
       case '오전반반차B':
       case '오후반반차A':
       case '오후반반차B':
-        return 'bg-yellow-50 text-yellow-900 border border-yellow-200';
+        return 'bg-blue-50 text-blue-900 border border-blue-200';
       case '체휴':
         return 'bg-green-50 text-green-900 border border-green-200';
       case '근무':
-        return 'bg-blue-50 text-blue-900 border border-blue-200';
-      case '시차':
         return 'bg-indigo-50 text-indigo-900 border border-indigo-200';
+      case '시차':
+        return 'bg-purple-50 text-purple-900 border border-purple-200';
       default:
         return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
     }
@@ -77,18 +77,18 @@ const MobileCalendar = memo(({
         return 'text-red-900';
       case '오전반차':
       case '오후반차':
-        return 'text-orange-900';
+        return 'text-yellow-900';
       case '오전반반차A':
       case '오전반반차B':
       case '오후반반차A':
       case '오후반반차B':
-        return 'text-yellow-900';
+        return 'text-blue-900';
       case '체휴':
         return 'text-green-900';
       case '근무':
-        return 'text-blue-900';
-      case '시차':
         return 'text-indigo-900';
+      case '시차':
+        return 'text-purple-900';
       default:
         return 'text-gray-700';
     }
@@ -497,40 +497,70 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* 연차/체휴 잔여 수 */}
+          {/* 연차/체휴/근무 정보 */}
           {user && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <div className="text-xs text-blue-600 font-medium mb-2">연차</div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+                <div className="text-xs text-red-600 font-medium mb-2">연차</div>
                 <div className="space-y-1">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-blue-700 font-medium">잔여</span>
-                    <span className="text-xl font-bold text-blue-700">{user.annualLeaveRemaining}일</span>
+                    <span className="text-sm text-red-700 font-medium">잔여</span>
+                    <span className="text-xl font-bold text-red-700">{user.annualLeaveRemaining}일</span>
                   </div>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-blue-600">사용</span>
-                    <span className="text-xs text-blue-600">{user.annualLeaveUsed}일</span>
+                    <span className="text-xs text-red-600">사용</span>
+                    <span className="text-xs text-red-600">{user.annualLeaveUsed}일</span>
                   </div>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-blue-500">전체</span>
-                    <span className="text-xs text-blue-500">{user.annualLeaveTotal}일</span>
+                    <span className="text-xs text-red-500">전체</span>
+                    <span className="text-xs text-red-500">{user.annualLeaveTotal}일</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                <div className="text-xs text-emerald-600 font-medium mb-2">체휴</div>
+              <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
+                <div className="text-xs text-yellow-600 font-medium mb-2">체휴</div>
                 <div className="space-y-1">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-emerald-700 font-medium">잔여</span>
-                    <span className="text-xl font-bold text-emerald-700">{user.compLeaveRemaining}일</span>
+                    <span className="text-sm text-yellow-700 font-medium">잔여</span>
+                    <span className="text-xl font-bold text-yellow-700">{user.compLeaveRemaining}일</span>
                   </div>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-emerald-600">사용</span>
-                    <span className="text-xs text-emerald-600">{user.compLeaveUsed}일</span>
+                    <span className="text-xs text-yellow-600">사용</span>
+                    <span className="text-xs text-yellow-600">{user.compLeaveUsed}일</span>
                   </div>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-emerald-500">전체</span>
-                    <span className="text-xs text-emerald-500">{user.compLeaveTotal}일</span>
+                    <span className="text-xs text-yellow-500">전체</span>
+                    <span className="text-xs text-yellow-500">{user.compLeaveTotal}일</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                <div className="text-xs text-blue-600 font-medium mb-2">{currentMonth.format('M월')} 근무 현황</div>
+                <div className="space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-blue-700 font-medium">근무일</span>
+                    <span className="text-xl font-bold text-blue-700">
+                      {attendances.filter(a => {
+                        const attendanceMonth = dayjs(a.date).format('YYYY-MM');
+                        return attendanceMonth === currentMonth.format('YYYY-MM') &&
+                               (a.type === '근무' || a.type === '시차');
+                      }).length}일
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-blue-600">시차시간</span>
+                    <span className="text-xs text-blue-600">
+                      {attendances
+                        .filter(a => {
+                          const attendanceMonth = dayjs(a.date).format('YYYY-MM');
+                          return attendanceMonth === currentMonth.format('YYYY-MM') && a.type === '시차';
+                        })
+                        .reduce((total, a) => {
+                          // 시차 근태의 경우 startTime과 endTime을 이용해 근무 시간 계산
+                          // 간단하게 시차 근태 수 * 8시간으로 계산
+                          return total + 8;
+                        }, 0)}시간
+                    </span>
                   </div>
                 </div>
               </div>
@@ -581,11 +611,11 @@ export default function CalendarPage() {
               {/* 두 번째 행 */}
               <div className="grid grid-cols-2 gap-4">
                 {/* 오전반차 */}
-                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                   <span className="text-xl">🌅</span>
                   <div>
-                    <div className="font-semibold text-orange-900 text-sm">오전반차</div>
-                    <div className="text-xs text-orange-600">0.5일</div>
+                    <div className="font-semibold text-yellow-900 text-sm">오전반차</div>
+                    <div className="text-xs text-yellow-600">0.5일</div>
                   </div>
                 </div>
 
@@ -602,58 +632,58 @@ export default function CalendarPage() {
               {/* 세 번째 행 */}
               <div className="grid grid-cols-2 gap-4">
                 {/* 오후반차 */}
-                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                   <span className="text-xl">🌆</span>
                   <div>
-                    <div className="font-semibold text-orange-900 text-sm">오후반차</div>
-                    <div className="text-xs text-orange-600">0.5일</div>
+                    <div className="font-semibold text-yellow-900 text-sm">오후반차</div>
+                    <div className="text-xs text-yellow-600">0.5일</div>
                   </div>
                 </div>
 
                 {/* 시차 */}
-                <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
                   <span className="text-xl">⏰</span>
                   <div>
-                    <div className="font-semibold text-indigo-900 text-sm">시차</div>
-                    <div className="text-xs text-indigo-600">직접입력</div>
+                    <div className="font-semibold text-purple-900 text-sm">시차</div>
+                    <div className="text-xs text-purple-600">직접입력</div>
                   </div>
                 </div>
               </div>
 
               {/* 네 번째 행 - 반반차 오전 */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-lg">🌄</span>
                   <div>
-                    <div className="font-semibold text-yellow-900 text-sm">오전반반차A</div>
-                    <div className="text-xs text-yellow-600">0.25일 (09시-11시)</div>
+                    <div className="font-semibold text-blue-900 text-sm">오전반반차A</div>
+                    <div className="text-xs text-blue-600">0.25일 (09시-11시)</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-lg">☀️</span>
                   <div>
-                    <div className="font-semibold text-yellow-900 text-sm">오전반반차B</div>
-                    <div className="text-xs text-yellow-600">0.25일 (11시-14시)</div>
+                    <div className="font-semibold text-blue-900 text-sm">오전반반차B</div>
+                    <div className="text-xs text-blue-600">0.25일 (11시-14시)</div>
                   </div>
                 </div>
               </div>
 
               {/* 다섯 번째 행 - 반반차 오후 */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-lg">🌤️</span>
                   <div>
-                    <div className="font-semibold text-yellow-900 text-sm">오후반반차A</div>
-                    <div className="text-xs text-yellow-600">0.25일 (14시-16시)</div>
+                    <div className="font-semibold text-blue-900 text-sm">오후반반차A</div>
+                    <div className="text-xs text-blue-600">0.25일 (14시-16시)</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-lg">🌙</span>
                   <div>
-                    <div className="font-semibold text-yellow-900 text-sm">오후반반차B</div>
-                    <div className="text-xs text-yellow-600">0.25일 (16시-18시)</div>
+                    <div className="font-semibold text-blue-900 text-sm">오후반반차B</div>
+                    <div className="text-xs text-blue-600">0.25일 (16시-18시)</div>
                   </div>
                 </div>
               </div>

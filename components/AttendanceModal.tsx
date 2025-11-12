@@ -443,8 +443,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오전반차'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -464,8 +464,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오후반차'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -488,8 +488,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오전반반차A'
-                          ? 'bg-yellow-500 text-white'
-                          : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -509,8 +509,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오전반반차B'
-                          ? 'bg-yellow-500 text-white'
-                          : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -532,8 +532,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오후반반차A'
-                          ? 'bg-yellow-500 text-white'
-                          : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -553,8 +553,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       }}
                       className={`p-3 text-left rounded-lg transition ${
                         type === '오후반반차B'
-                          ? 'bg-yellow-500 text-white'
-                          : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -596,8 +596,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     }}
                     className={`w-full p-3 text-left rounded-lg transition ${
                       type === '근무'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -617,8 +617,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     }}
                     className={`w-full p-3 text-left rounded-lg transition ${
                       type === '시차'
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
