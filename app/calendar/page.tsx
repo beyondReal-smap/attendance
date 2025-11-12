@@ -540,7 +540,7 @@ export default function CalendarPage() {
                       {attendances.filter(a => {
                         const attendanceMonth = dayjs(a.date).format('YYYY-MM');
                         return attendanceMonth === currentMonth.format('YYYY-MM') &&
-                               (a.type === '근무' || a.type === '시차');
+                               a.type === '근무';
                       }).length}일
                     </span>
                   </div>
