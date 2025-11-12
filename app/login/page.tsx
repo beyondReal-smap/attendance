@@ -47,13 +47,15 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+          <div className="mb-6">
+            <img
+              src="/hwgi_ci.png"
+              alt="화상고객센터 CI"
+              className="h-16 mx-auto object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            근태 관리
+            디지털 화상고객센터 근태 관리
           </h1>
           <p className="text-sm text-gray-500">로그인하여 시작하세요</p>
         </div>
@@ -62,7 +64,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1.5">
-                아이디
+                사원번호
               </label>
               <input
                 id="username"
@@ -71,7 +73,7 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-gray-900"
-                placeholder="아이디를 입력하세요"
+                placeholder="사원번호를 입력하세요"
               />
             </div>
 
