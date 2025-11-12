@@ -6,8 +6,9 @@ import { format } from 'date-fns';
 import { AttendanceType } from '@/types';
 import { DatePickerCalendar } from '@/components/DatePickerCalendar';
 import AlertModal from '@/components/AlertModal';
+import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
-import { FiCalendar, FiDownload } from 'react-icons/fi';
+import { FiCalendar, FiDownload, FiX } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 
 interface User {
@@ -62,6 +63,7 @@ export default function AdminPage() {
   // 근태 목록 필터링 상태
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
@@ -880,12 +882,14 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     월 선택
                   </label>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMonthPicker(true)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                  >
+                    <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
+                    <FiCalendar className="w-4 h-4 text-gray-400" />
+                  </button>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1060,6 +1064,92 @@ export default function AdminPage() {
             message={alertMessage}
             type={alertType}
           />
+
+          {/* 월 선택 모달 */}
+          {showMonthPicker && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">월 선택</h3>
+                    <button
+                      onClick={() => setShowMonthPicker(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  {/* 연도 선택 */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      연도
+                    </label>
+                    <select
+                      value={dayjs(selectedMonth).year()}
+                      onChange={(e) => {
+                        const currentMonth = dayjs(selectedMonth).month() + 1;
+                        const newYear = parseInt(e.target.value);
+                        setSelectedMonth(`${newYear}-${currentMonth.toString().padStart(2, '0')}`);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                    >
+                      {Array.from({ length: 10 }, (_, i) => dayjs().year() - 2 + i).map(year => (
+                        <option key={year} value={year}>
+                          {year}년
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 월 선택 */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      월
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
+                        const currentMonth = dayjs(selectedMonth).month() + 1;
+                        const isSelected = currentMonth === month;
+
+                        return (
+                          <button
+                            key={month}
+                            onClick={() => {
+                              const currentYear = dayjs(selectedMonth).year();
+                              setSelectedMonth(`${currentYear}-${month.toString().padStart(2, '0')}`);
+                              setShowMonthPicker(false);
+                            }}
+                            className={`p-3 text-sm font-medium rounded-lg transition ${
+                              isSelected
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {month}월
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 현재 선택된 월 표시 */}
+                  <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="text-sm font-medium text-orange-700">
+                      선택된 월: {dayjs(selectedMonth).format('YYYY년 M월')}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
     </div>
