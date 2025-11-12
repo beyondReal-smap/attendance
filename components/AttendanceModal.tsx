@@ -128,7 +128,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div key="attendance-modal">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -341,7 +341,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
               </form>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
 
       {/* 근태 유형 선택 모달 */}
