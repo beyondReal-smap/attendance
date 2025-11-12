@@ -890,13 +890,6 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={downloadCSV}
-                  className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
-                >
-                  <FiDownload className="w-4 h-4" />
-                  CSV
-                </button>
-                <button
                   onClick={downloadXLSX}
                   className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
                 >
