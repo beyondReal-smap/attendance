@@ -692,7 +692,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
           >
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">시작시간 선택</h3>
+                <h3 className="text-lg font-bold text-gray-900">시작 시간 선택</h3>
                 <button
                   onClick={() => setShowStartTimeModal(false)}
                   className="p-1 hover:bg-gray-100 rounded-lg transition"
