@@ -51,24 +51,24 @@ const MobileCalendar = memo(({
   const getAttendanceColor = (type: AttendanceType | null): string => {
     switch (type) {
       case '연차':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-50 text-blue-900 border border-blue-200';
       case '오전반차':
-        return 'bg-sky-500 text-white';
+        return 'bg-sky-50 text-sky-900 border border-sky-200';
       case '오후반차':
-        return 'bg-cyan-500 text-white';
+        return 'bg-cyan-50 text-cyan-900 border border-cyan-200';
       case '오전반반차A':
       case '오전반반차B':
       case '오후반반차A':
       case '오후반반차B':
-        return 'bg-indigo-500 text-white';
+        return 'bg-indigo-50 text-indigo-900 border border-indigo-200';
       case '체휴':
-        return 'bg-emerald-500 text-white';
+        return 'bg-emerald-50 text-emerald-900 border border-emerald-200';
       case '근무':
-        return 'bg-slate-500 text-white';
+        return 'bg-slate-50 text-slate-900 border border-slate-200';
       case '시차':
-        return 'bg-amber-500 text-white';
+        return 'bg-amber-50 text-amber-900 border border-amber-200';
       default:
-        return 'bg-white text-gray-700 hover:bg-gray-50';
+        return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
     }
   };
 
