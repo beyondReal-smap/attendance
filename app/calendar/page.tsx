@@ -582,7 +582,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 근태 유형 범례 */}
-        <div className="mt-4 p-5 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-6">
+        <div className="mt-4 p-5 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-8">
             <h3 className="text-lg font-black text-gray-900 mb-4">
               근태 유형 범례
             </h3>
