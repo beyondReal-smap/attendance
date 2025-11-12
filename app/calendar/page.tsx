@@ -503,7 +503,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar */}
-        <div className="p-5">
+        <div className="p-5 bg-blue-50/30 rounded-xl border border-blue-100 mx-2 mt-4">
           <h2 className="text-lg font-black text-gray-900 mb-4">
             근태 달력
           </h2>
@@ -585,7 +585,6 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* 근태 등록 모달 */}
       <AttendanceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
