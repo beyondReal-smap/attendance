@@ -72,6 +72,30 @@ const MobileCalendar = memo(({
     }
   };
 
+  const getAttendanceTextColor = (type: AttendanceType | null): string => {
+    switch (type) {
+      case '연차':
+        return 'text-blue-900';
+      case '오전반차':
+        return 'text-sky-900';
+      case '오후반차':
+        return 'text-cyan-900';
+      case '오전반반차A':
+      case '오전반반차B':
+      case '오후반반차A':
+      case '오후반반차B':
+        return 'text-indigo-900';
+      case '체휴':
+        return 'text-emerald-900';
+      case '근무':
+        return 'text-slate-900';
+      case '시차':
+        return 'text-amber-900';
+      default:
+        return 'text-gray-700';
+    }
+  };
+
   const getAttendanceIcon = (type: AttendanceType | null): string => {
     switch (type) {
       case '연차': return '✈️';
@@ -150,6 +174,7 @@ const MobileCalendar = memo(({
       const isToday = today.isSame(currentDate, 'day');
       const attendanceType = attendanceMap[dateString] || null;
       const colors = getAttendanceColor(attendanceType);
+      const textColor = getAttendanceTextColor(attendanceType);
       const icon = getAttendanceIcon(attendanceType);
 
       days.push(
@@ -167,7 +192,7 @@ const MobileCalendar = memo(({
             ${!attendanceType ? 'border border-gray-200' : ''}
           `}
         >
-          <span className={`${attendanceType ? 'text-white' : 'text-black'} text-sm`}>
+          <span className={`${attendanceType ? textColor : 'text-black'} text-sm font-semibold`}>
             {dayIndex + 1}
           </span>
           {attendanceType && (
