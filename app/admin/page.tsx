@@ -64,6 +64,7 @@ export default function AdminPage() {
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showUserFilter, setShowUserFilter] = useState(false);
 
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
@@ -895,18 +896,21 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사용자 필터
                   </label>
-                  <select
-                    value={selectedUserFilter}
-                    onChange={(e) => setSelectedUserFilter(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                  <button
+                    type="button"
+                    onClick={() => setShowUserFilter(true)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
-                    <option value="all">전체 사용자</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.name}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
+                    <span>
+                      {selectedUserFilter === 'all'
+                        ? '전체 사용자'
+                        : users.find(u => u.name === selectedUserFilter)?.name || '전체 사용자'
+                      }
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div className="mt-3 text-sm text-gray-600">
@@ -1144,6 +1148,119 @@ export default function AdminPage() {
                   <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 월: {dayjs(selectedMonth).format('YYYY년 M월')}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 사용자 필터 모달 */}
+          {showUserFilter && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">사용자 필터</h3>
+                    <button
+                      onClick={() => setShowUserFilter(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  {/* 전체 사용자 옵션 */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => {
+                        setSelectedUserFilter('all');
+                        setShowUserFilter(false);
+                      }}
+                      className={`w-full p-3 text-left rounded-lg transition ${
+                        selectedUserFilter === 'all'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
+                          전체
+                        </div>
+                        <div>
+                          <div className="font-medium">전체 사용자</div>
+                          <div className="text-xs opacity-75">모든 사용자의 근태 기록</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* 사용자 리스트 */}
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      개별 사용자 선택
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {users.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => {
+                            setSelectedUserFilter(user.name);
+                            setShowUserFilter(false);
+                          }}
+                          className={`w-full p-3 text-left rounded-lg transition ${
+                            selectedUserFilter === user.name
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
+                              {user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-medium">{user.name}</div>
+                              <div className="text-xs opacity-75">{user.username}</div>
+                            </div>
+                            {user.isAdmin && (
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                selectedUserFilter === user.name
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                관리자
+                              </span>
+                            )}
+                            {user.isTempPassword && (
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                selectedUserFilter === user.name
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-orange-100 text-orange-700'
+                              }`}>
+                                임시비밀번호
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 현재 선택 표시 */}
+                  <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="text-sm font-medium text-orange-700">
+                      선택된 필터: {
+                        selectedUserFilter === 'all'
+                          ? '전체 사용자'
+                          : users.find(u => u.name === selectedUserFilter)?.name || '전체 사용자'
+                      }
                     </div>
                   </div>
                 </div>
