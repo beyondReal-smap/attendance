@@ -50,47 +50,9 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
     }
   }, [isOpen]);
 
-  // 시작시간 모달이 열릴 때 초기 스크롤 위치 설정
-  useEffect(() => {
-    if (showStartTimeModal) {
-      setTimeout(() => {
-        // 시간: 9시 (인덱스 9)로 스크롤
-        const hourContainer = document.querySelector('.start-time-hour-container') as HTMLElement;
-        if (hourContainer) {
-          const itemHeight = 32; // h-8
-          const targetScroll = 9 * itemHeight - 80; // 중앙에 위치하도록 조정
-          hourContainer.scrollTop = Math.max(0, targetScroll);
-        }
+  // 시작시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
 
-        // 분: 0분 (인덱스 0)으로 스크롤
-        const minuteContainer = document.querySelector('.start-time-minute-container') as HTMLElement;
-        if (minuteContainer) {
-          minuteContainer.scrollTop = -80; // 0분이 중앙에 오도록
-        }
-      }, 100);
-    }
-  }, [showStartTimeModal]);
-
-  // 종료시간 모달이 열릴 때 초기 스크롤 위치 설정
-  useEffect(() => {
-    if (showEndTimeModal) {
-      setTimeout(() => {
-        // 시간: 18시 (인덱스 18)로 스크롤
-        const hourContainer = document.querySelector('.end-time-hour-container') as HTMLElement;
-        if (hourContainer) {
-          const itemHeight = 32; // h-8
-          const targetScroll = 18 * itemHeight - 80; // 중앙에 위치하도록 조정
-          hourContainer.scrollTop = Math.max(0, targetScroll);
-        }
-
-        // 분: 0분 (인덱스 0)으로 스크롤
-        const minuteContainer = document.querySelector('.end-time-minute-container') as HTMLElement;
-        if (minuteContainer) {
-          minuteContainer.scrollTop = -80; // 0분이 중앙에 오도록
-        }
-      }, 100);
-    }
-  }, [showEndTimeModal]);
+  // 종료시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
 
 
   // 근태 유형 변경 시 종료일자 자동 설정
@@ -708,114 +670,29 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   시작시간을 선택하세요
                 </div>
 
-                {/* 시간 선택 피커 */}
+                {/* 시간 선택 버튼 */}
                 <div className="mb-8">
-                  <div className="flex items-center justify-center gap-4">
-                    {/* 시간 선택 */}
-                    <div className="flex flex-col items-center">
-                      <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
-                        <div
-                          className="start-time-hour-container h-full overflow-y-auto scrollbar-hide"
-                          style={{
-                            scrollBehavior: 'smooth',
-                            scrollSnapType: 'y mandatory'
-                          }}
-                          onScroll={(e) => {
-                            const container = e.currentTarget;
-                            const scrollTop = container.scrollTop;
-                            const itemHeight = 32; // h-8 = 32px
-                            const listPaddingTop = 64; // py-16 = 64px
-                            const selectorCenterY = 80; // 선택 표시자 중앙 (top-16 + h-8/2 = 64 + 16)
-
-                            // 선택 표시자 중앙이 리스트에서 몇 번째 아이템에 해당하는지 계산
-                            const selectorCenterInList = selectorCenterY - listPaddingTop + scrollTop;
-                            const selectedIndex = Math.round(selectorCenterInList / itemHeight);
-
-                            const selectedHour = Math.max(0, Math.min(23, selectedIndex));
-
-                            const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                            setStartTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
-                          <div className="py-16">
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <div
-                                key={i}
-                                onClick={() => {
-                                  const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                                  setStartTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                                }}
-                                className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
-                                  parseInt(startTime ? startTime.split(':')[0] : '9') === i
-                                    ? 'text-blue-600 font-bold bg-blue-50'
-                                    : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                                style={{ scrollSnapAlign: 'center' }}
-                              >
-                                {i.toString().padStart(2, '0')}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-2xl font-bold text-gray-400">:</div>
-
-                    {/* 분 선택 */}
-                    <div className="flex flex-col items-center">
-                      <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
-                        <div
-                          className="start-time-minute-container h-full overflow-y-auto scrollbar-hide"
-                          style={{
-                            scrollBehavior: 'smooth',
-                            scrollSnapType: 'y mandatory'
-                          }}
-                          onScroll={(e) => {
-                            const container = e.currentTarget;
-                            const scrollTop = container.scrollTop;
-                            const itemHeight = 32; // h-8 = 32px
-                            const listPaddingTop = 64; // py-16 = 64px
-                            const selectorCenterY = 80; // 선택 표시자 중앙 (top-16 + h-8/2 = 64 + 16)
-
-                            // 선택 표시자 중앙이 리스트에서 몇 번째 아이템에 해당하는지 계산
-                            const selectorCenterInList = selectorCenterY - listPaddingTop + scrollTop;
-                            const selectedIndex = Math.round(selectorCenterInList / itemHeight);
-
-                            const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
-
-                            const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                            setStartTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
-                          <div className="py-16">
-                            {Array.from({ length: 12 }, (_, i) => {
-                              const minute = i * 5;
-                              return (
-                                <div
-                                  key={i}
-                                  onClick={() => {
-                                    const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                                    setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-                                  }}
-                                  className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
-                                    parseInt(startTime ? startTime.split(':')[1] : '0') === minute
-                                      ? 'text-blue-600 font-bold bg-blue-50'
-                                      : 'text-gray-700 hover:bg-gray-100'
-                                  }`}
-                                  style={{ scrollSnapAlign: 'center' }}
-                                >
-                                  {minute.toString().padStart(2, '0')}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs font-medium text-gray-600 mb-4">시작 시간</label>
+                    <div className="grid grid-cols-4 gap-2 max-w-sm">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const hour = i + 8; // 8시부터 시작
+                        return (
+                          <button
+                            key={hour}
+                            onClick={() => {
+                              setStartTime(`${hour.toString().padStart(2, '0')}:00`);
+                            }}
+                            className={`h-12 px-6 flex items-center justify-center text-sm font-semibold rounded-lg transition-all duration-200 ${
+                              parseInt(startTime ? startTime.split(':')[0] : '9') === hour
+                                ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+                            }`}
+                          >
+                            {hour.toString().padStart(2, '0')}시
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -832,16 +709,9 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   onClick={() => {
                     // 시작시간 선택 시 종료시간 자동 설정 (+8시간)
                     if (startTime) {
-                      const [hours, minutes] = startTime.split(':').map(Number);
-                      const startDateTime = new Date();
-                      startDateTime.setHours(hours, minutes, 0, 0);
-
-                      const endDateTime = new Date(startDateTime);
-                      endDateTime.setHours(startDateTime.getHours() + 8);
-
-                      const endHours = endDateTime.getHours();
-                      const endMinutes = endDateTime.getMinutes();
-                      setEndTime(`${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`);
+                      const hours = parseInt(startTime.split(':')[0]);
+                      const endHours = (hours + 8) % 24; // 24시간 형식 유지
+                      setEndTime(`${endHours.toString().padStart(2, '0')}:00`);
                     }
                     setShowStartTimeModal(false);
                   }}
@@ -859,16 +729,9 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                 {startTime && (
                   <div className="text-xs text-blue-600 mt-1">
                     종료시간: {(() => {
-                      const [hours, minutes] = startTime.split(':').map(Number);
-                      const startDateTime = new Date();
-                      startDateTime.setHours(hours, minutes, 0, 0);
-
-                      const endDateTime = new Date(startDateTime);
-                      endDateTime.setHours(startDateTime.getHours() + 8);
-
-                      const endHours = endDateTime.getHours();
-                      const endMinutes = endDateTime.getMinutes();
-                      return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                      const hours = parseInt(startTime.split(':')[0]);
+                      const endHours = (hours + 8) % 24;
+                      return `${endHours.toString().padStart(2, '0')}:00`;
                     })()} (자동 설정)
                   </div>
                 )}
@@ -905,110 +768,29 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   종료시간을 선택하세요
                 </div>
 
-                {/* 시간 선택 피커 */}
+                {/* 시간 선택 버튼 */}
                 <div className="mb-8">
-                  <div className="flex items-center justify-center gap-4">
-                    {/* 시간 선택 */}
-                    <div className="flex flex-col items-center">
-                      <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
-                        <div
-                          className="end-time-hour-container h-full overflow-y-auto scrollbar-hide"
-                          style={{
-                            scrollBehavior: 'smooth',
-                            scrollSnapType: 'y mandatory'
-                          }}
-                          onScroll={(e) => {
-                            const container = e.currentTarget;
-                            const scrollTop = container.scrollTop;
-                            const itemHeight = 32; // h-8 = 32px
-                            const listPaddingTop = 64; // py-16 = 64px
-                            const selectorCenterY = 80; // 선택 표시자 중앙 (top-16 + h-8/2 = 64 + 16)
-
-                            // 선택 표시자 중앙이 리스트에서 몇 번째 아이템에 해당하는지 계산
-                            const selectorCenterInList = selectorCenterY - listPaddingTop + scrollTop;
-                            const selectedIndex = Math.round(selectorCenterInList / itemHeight);
-
-                            const selectedHour = Math.max(0, Math.min(23, selectedIndex));
-
-                            const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                            setEndTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
-                          <div className="py-16">
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <div
-                                key={i}
-                                onClick={() => {
-                                  const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                                  setEndTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                                }}
-                                className={`h-8 flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
-                                  parseInt(endTime ? endTime.split(':')[0] : '18') === i
-                                    ? 'text-blue-600 font-bold bg-blue-50'
-                                    : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                                style={{ scrollSnapAlign: 'center' }}
-                              >
-                                {i.toString().padStart(2, '0')}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-2xl font-bold text-gray-400">:</div>
-
-                    {/* 분 선택 */}
-                    <div className="flex flex-col items-center">
-                      <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
-                        <div
-                          className="end-time-minute-container h-full overflow-y-auto scrollbar-hide"
-                          style={{
-                            scrollBehavior: 'smooth',
-                            scrollSnapType: 'y mandatory'
-                          }}
-                          onScroll={(e) => {
-                            const container = e.currentTarget;
-                            const scrollTop = container.scrollTop;
-                            const itemHeight = 32; // h-8 = 32px
-                            const listPaddingTop = 64; // py-16 = 64px
-                            const selectorCenterY = 80; // 선택 표시자 중앙 (top-16 + h-8/2 = 64 + 16)
-
-                            // 선택 표시자 중앙이 리스트에서 몇 번째 아이템에 해당하는지 계산
-                            const selectorCenterInList = selectorCenterY - listPaddingTop + scrollTop;
-                            const selectedIndex = Math.round(selectorCenterInList / itemHeight);
-
-                            const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
-
-                            const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 18;
-                            setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
-                          <div className="py-16">
-                            {Array.from({ length: 12 }, (_, i) => {
-                              const minute = i * 5;
-                              return (
-                                <div
-                                  key={i}
-                                  className={`h-8 flex items-center justify-center text-sm font-medium ${
-                                    parseInt(endTime ? endTime.split(':')[1] : '0') === minute
-                                      ? 'text-blue-600 font-bold'
-                                      : 'text-gray-700'
-                                  }`}
-                                  style={{ scrollSnapAlign: 'center' }}
-                                >
-                                  {minute.toString().padStart(2, '0')}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs font-medium text-gray-600 mb-4">종료 시간</label>
+                    <div className="grid grid-cols-4 gap-2 max-w-sm">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const hour = i + 8; // 8시부터 시작
+                        return (
+                          <button
+                            key={hour}
+                            onClick={() => {
+                              setEndTime(`${hour.toString().padStart(2, '0')}:00`);
+                            }}
+                            className={`h-12 px-6 flex items-center justify-center text-sm font-semibold rounded-lg transition-all duration-200 ${
+                              parseInt(endTime ? endTime.split(':')[0] : '18') === hour
+                                ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+                            }`}
+                          >
+                            {hour.toString().padStart(2, '0')}시
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
