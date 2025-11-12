@@ -32,6 +32,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   const [loading, setLoading] = useState(false);
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [showTypeModal, setShowTypeModal] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
@@ -63,15 +64,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
         setWorkingDays(timeInfo.days);
       } else {
         // 그 외의 경우 기존 로직 사용
-        const start = dayjs(startDate);
-        const end = dayjs(endDate);
-        if (start.isValid() && end.isValid() && !end.isBefore(start)) {
-          const days = countWorkingDays(start, end);
-          setWorkingDays(days);
-        } else {
-          setWorkingDays(0);
-        }
+      const start = dayjs(startDate);
+      const end = dayjs(endDate);
+      if (start.isValid() && end.isValid() && !end.isBefore(start)) {
+        const days = countWorkingDays(start, end);
+        setWorkingDays(days);
+      } else {
+        setWorkingDays(0);
       }
+    }
     }
   }, [startDate, endDate, type]);
 
@@ -163,22 +164,32 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   <label className="block text-xs font-medium text-gray-700 mb-1.5">
                     근태 유형
                   </label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value as AttendanceType)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  <button
+                    type="button"
+                    onClick={() => setShowTypeModal(true)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
-                    <option value="연차">연차 (1일)</option>
-                    <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
-                    <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
-                    <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
-                    <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
-                    <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
-                    <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
-                    <option value="체휴">체휴 (1일)</option>
-                    <option value="근무">근무</option>
-                    <option value="시차">시차 (시간 직접 입력)</option>
-                  </select>
+                    <span>
+                      {(() => {
+                        const labels: Record<string, string> = {
+                          '연차': '연차 (1일)',
+                          '오전반차': '오전반차 (0.5일)',
+                          '오후반차': '오후반차 (0.5일)',
+                          '오전반반차A': '오전반반차A (0.25일)',
+                          '오전반반차B': '오전반반차B (0.25일)',
+                          '오후반반차A': '오후반반차A (0.25일)',
+                          '오후반반차B': '오후반반차B (0.25일)',
+                          '체휴': '체휴 (1일)',
+                          '근무': '근무',
+                          '시차': '시차 (시간 직접 입력)'
+                        };
+                        return labels[type] || type;
+                      })()}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* 날짜 선택 */}
@@ -331,6 +342,280 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
             </div>
           </motion.div>
         </>
+      )}
+
+      {/* 근태 유형 선택 모달 */}
+      {showTypeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">근태 유형 선택</h3>
+                <button
+                  onClick={() => setShowTypeModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <FiX className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="mb-6">
+                <div className="text-sm font-medium text-gray-700 mb-3">
+                  근태 유형을 선택하세요
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {/* 연차 */}
+                  <button
+                    onClick={() => {
+                      setType('연차');
+                      setShowTypeModal(false);
+                    }}
+                    className={`w-full p-3 text-left rounded-lg transition ${
+                      type === '연차'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">✈️</span>
+                      <div>
+                        <div className="font-medium">연차</div>
+                        <div className="text-xs opacity-75">1일</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* 반차 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setType('오전반차');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오전반차'
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🌅</span>
+                        <div>
+                          <div className="font-medium text-sm">오전반차</div>
+                          <div className="text-xs opacity-75">0.5일</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setType('오후반차');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오후반차'
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-cyan-50 text-cyan-900 border border-cyan-200 hover:bg-cyan-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🌆</span>
+                        <div>
+                          <div className="font-medium text-sm">오후반차</div>
+                          <div className="text-xs opacity-75">0.5일</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* 반반차 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setType('오전반반차A');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오전반반차A'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🌄</span>
+                        <div>
+                          <div className="font-medium text-sm">오전반반차A</div>
+                          <div className="text-xs opacity-75">0.25일</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setType('오전반반차B');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오전반반차B'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">☀️</span>
+                        <div>
+                          <div className="font-medium text-sm">오전반반차B</div>
+                          <div className="text-xs opacity-75">0.25일</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setType('오후반반차A');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오후반반차A'
+                          ? 'bg-violet-500 text-white'
+                          : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🌤️</span>
+                        <div>
+                          <div className="font-medium text-sm">오후반반차A</div>
+                          <div className="text-xs opacity-75">0.25일</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setType('오후반반차B');
+                        setEndDate(startDate);
+                        setShowTypeModal(false);
+                      }}
+                      className={`p-3 text-left rounded-lg transition ${
+                        type === '오후반반차B'
+                          ? 'bg-violet-500 text-white'
+                          : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🌙</span>
+                        <div>
+                          <div className="font-medium text-sm">오후반반차B</div>
+                          <div className="text-xs opacity-75">0.25일</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* 체휴 */}
+                  <button
+                    onClick={() => {
+                      setType('체휴');
+                      setShowTypeModal(false);
+                    }}
+                    className={`w-full p-3 text-left rounded-lg transition ${
+                      type === '체휴'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🏠</span>
+                      <div>
+                        <div className="font-medium">체휴</div>
+                        <div className="text-xs opacity-75">1일</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* 근무 */}
+                  <button
+                    onClick={() => {
+                      setType('근무');
+                      setShowTypeModal(false);
+                    }}
+                    className={`w-full p-3 text-left rounded-lg transition ${
+                      type === '근무'
+                        ? 'bg-slate-500 text-white'
+                        : 'bg-slate-50 text-slate-900 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">💼</span>
+                      <div>
+                        <div className="font-medium">근무</div>
+                        <div className="text-xs opacity-75">정상 근무</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* 시차 */}
+                  <button
+                    onClick={() => {
+                      setType('시차');
+                      setShowTypeModal(false);
+                    }}
+                    className={`w-full p-3 text-left rounded-lg transition ${
+                      type === '시차'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">⏰</span>
+                      <div>
+                        <div className="font-medium">시차</div>
+                        <div className="text-xs opacity-75">시간 직접 입력</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 현재 선택 표시 */}
+              <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="text-sm font-medium text-purple-700">
+                  선택된 유형: {
+                    (() => {
+                      const labels: Record<string, string> = {
+                        '연차': '연차 (1일)',
+                        '오전반차': '오전반차 (0.5일)',
+                        '오후반차': '오후반차 (0.5일)',
+                        '오전반반차A': '오전반반차A (0.25일)',
+                        '오전반반차B': '오전반반차B (0.25일)',
+                        '오후반반차A': '오후반반차A (0.25일)',
+                        '오후반반차B': '오후반반차B (0.25일)',
+                        '체휴': '체휴 (1일)',
+                        '근무': '근무',
+                        '시차': '시차 (시간 직접 입력)'
+                      };
+                      return labels[type] || type;
+                    })()
+                  }
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
