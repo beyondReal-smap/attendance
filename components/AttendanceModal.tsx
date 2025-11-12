@@ -50,6 +50,48 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
     }
   }, [isOpen]);
 
+  // 시작시간 모달이 열릴 때 초기 스크롤 위치 설정
+  useEffect(() => {
+    if (showStartTimeModal) {
+      setTimeout(() => {
+        // 시간: 9시 (인덱스 9)로 스크롤
+        const hourContainer = document.querySelector('.start-time-hour-container') as HTMLElement;
+        if (hourContainer) {
+          const itemHeight = 32; // h-8
+          const targetScroll = 9 * itemHeight - 80; // 중앙에 위치하도록 조정
+          hourContainer.scrollTop = Math.max(0, targetScroll);
+        }
+
+        // 분: 0분 (인덱스 0)으로 스크롤
+        const minuteContainer = document.querySelector('.start-time-minute-container') as HTMLElement;
+        if (minuteContainer) {
+          minuteContainer.scrollTop = -80; // 0분이 중앙에 오도록
+        }
+      }, 100);
+    }
+  }, [showStartTimeModal]);
+
+  // 종료시간 모달이 열릴 때 초기 스크롤 위치 설정
+  useEffect(() => {
+    if (showEndTimeModal) {
+      setTimeout(() => {
+        // 시간: 17시 (인덱스 17)로 스크롤
+        const hourContainer = document.querySelector('.end-time-hour-container') as HTMLElement;
+        if (hourContainer) {
+          const itemHeight = 32; // h-8
+          const targetScroll = 17 * itemHeight - 80; // 중앙에 위치하도록 조정
+          hourContainer.scrollTop = Math.max(0, targetScroll);
+        }
+
+        // 분: 0분 (인덱스 0)으로 스크롤
+        const minuteContainer = document.querySelector('.end-time-minute-container') as HTMLElement;
+        if (minuteContainer) {
+          minuteContainer.scrollTop = -80; // 0분이 중앙에 오도록
+        }
+      }, 100);
+    }
+  }, [showEndTimeModal]);
+
 
   // 근태 유형 변경 시 종료일자 자동 설정
   useEffect(() => {
@@ -668,25 +710,35 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div className="h-full overflow-y-auto scrollbar-hide">
+                        <div
+                          className="start-time-hour-container h-full overflow-y-auto scrollbar-hide"
+                          style={{
+                            scrollBehavior: 'smooth',
+                            scrollSnapType: 'y mandatory'
+                          }}
+                          onScroll={(e) => {
+                            const container = e.currentTarget;
+                            const scrollTop = container.scrollTop;
+                            const itemHeight = 32; // h-8 = 32px
+                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedHour = Math.max(0, Math.min(23, selectedIndex));
+
+                            setTimeout(() => {
+                              const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                              setStartTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                            }, 100);
+                          }}
+                        >
                           <div className="py-16">
-                            {Array.from({ length: 24 }, (_, i) => {
-                              const isSelected = parseInt(startTime ? startTime.split(':')[0] : '9') === i;
-                              return (
-                                <button
-                                  key={i}
-                                  onClick={() => {
-                                    const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                                    setStartTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                                  }}
-                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
-                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
-                                  }`}
-                                >
-                                  {i.toString().padStart(2, '0')}
-                                </button>
-                              );
-                            })}
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                style={{ scrollSnapAlign: 'center' }}
+                              >
+                                {i.toString().padStart(2, '0')}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -701,24 +753,36 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div className="h-full overflow-y-auto scrollbar-hide">
+                        <div
+                          className="start-time-minute-container h-full overflow-y-auto scrollbar-hide"
+                          style={{
+                            scrollBehavior: 'smooth',
+                            scrollSnapType: 'y mandatory'
+                          }}
+                          onScroll={(e) => {
+                            const container = e.currentTarget;
+                            const scrollTop = container.scrollTop;
+                            const itemHeight = 32; // h-8 = 32px
+                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
+
+                            setTimeout(() => {
+                              const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                              setStartTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
+                            }, 100);
+                          }}
+                        >
                           <div className="py-16">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
-                              const isSelected = parseInt(startTime ? startTime.split(':')[1] : '0') === minute;
                               return (
-                                <button
+                                <div
                                   key={i}
-                                  onClick={() => {
-                                    const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                                    setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-                                  }}
-                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
-                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
-                                  }`}
+                                  className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                  style={{ scrollSnapAlign: 'center' }}
                                 >
                                   {minute.toString().padStart(2, '0')}
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
@@ -823,25 +887,35 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div className="h-full overflow-y-auto scrollbar-hide">
+                        <div
+                          className="end-time-hour-container h-full overflow-y-auto scrollbar-hide"
+                          style={{
+                            scrollBehavior: 'smooth',
+                            scrollSnapType: 'y mandatory'
+                          }}
+                          onScroll={(e) => {
+                            const container = e.currentTarget;
+                            const scrollTop = container.scrollTop;
+                            const itemHeight = 32; // h-8 = 32px
+                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedHour = Math.max(0, Math.min(23, selectedIndex));
+
+                            setTimeout(() => {
+                              const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                              setEndTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                            }, 100);
+                          }}
+                        >
                           <div className="py-16">
-                            {Array.from({ length: 24 }, (_, i) => {
-                              const isSelected = parseInt(endTime ? endTime.split(':')[0] : '17') === i;
-                              return (
-                                <button
-                                  key={i}
-                                  onClick={() => {
-                                    const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                                    setEndTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                                  }}
-                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
-                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
-                                  }`}
-                                >
-                                  {i.toString().padStart(2, '0')}
-                                </button>
-                              );
-                            })}
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                style={{ scrollSnapAlign: 'center' }}
+                              >
+                                {i.toString().padStart(2, '0')}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -856,24 +930,36 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div className="h-full overflow-y-auto scrollbar-hide">
+                        <div
+                          className="end-time-minute-container h-full overflow-y-auto scrollbar-hide"
+                          style={{
+                            scrollBehavior: 'smooth',
+                            scrollSnapType: 'y mandatory'
+                          }}
+                          onScroll={(e) => {
+                            const container = e.currentTarget;
+                            const scrollTop = container.scrollTop;
+                            const itemHeight = 32; // h-8 = 32px
+                            const selectedIndex = Math.round(scrollTop / itemHeight);
+                            const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
+
+                            setTimeout(() => {
+                              const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                              setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
+                            }, 100);
+                          }}
+                        >
                           <div className="py-16">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
-                              const isSelected = parseInt(endTime ? endTime.split(':')[1] : '0') === minute;
                               return (
-                                <button
+                                <div
                                   key={i}
-                                  onClick={() => {
-                                    const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
-                                    setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-                                  }}
-                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
-                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
-                                  }`}
+                                  className="h-8 flex items-center justify-center text-xs font-medium text-gray-700"
+                                  style={{ scrollSnapAlign: 'center' }}
                                 >
                                   {minute.toString().padStart(2, '0')}
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
