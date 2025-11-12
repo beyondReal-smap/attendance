@@ -707,9 +707,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
                       <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
-                        </div>
+                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
                         <div
                           className="start-time-hour-container h-full overflow-y-auto scrollbar-hide"
                           style={{
@@ -720,7 +718,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
+                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
+                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
                             const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
@@ -752,9 +751,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
                       <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
-                        </div>
+                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
                         <div
                           className="start-time-minute-container h-full overflow-y-auto scrollbar-hide"
                           style={{
@@ -765,7 +762,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
+                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
+                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
                             const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
@@ -888,9 +886,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
                       <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
-                        </div>
+                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
                         <div
                           className="end-time-hour-container h-full overflow-y-auto scrollbar-hide"
                           style={{
@@ -901,7 +897,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
+                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
+                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
                             const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
@@ -933,9 +930,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
                       <div className="relative h-40 w-16 overflow-hidden bg-gray-50 rounded-lg border">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <div className="h-8 w-full bg-blue-500 bg-opacity-20 rounded"></div>
-                        </div>
+                        <div className="absolute top-16 left-0 right-0 h-8 border-2 border-blue-500 rounded pointer-events-none z-10"></div>
                         <div
                           className="end-time-minute-container h-full overflow-y-auto scrollbar-hide"
                           style={{
@@ -946,7 +941,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectedIndex = Math.round((scrollTop + 16) / itemHeight); // 중앙 선택을 위해 +16
+                            const centerOffset = 64; // 선택 영역 중앙까지의 거리 (py-16 = 64px)
+                            const selectedIndex = Math.round((scrollTop + centerOffset) / itemHeight);
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
                             const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
