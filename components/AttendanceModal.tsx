@@ -649,51 +649,74 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
             <div className="p-4">
               <div className="mb-6">
-                <div className="text-sm font-medium text-gray-700 mb-4">
-                  시간을 선택하세요
+                <div className="text-sm font-medium text-gray-700 mb-6 text-center">
+                  시작시간을 선택하세요
                 </div>
 
-                {/* 시간 선택 스크롤 */}
-                <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">시간</label>
-                  <div className="flex items-center justify-center">
-                    <select
-                      value={startTime ? parseInt(startTime.split(':')[0]) : 9}
-                      onChange={(e) => {
-                        const hour = parseInt(e.target.value);
-                        const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                        setStartTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                      }}
-                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
-                    >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <option key={i} value={i} className="text-center py-1">
-                          {i.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
+                {/* 시계 형태의 시간 표시 */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full border-4 border-blue-200 bg-white flex items-center justify-center shadow-lg">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-600">
+                          {startTime ? startTime.split(':')[0].padStart(2, '0') : '09'}
+                        </div>
+                        <div className="text-lg text-gray-500">:</div>
+                        <div className="text-3xl font-bold text-blue-600">
+                          {startTime ? startTime.split(':')[1].padStart(2, '0') : '00'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-1 h-4 bg-blue-500 rounded-full origin-bottom" style={{
+                      transform: `translateX(-50%) rotate(${(parseInt(startTime ? startTime.split(':')[0] : '9') % 12) * 30}deg)`
+                    }}></div>
                   </div>
                 </div>
 
-                {/* 분 선택 스크롤 */}
+                {/* 시간 선택 그리드 */}
                 <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">분</label>
-                  <div className="flex items-center justify-center">
-                    <select
-                      value={startTime ? parseInt(startTime.split(':')[1]) : 0}
-                      onChange={(e) => {
-                        const minute = parseInt(e.target.value);
-                        const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                        setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-                      }}
-                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
-                    >
-                      {Array.from({ length: 60 }, (_, i) => (
-                        <option key={i} value={i} className="text-center py-1">
-                          {i.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="text-xs font-medium text-gray-600 mb-3 text-center">시간 선택</div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          const hour = i;
+                          const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                          setStartTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                        }}
+                        className={`p-2 text-center rounded-lg transition text-sm font-medium ${
+                          parseInt(startTime ? startTime.split(':')[0] : '9') === i
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {i.toString().padStart(2, '0')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 분 선택 그리드 */}
+                <div className="mb-6">
+                  <div className="text-xs font-medium text-gray-600 mb-3 text-center">분 선택</div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(minute => (
+                      <button
+                        key={minute}
+                        onClick={() => {
+                          const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                          setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                        }}
+                        className={`p-2 text-center rounded-lg transition text-sm font-medium ${
+                          parseInt(startTime ? startTime.split(':')[1] : '0') === minute
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {minute.toString().padStart(2, '0')}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -715,7 +738,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                     }
                     setShowStartTimeModal(false);
                   }}
-                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition shadow-md"
                 >
                   선택 완료
                 </button>
@@ -771,51 +794,74 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
             <div className="p-4">
               <div className="mb-6">
-                <div className="text-sm font-medium text-gray-700 mb-4">
-                  시간을 선택하세요
+                <div className="text-sm font-medium text-gray-700 mb-6 text-center">
+                  종료시간을 선택하세요
                 </div>
 
-                {/* 시간 선택 스크롤 */}
-                <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">시간</label>
-                  <div className="flex items-center justify-center">
-                    <select
-                      value={endTime ? parseInt(endTime.split(':')[0]) : 17}
-                      onChange={(e) => {
-                        const hour = parseInt(e.target.value);
-                        const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                        setEndTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                      }}
-                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
-                    >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <option key={i} value={i} className="text-center py-1">
-                          {i.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
+                {/* 시계 형태의 시간 표시 */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full border-4 border-blue-200 bg-white flex items-center justify-center shadow-lg">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-600">
+                          {endTime ? endTime.split(':')[0].padStart(2, '0') : '17'}
+                        </div>
+                        <div className="text-lg text-gray-500">:</div>
+                        <div className="text-3xl font-bold text-blue-600">
+                          {endTime ? endTime.split(':')[1].padStart(2, '0') : '00'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-1 h-4 bg-blue-500 rounded-full origin-bottom" style={{
+                      transform: `translateX(-50%) rotate(${(parseInt(endTime ? endTime.split(':')[0] : '17') % 12) * 30}deg)`
+                    }}></div>
                   </div>
                 </div>
 
-                {/* 분 선택 스크롤 */}
+                {/* 시간 선택 그리드 */}
                 <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">분</label>
-                  <div className="flex items-center justify-center">
-                    <select
-                      value={endTime ? parseInt(endTime.split(':')[1]) : 0}
-                      onChange={(e) => {
-                        const minute = parseInt(e.target.value);
-                        const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
-                        setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-                      }}
-                      className="w-20 h-32 text-center border border-gray-300 rounded-lg bg-white text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none overflow-y-auto"
-                    >
-                      {Array.from({ length: 60 }, (_, i) => (
-                        <option key={i} value={i} className="text-center py-1">
-                          {i.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="text-xs font-medium text-gray-600 mb-3 text-center">시간 선택</div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          const hour = i;
+                          const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                          setEndTime(`${hour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                        }}
+                        className={`p-2 text-center rounded-lg transition text-sm font-medium ${
+                          parseInt(endTime ? endTime.split(':')[0] : '17') === i
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {i.toString().padStart(2, '0')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 분 선택 그리드 */}
+                <div className="mb-6">
+                  <div className="text-xs font-medium text-gray-600 mb-3 text-center">분 선택</div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(minute => (
+                      <button
+                        key={minute}
+                        onClick={() => {
+                          const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                          setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                        }}
+                        className={`p-2 text-center rounded-lg transition text-sm font-medium ${
+                          parseInt(endTime ? endTime.split(':')[1] : '0') === minute
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {minute.toString().padStart(2, '0')}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -824,7 +870,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   onClick={() => {
                     setShowEndTimeModal(false);
                   }}
-                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition shadow-md"
                 >
                   선택 완료
                 </button>
