@@ -660,16 +660,16 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
                 {/* 시간 선택 피커 */}
                 <div className="mb-8">
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center justify-center gap-2">
                     {/* 시간 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-48 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div className="h-full overflow-y-auto scrollbar-hide">
-                          <div className="py-20">
+                          <div className="py-16">
                             {Array.from({ length: 24 }, (_, i) => {
                               const isSelected = parseInt(startTime ? startTime.split(':')[0] : '9') === i;
                               return (
@@ -679,7 +679,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                                     const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
                                     setStartTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
                                   }}
-                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
                                     isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
                                   }`}
                                 >
@@ -692,17 +692,17 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       </div>
                     </div>
 
-                    <div className="text-2xl font-bold text-gray-400">:</div>
+                    <div className="text-xl font-bold text-gray-400">:</div>
 
                     {/* 분 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-48 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div className="h-full overflow-y-auto scrollbar-hide">
-                          <div className="py-20">
+                          <div className="py-16">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
                               const isSelected = parseInt(startTime ? startTime.split(':')[1] : '0') === minute;
@@ -713,7 +713,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                                     const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
                                     setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
                                   }}
-                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
                                     isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
                                   }`}
                                 >
@@ -815,16 +815,16 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
 
                 {/* 시간 선택 피커 */}
                 <div className="mb-8">
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center justify-center gap-2">
                     {/* 시간 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">시간</label>
-                      <div className="relative h-48 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div className="h-full overflow-y-auto scrollbar-hide">
-                          <div className="py-20">
+                          <div className="py-16">
                             {Array.from({ length: 24 }, (_, i) => {
                               const isSelected = parseInt(endTime ? endTime.split(':')[0] : '17') === i;
                               return (
@@ -834,7 +834,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                                     const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
                                     setEndTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
                                   }}
-                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
                                     isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
                                   }`}
                                 >
@@ -847,17 +847,17 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                       </div>
                     </div>
 
-                    <div className="text-2xl font-bold text-gray-400">:</div>
+                    <div className="text-xl font-bold text-gray-400">:</div>
 
                     {/* 분 선택 */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-medium text-gray-600 mb-2">분</label>
-                      <div className="relative h-48 w-16 overflow-hidden bg-gray-50 rounded-lg border">
+                      <div className="relative h-40 w-14 overflow-hidden bg-gray-50 rounded-lg border">
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
                         <div className="h-full overflow-y-auto scrollbar-hide">
-                          <div className="py-20">
+                          <div className="py-16">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
                               const isSelected = parseInt(endTime ? endTime.split(':')[1] : '0') === minute;
@@ -868,7 +868,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                                     const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
                                     setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
                                   }}
-                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                  className={`w-full h-8 flex items-center justify-center text-xs font-medium transition-colors ${
                                     isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
                                   }`}
                                 >
