@@ -104,10 +104,6 @@ export default function LoginPage() {
               {loading ? '로그인 중...' : '로그인'}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
-            <p>기본 관리자 계정: admin / admin123</p>
-          </div>
         </div>
       </div>
     </div>
