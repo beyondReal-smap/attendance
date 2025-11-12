@@ -77,7 +77,14 @@ export async function initDatabase() {
     try {
       await sql`ALTER TABLE atnd_users ADD COLUMN is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부'`;
     } catch (e: any) {
-      if (!e.message?.includes('Duplicate column name')) console.error('Column add error:', e);
+      // MySQL 중복 컬럼 에러 무시 (에러 코드 1060 또는 메시지 확인)
+      const isDuplicateError = e.code === 1060 ||
+                               e.code === 'ER_DUP_FIELDNAME' ||
+                               e.message?.includes('Duplicate column name') ||
+                               e.message?.includes('already exists');
+      if (!isDuplicateError) {
+        console.error('is_temp_password column add error:', e);
+      }
     }
 
     // Attendance 테이블 생성
