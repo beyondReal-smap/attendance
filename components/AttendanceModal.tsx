@@ -46,7 +46,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
       setEndDate(dateStr);
       // 시차 시간 초기화
       setStartTime('09:00');
-      setEndTime('17:00');
+      setEndTime('18:00');
     }
   }, [isOpen]);
 
@@ -75,11 +75,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   useEffect(() => {
     if (showEndTimeModal) {
       setTimeout(() => {
-        // 시간: 17시 (인덱스 17)로 스크롤
+        // 시간: 18시 (인덱스 18)로 스크롤
         const hourContainer = document.querySelector('.end-time-hour-container') as HTMLElement;
         if (hourContainer) {
           const itemHeight = 32; // h-8
-          const targetScroll = 17 * itemHeight - 80; // 중앙에 위치하도록 조정
+          const targetScroll = 18 * itemHeight - 80; // 중앙에 위치하도록 조정
           hourContainer.scrollTop = Math.max(0, targetScroll);
         }
 
@@ -718,14 +718,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
-                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
-                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+                            const containerHeight = 160; // h-40 = 160px
+                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
 
-                            // 선택 표시자 중앙의 상대적 위치 계산
-                            const selectorCenter = selectorTop + selectorHeight / 2;
-                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
-                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
 
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
@@ -769,14 +766,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
-                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
-                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+                            const containerHeight = 160; // h-40 = 160px
+                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
 
-                            // 선택 표시자 중앙의 상대적 위치 계산
-                            const selectorCenter = selectorTop + selectorHeight / 2;
-                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
-                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
 
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
@@ -911,14 +905,11 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
-                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
-                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+                            const containerHeight = 160; // h-40 = 160px
+                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
 
-                            // 선택 표시자 중앙의 상대적 위치 계산
-                            const selectorCenter = selectorTop + selectorHeight / 2;
-                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
-                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
 
                             const selectedHour = Math.max(0, Math.min(23, selectedIndex));
 
@@ -962,18 +953,15 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                             const container = e.currentTarget;
                             const scrollTop = container.scrollTop;
                             const itemHeight = 32; // h-8 = 32px
-                            const selectorTop = 64; // 선택 표시자 상단 위치 (top-16 = 64px)
-                            const selectorHeight = 32; // 선택 표시자 높이 (h-8 = 32px)
-                            const listTopPadding = 64; // 숫자 리스트 상단 패딩 (py-16 = 64px)
+                            const containerHeight = 160; // h-40 = 160px
+                            const selectorCenterY = containerHeight / 2; // 컨테이너 중앙 (80px)
 
-                            // 선택 표시자 중앙의 상대적 위치 계산
-                            const selectorCenter = selectorTop + selectorHeight / 2;
-                            const relativeCenter = selectorCenter - listTopPadding + scrollTop;
-                            const selectedIndex = Math.round(relativeCenter / itemHeight);
+                            // 스크롤된 상태에서 선택 표시자 중앙에 해당하는 아이템 인덱스 계산
+                            const selectedIndex = Math.round((scrollTop + selectorCenterY) / itemHeight) - 2; // py-16 보정
 
                             const selectedMinute = Math.max(0, Math.min(11, selectedIndex)) * 5;
 
-                            const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                            const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 18;
                             setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
                           }}
                         >
