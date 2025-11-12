@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="mb-6">
+          <div className="mb-4">
             <img
               src="/hwgi_ci.png"
               alt="화상고객센터 CI"
