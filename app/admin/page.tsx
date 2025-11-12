@@ -966,10 +966,13 @@ export default function AdminPage() {
                           <td className="px-4 py-3 text-sm text-gray-600">{attendance.date}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
-                              attendance.type === '연차' ? 'bg-blue-100 text-blue-700' :
-                              attendance.type === '체휴' ? 'bg-emerald-100 text-emerald-700' :
-                              attendance.type === '근무' ? 'bg-gray-100 text-gray-700' :
-                              'bg-amber-100 text-amber-700'
+                              attendance.type === '연차' ? 'bg-red-100 text-red-700' :
+                              (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-orange-100 text-orange-700' :
+                              (attendance.type.includes('반반차')) ? 'bg-yellow-100 text-yellow-700' :
+                              attendance.type === '체휴' ? 'bg-green-100 text-green-700' :
+                              attendance.type === '근무' ? 'bg-blue-100 text-blue-700' :
+                              attendance.type === '시차' ? 'bg-indigo-100 text-indigo-700' :
+                              'bg-purple-100 text-purple-700'
                             }`}>
                               {attendance.type}
                             </span>
@@ -1291,8 +1294,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '연차'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1314,8 +1317,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반차'
-                              ? 'bg-sky-500 text-white'
-                              : 'bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1335,8 +1338,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반차'
-                              ? 'bg-cyan-500 text-white'
-                              : 'bg-cyan-50 text-cyan-900 border border-cyan-200 hover:bg-cyan-100'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1359,8 +1362,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반반차A'
-                              ? 'bg-indigo-500 text-white'
-                              : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                              ? 'bg-yellow-500 text-white'
+                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1380,8 +1383,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오전반반차B'
-                              ? 'bg-indigo-500 text-white'
-                              : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                              ? 'bg-yellow-500 text-white'
+                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1403,8 +1406,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반반차A'
-                              ? 'bg-violet-500 text-white'
-                              : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                              ? 'bg-yellow-500 text-white'
+                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1424,8 +1427,8 @@ export default function AdminPage() {
                           }}
                           className={`p-3 text-left rounded-lg transition ${
                             selectedType === '오후반반차B'
-                              ? 'bg-violet-500 text-white'
-                              : 'bg-violet-50 text-violet-900 border border-violet-200 hover:bg-violet-100'
+                              ? 'bg-yellow-500 text-white'
+                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1446,8 +1449,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '체휴'
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1467,8 +1470,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '근무'
-                            ? 'bg-slate-500 text-white'
-                            : 'bg-slate-50 text-slate-900 border border-slate-200 hover:bg-slate-100'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1488,8 +1491,8 @@ export default function AdminPage() {
                         }}
                         className={`w-full p-3 text-left rounded-lg transition ${
                           selectedType === '시차'
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
