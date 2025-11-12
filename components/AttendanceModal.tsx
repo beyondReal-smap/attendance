@@ -325,38 +325,46 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   </div>
                 )}
 
-                {/* 시차 근태 시간 입력 */}
+                {/* 시작시간, 종료시간 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                      시작시간
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowStartTimeModal(true)}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>{startTime || '선택하세요'}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                      종료시간
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEndTimeModal(true)}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>{endTime || '선택하세요'}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 시차 근태 시간 입력 - 시차 타입일 때만 표시 */}
                 {type === '시차' && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        시작시간
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowStartTimeModal(true)}
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                      >
-                        <span>{startTime || '선택하세요'}</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        종료시간
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowEndTimeModal(true)}
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                      >
-                        <span>{endTime || '선택하세요'}</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="text-xs font-medium text-amber-700 mb-2">시차 근태 시간</div>
+                    <div className="text-sm text-amber-600">
+                      시작: {startTime || '미선택'} → 종료: {endTime || '미선택'}
                     </div>
                   </div>
                 )}
