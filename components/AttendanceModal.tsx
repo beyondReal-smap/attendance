@@ -44,24 +44,38 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
       const dateStr = selectedDate.format('YYYY-MM-DD');
       setStartDate(dateStr);
       setEndDate(dateStr);
-      // 시차 시간 초기화
-      setStartTime('09:00');
-      setEndTime('18:00');
+      // 시차 시간 초기화 (시차 유형이 아닐 때는 초기화하지 않음)
+      if (type === '시차') {
+        setStartTime('09:00');
+        setEndTime('18:00');
+      } else {
+        setStartTime('');
+        setEndTime('');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   // 시작시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
 
   // 종료시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
 
 
-  // 근태 유형 변경 시 종료일자 자동 설정
+  // 근태 유형 변경 시 종료일자 자동 설정 및 시간 초기화
   useEffect(() => {
     if (startDate) {
       const timeInfo = getAttendanceTimeInfo(type);
       // 반차나 반반차의 경우 종료일자를 시작일자와 같게 설정
       if (timeInfo.days < 1 && timeInfo.days > 0) {
         setEndDate(startDate);
+      }
+
+      // 시차 유형일 때는 시간을 초기화, 다른 유형일 때는 시간 초기화
+      if (type === '시차') {
+        setStartTime('09:00');
+        setEndTime('18:00');
+      } else {
+        setStartTime('');
+        setEndTime('');
       }
     }
   }, [type, startDate]);
@@ -287,39 +301,41 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                   </div>
                 )}
 
-                {/* 시작시간, 종료시간 */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                      시작시간
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowStartTimeModal(true)}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                    >
-                      <span>{startTime || '선택하세요'}</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
+                {/* 시작시간, 종료시간 - 시차 유형일 때만 표시 */}
+                {type === '시차' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                        시작시간
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowStartTimeModal(true)}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{startTime || '선택하세요'}</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                        종료시간
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowEndTimeModal(true)}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{endTime || '선택하세요'}</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                      종료시간
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowEndTimeModal(true)}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                    >
-                      <span>{endTime || '선택하세요'}</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                )}
 
                 {/* 시차 근태 시간 입력 - 시차 타입일 때만 표시 */}
                 {type === '시차' && (

@@ -503,24 +503,36 @@ export default function CalendarPage() {
           {user && (
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <div className="text-xs text-blue-600 font-medium mb-1">연차</div>
-                <div className="flex items-baseline gap-1">
-                  <div className="text-2xl font-bold text-blue-700">
-                    {user.annualLeaveRemaining}
+                <div className="text-xs text-blue-600 font-medium mb-2">연차</div>
+                <div className="space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-blue-700 font-medium">잔여</span>
+                    <span className="text-xl font-bold text-blue-700">{user.annualLeaveRemaining}일</span>
                   </div>
-                  <div className="text-xs text-blue-500">
-                    / {user.annualLeaveTotal}일
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-blue-600">사용</span>
+                    <span className="text-xs text-blue-600">{user.annualLeaveUsed}일</span>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-blue-500">전체</span>
+                    <span className="text-xs text-blue-500">{user.annualLeaveTotal}일</span>
                   </div>
                 </div>
               </div>
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                <div className="text-xs text-emerald-600 font-medium mb-1">체휴</div>
-                <div className="flex items-baseline gap-1">
-                  <div className="text-2xl font-bold text-emerald-700">
-                    {user.compLeaveRemaining}
+                <div className="text-xs text-emerald-600 font-medium mb-2">체휴</div>
+                <div className="space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-emerald-700 font-medium">잔여</span>
+                    <span className="text-xl font-bold text-emerald-700">{user.compLeaveRemaining}일</span>
                   </div>
-                  <div className="text-xs text-emerald-500">
-                    / {user.compLeaveTotal}일
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-emerald-600">사용</span>
+                    <span className="text-xs text-emerald-600">{user.compLeaveUsed}일</span>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-emerald-500">전체</span>
+                    <span className="text-xs text-emerald-500">{user.compLeaveTotal}일</span>
                   </div>
                 </div>
               </div>
