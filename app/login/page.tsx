@@ -51,7 +51,7 @@ export default function LoginPage() {
             <img
               src="/hwgi_ci.png"
               alt="화상고객센터 CI"
-              className="h-16 mx-auto object-contain"
+              className="h-12 mx-auto object-contain"
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
