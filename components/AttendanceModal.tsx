@@ -38,11 +38,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  // 시간 선택 피커 스크롤 위치 관리
-  const startTimeHourRef = useRef<HTMLDivElement>(null);
-  const startTimeMinuteRef = useRef<HTMLDivElement>(null);
-  const endTimeHourRef = useRef<HTMLDivElement>(null);
-  const endTimeMinuteRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && selectedDate) {
@@ -55,43 +50,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
     }
   }, [isOpen]);
 
-  // 시작시간 모달이 열릴 때 선택된 시간을 중앙에 위치시키기
-  useEffect(() => {
-    if (showStartTimeModal && startTimeHourRef.current && startTimeMinuteRef.current) {
-      const hour = parseInt(startTime.split(':')[0]);
-      const minute = parseInt(startTime.split(':')[1]);
-      const minuteIndex = minute / 5;
-
-      // 시간 스크롤 위치 설정 (선택된 시간이 중앙에 오도록)
-      setTimeout(() => {
-        if (startTimeHourRef.current) {
-          startTimeHourRef.current.scrollTop = hour * 40 - 80; // 중앙으로 위치 조정
-        }
-        if (startTimeMinuteRef.current) {
-          startTimeMinuteRef.current.scrollTop = minuteIndex * 40 - 80; // 중앙으로 위치 조정
-        }
-      }, 100);
-    }
-  }, [showStartTimeModal, startTime]);
-
-  // 종료시간 모달이 열릴 때 선택된 시간을 중앙에 위치시키기
-  useEffect(() => {
-    if (showEndTimeModal && endTimeHourRef.current && endTimeMinuteRef.current) {
-      const hour = parseInt(endTime.split(':')[0]);
-      const minute = parseInt(endTime.split(':')[1]);
-      const minuteIndex = minute / 5;
-
-      // 시간 스크롤 위치 설정 (선택된 시간이 중앙에 오도록)
-      setTimeout(() => {
-        if (endTimeHourRef.current) {
-          endTimeHourRef.current.scrollTop = hour * 40 - 80; // 중앙으로 위치 조정
-        }
-        if (endTimeMinuteRef.current) {
-          endTimeMinuteRef.current.scrollTop = minuteIndex * 40 - 80; // 중앙으로 위치 조정
-        }
-      }, 100);
-    }
-  }, [showEndTimeModal, endTime]);
 
   // 근태 유형 변경 시 종료일자 자동 설정
   useEffect(() => {
@@ -710,25 +668,23 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div
-                          ref={startTimeHourRef}
-                          className="h-full overflow-y-auto scrollbar-hide"
-                          onScroll={(e) => {
-                            const scrollTop = e.currentTarget.scrollTop;
-                            const selectedHour = Math.round(scrollTop / 40);
-                            const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
-                            setStartTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
+                        <div className="h-full overflow-y-auto scrollbar-hide">
                           <div className="py-20">
                             {Array.from({ length: 24 }, (_, i) => {
                               const isSelected = parseInt(startTime ? startTime.split(':')[0] : '9') === i;
                               return (
-                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
-                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
-                                }`}>
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    const currentMinute = startTime ? parseInt(startTime.split(':')[1]) : 0;
+                                    setStartTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                                  }}
+                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
                                   {i.toString().padStart(2, '0')}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -745,26 +701,24 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div
-                          ref={startTimeMinuteRef}
-                          className="h-full overflow-y-auto scrollbar-hide"
-                          onScroll={(e) => {
-                            const scrollTop = e.currentTarget.scrollTop;
-                            const selectedMinute = Math.round(scrollTop / 40) * 5;
-                            const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
-                            setStartTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
+                        <div className="h-full overflow-y-auto scrollbar-hide">
                           <div className="py-20">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
                               const isSelected = parseInt(startTime ? startTime.split(':')[1] : '0') === minute;
                               return (
-                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
-                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
-                                }`}>
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    const currentHour = startTime ? parseInt(startTime.split(':')[0]) : 9;
+                                    setStartTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                                  }}
+                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
                                   {minute.toString().padStart(2, '0')}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -869,25 +823,23 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div
-                          ref={endTimeHourRef}
-                          className="h-full overflow-y-auto scrollbar-hide"
-                          onScroll={(e) => {
-                            const scrollTop = e.currentTarget.scrollTop;
-                            const selectedHour = Math.round(scrollTop / 40);
-                            const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
-                            setEndTime(`${selectedHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
+                        <div className="h-full overflow-y-auto scrollbar-hide">
                           <div className="py-20">
                             {Array.from({ length: 24 }, (_, i) => {
                               const isSelected = parseInt(endTime ? endTime.split(':')[0] : '17') === i;
                               return (
-                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
-                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
-                                }`}>
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    const currentMinute = endTime ? parseInt(endTime.split(':')[1]) : 0;
+                                    setEndTime(`${i.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+                                  }}
+                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
                                   {i.toString().padStart(2, '0')}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
@@ -904,26 +856,24 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <div className="h-8 w-full bg-blue-500 bg-opacity-10 rounded"></div>
                         </div>
-                        <div
-                          ref={endTimeMinuteRef}
-                          className="h-full overflow-y-auto scrollbar-hide"
-                          onScroll={(e) => {
-                            const scrollTop = e.currentTarget.scrollTop;
-                            const selectedMinute = Math.round(scrollTop / 40) * 5;
-                            const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
-                            setEndTime(`${currentHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                          }}
-                        >
+                        <div className="h-full overflow-y-auto scrollbar-hide">
                           <div className="py-20">
                             {Array.from({ length: 12 }, (_, i) => {
                               const minute = i * 5;
                               const isSelected = parseInt(endTime ? endTime.split(':')[1] : '0') === minute;
                               return (
-                                <div key={i} className={`h-10 flex items-center justify-center text-sm font-medium transition-colors ${
-                                  isSelected ? 'text-white bg-blue-500' : 'text-gray-700'
-                                }`}>
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    const currentHour = endTime ? parseInt(endTime.split(':')[0]) : 17;
+                                    setEndTime(`${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+                                  }}
+                                  className={`w-full h-10 flex items-center justify-center text-sm font-medium transition-colors ${
+                                    isSelected ? 'text-white bg-blue-500' : 'text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
                                   {minute.toString().padStart(2, '0')}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
