@@ -724,7 +724,7 @@ export default function AdminPage() {
               <h2 className="text-xl font-bold text-gray-900">근태 추가</h2>
             </div>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사용자
@@ -743,6 +743,36 @@ export default function AdminPage() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    근태 유형
+                  </label>
+                  <select
+                    value={selectedType}
+                    onChange={(e) => {
+                      setSelectedType(e.target.value as AttendanceType);
+                      // 반차나 반반차 선택시 종료일자 초기화
+                      if (['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(e.target.value)) {
+                        setEndDate(startDate);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  >
+                    <option value="연차">연차 (1일)</option>
+                    <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
+                    <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
+                    <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
+                    <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
+                    <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
+                    <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
+                    <option value="체휴">체휴 (1일)</option>
+                    <option value="근무">근무</option>
+                    <option value="시차">시차 (시간 직접 입력)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     시작일자
@@ -767,37 +797,23 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setShowEndCalendar(true);
-                      setShowStartCalendar(false);
+                      // 반차나 반반차는 종료일자 선택 불가
+                      if (!['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)) {
+                        setShowEndCalendar(true);
+                        setShowStartCalendar(false);
+                      }
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    disabled={['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)}
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between text-left text-gray-900 ${
+                      ['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)
+                        ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                        : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
                     <span>{endDate || '선택하세요'}</span>
-                    <FiCalendar className="w-4 h-4 text-gray-400" />
+                    <FiCalendar className={`w-4 h-4 ${['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType) ? 'text-gray-300' : 'text-gray-400'}`} />
                   </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  근태 유형
-                </label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value as AttendanceType)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                >
-                  <option value="연차">연차 (1일)</option>
-                  <option value="오전반차">오전반차 (0.5일, 09:00-14:00)</option>
-                  <option value="오후반차">오후반차 (0.5일, 14:00-18:00)</option>
-                  <option value="오전반반차A">오전반반차A (0.25일, 09:00-11:00)</option>
-                  <option value="오전반반차B">오전반반차B (0.25일, 11:00-14:00)</option>
-                  <option value="오후반반차A">오후반반차A (0.25일, 14:00-16:00)</option>
-                  <option value="오후반반차B">오후반반차B (0.25일, 16:00-18:00)</option>
-                  <option value="체휴">체휴 (1일)</option>
-                  <option value="근무">근무</option>
-                  <option value="시차">시차 (시간 직접 입력)</option>
-                </select>
               </div>
 
               <div>
