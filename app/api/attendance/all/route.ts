@@ -12,13 +12,15 @@ export async function GET() {
     }
 
     const result = await sql`
-      SELECT 
+      SELECT
         a.id,
         a.user_id as "userId",
         u.name as "userName",
         a.date,
         a.type,
-        a.reason
+        a.reason,
+        a.start_time as "startTime",
+        a.end_time as "endTime"
       FROM atnd_attendance a
       JOIN atnd_users u ON a.user_id = u.id
       ORDER BY a.date DESC, u.name ASC
@@ -31,6 +33,8 @@ export async function GET() {
       date: dayjs(row.date).format('YYYY-MM-DD'),
       type: row.type as AttendanceType,
       reason: row.reason || null,
+      startTime: row.startTime,
+      endTime: row.endTime,
     }));
 
     return NextResponse.json(attendances);

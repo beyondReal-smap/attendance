@@ -9,12 +9,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // is_temp_password 컬럼이 없는 경우를 대비해 먼저 추가 시도
+    // is_temp_password 컬럼 존재 여부 확인 및 추가 (한 번만 실행)
     try {
-      await sql`ALTER TABLE atnd_users ADD COLUMN is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부'`;
+      // 먼저 컬럼이 존재하는지 확인
+      const columnCheck = await sql`
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'atnd_users'
+        AND COLUMN_NAME = 'is_temp_password'
+      `;
+
+      // 컬럼이 존재하지 않으면 추가
+      if (columnCheck.rows.length === 0) {
+        await sql`ALTER TABLE atnd_users ADD COLUMN is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부'`;
+      }
     } catch (e: any) {
-      // 컬럼이 이미 존재하는 경우 무시
-      if (!e.message?.includes('Duplicate column')) {
+      // 컬럼 추가 실패 시 로깅 (Duplicate 에러는 무시)
+      if (!e.message?.includes('Duplicate column name') && !e.message?.includes('ER_DUP_FIELDNAME')) {
         console.error('Column add error:', e);
       }
     }

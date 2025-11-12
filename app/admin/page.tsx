@@ -32,6 +32,8 @@ interface Attendance {
   date: string;
   type: AttendanceType;
   reason?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 export default function AdminPage() {
@@ -589,7 +591,7 @@ export default function AdminPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleChangePassword(user.id)}
-                            className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
+                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
                           >
                             비밀번호 변경
                           </button>
@@ -975,6 +977,11 @@ export default function AdminPage() {
                               'bg-purple-100 text-purple-700'
                             }`}>
                               {attendance.type}
+                              {attendance.type === '시차' && attendance.startTime && attendance.endTime && (
+                                <span className="ml-1 text-purple-600">
+                                  ({attendance.startTime.split(':')[0]}~{attendance.endTime.split(':')[0]}시)
+                                </span>
+                              )}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>

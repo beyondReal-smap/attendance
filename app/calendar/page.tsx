@@ -365,13 +365,8 @@ export default function CalendarPage() {
   };
 
   const handleDayClick = (day: Dayjs) => {
-    // 이미 선택된 날짜를 다시 클릭하면 모달 열기
-    if (selectedDate && selectedDate.isSame(day, 'day')) {
-      setIsModalOpen(true);
-    } else {
-      // 새로운 날짜 선택
-      setSelectedDate(day);
-    }
+    setSelectedDate(day);
+    setIsModalOpen(true);
   };
 
   // 비밀번호 변경 핸들러
@@ -663,7 +658,7 @@ export default function CalendarPage() {
                   <span className="text-lg">🌄</span>
                   <div>
                     <div className="font-semibold text-gray-900 text-sm">오전반반차A</div>
-                    <div className="text-xs text-gray-600">0.25일 (09시-11시)</div>
+                    <div className="text-xs text-gray-600">0.25일 (09-11시)</div>
                   </div>
                 </div>
 
@@ -671,7 +666,7 @@ export default function CalendarPage() {
                   <span className="text-lg">☀️</span>
                   <div>
                     <div className="font-semibold text-gray-900 text-sm">오전반반차B</div>
-                    <div className="text-xs text-gray-600">0.25일 (11시-14시)</div>
+                    <div className="text-xs text-gray-600">0.25일 (11-14시)</div>
                   </div>
                 </div>
               </div>
@@ -682,7 +677,7 @@ export default function CalendarPage() {
                   <span className="text-lg">🌤️</span>
                   <div>
                     <div className="font-semibold text-gray-900 text-sm">오후반반차A</div>
-                    <div className="text-xs text-gray-600">0.25일 (14시-16시)</div>
+                    <div className="text-xs text-gray-600">0.25일 (14-16시)</div>
                   </div>
                 </div>
 
@@ -690,7 +685,7 @@ export default function CalendarPage() {
                   <span className="text-lg">🌙</span>
                   <div>
                     <div className="font-semibold text-gray-900 text-sm">오후반반차B</div>
-                    <div className="text-xs text-gray-600">0.25일 (16시-18시)</div>
+                    <div className="text-xs text-gray-600">0.25일 (16-18시)</div>
                   </div>
                 </div>
               </div>
@@ -698,18 +693,50 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <AttendanceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedDate={selectedDate}
-        onSave={handleSaveAttendance}
-        onAlert={(title, message, type) => {
-          setAlertTitle(title);
-          setAlertMessage(message);
-          setAlertType(type);
-          setAlertModalOpen(true);
-        }}
-      />
+      {/* 근태 등록 모달 - 이미 근태가 없는 경우에만 표시 */}
+      {!selectedAttendance && (
+        <AttendanceModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          selectedDate={selectedDate}
+          onSave={handleSaveAttendance}
+          onAlert={(title, message, type) => {
+            setAlertTitle(title);
+            setAlertMessage(message);
+            setAlertType(type);
+            setAlertModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* 이미 근태가 입력된 날짜 경고 모달 */}
+      <div className={`fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4 transition-opacity duration-200 ${isModalOpen && selectedAttendance ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`bg-white rounded-xl shadow-xl max-w-sm w-full transform transition-transform duration-200 ${isModalOpen && selectedAttendance ? 'scale-100' : 'scale-95'}`}>
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-center">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">근태 입력 불가</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              선택한 날짜에 이미 근태가 입력되어 있습니다.<br/>
+              근태 수정을 원하시면 관리자에게 문의해주세요.
+            </p>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* 비밀번호 변경 모달 */}
       {showPasswordChangeModal && (
