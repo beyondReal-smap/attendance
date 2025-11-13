@@ -29,14 +29,14 @@ export default function RootLayout({
       <Head>
         <link
           rel="preload"
-          href="/fonts/Suite-Regular.woff2"
+          href="/fonts/LINESeedKR-Rg.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
         />
         <link
           rel="preload"
-          href="/fonts/Suite-Bold.woff2"
+          href="/fonts/LINESeedKR-Bd.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
@@ -45,7 +45,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased`}
         style={{
-          fontFamily: 'SUITE, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'LINESeedKR, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           overscrollBehavior: 'none'
         }}
       >

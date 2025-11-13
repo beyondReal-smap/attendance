@@ -1485,7 +1485,7 @@ export default function AdminPage() {
                                 {attendance.type}
                                 {attendance.startTime && attendance.endTime && (
                                   <span className="text-xs ml-1">
-                                    ({attendance.startTime}~{attendance.endTime})
+                                    ({formatTimeDisplay(attendance.startTime)}~{formatTimeDisplay(attendance.endTime)})
                                   </span>
                                 )}
                               </span>
