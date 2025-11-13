@@ -2735,19 +2735,35 @@ function MonthlyAttendanceCalendar({
   const getAttendanceColorForSlot = (type: AttendanceType): string => {
     switch (type) {
       case '연차':
-        return 'bg-red-400';
-      case '오전반차':
-        return 'bg-orange-400';
-      case '오후반차':
-        return 'bg-green-400';
-      case '반반차':
-        return 'bg-purple-400';
-      case '체휴':
-        return 'bg-yellow-400';
+        return 'bg-red-500';        // 빨강
       case '결근':
-        return 'bg-blue-400';
+        return 'bg-rose-500';       // 장미빨강
+      case '오전반차':
+        return 'bg-orange-500';     // 주황
+      case '연장근무':
+        return 'bg-amber-500';      // 황금색
+      case '체휴':
+        return 'bg-yellow-500';     // 노랑
+      case '오후반차':
+        return 'bg-lime-500';       // 라임색
+      case '출장':
+        return 'bg-green-500';      // 초록
+      case '교육':
+        return 'bg-emerald-500';    // 에메랄드
+      case '휴식':
+        return 'bg-teal-500';       // 청록
+      case '팀장대행':
+        return 'bg-cyan-500';       // 하늘색
+      case '코칭':
+        return 'bg-blue-500';      // 파랑
+      case '반반차':
+        return 'bg-indigo-500';     // 남색
+      case '장애':
+        return 'bg-violet-500';     // 보라
+      case '기타':
+        return 'bg-purple-500';     // 자줏빛
       default:
-        return 'bg-gray-400';
+        return 'bg-gray-500';
     }
   };
 
@@ -2917,34 +2933,62 @@ function MonthlyAttendanceCalendar({
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
         <div className="flex flex-wrap gap-4 text-xs">
-          <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-400 border border-gray-300 rounded"></div>
-            <span>연차</span>
-          </div>
-          <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-400 border border-gray-300 rounded"></div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 border border-gray-300 rounded"></div>
+                <span>연차</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-rose-500 border border-gray-300 rounded"></div>
+                <span>결근</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-orange-500 border border-gray-300 rounded"></div>
                 <span>오전반차</span>
-          </div>
-          <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-400 border border-gray-300 rounded"></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-amber-500 border border-gray-300 rounded"></div>
+                <span>연장근무</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-yellow-500 border border-gray-300 rounded"></div>
+                <span>체휴</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-lime-500 border border-gray-300 rounded"></div>
                 <span>오후반차</span>
-          </div>
-          <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-purple-400 border border-gray-300 rounded"></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 border border-gray-300 rounded"></div>
+                <span>출장</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-emerald-500 border border-gray-300 rounded"></div>
+                <span>교육</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-teal-500 border border-gray-300 rounded"></div>
+                <span>휴식</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-cyan-500 border border-gray-300 rounded"></div>
+                <span>팀장대행</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 border border-gray-300 rounded"></div>
+                <span>코칭</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-indigo-500 border border-gray-300 rounded"></div>
                 <span>반반차</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-400 border border-gray-300 rounded"></div>
-            <span>체휴</span>
-          </div>
-          <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-400 border border-gray-300 rounded"></div>
-                <span>결근</span>
-          </div>
+                <div className="w-3 h-3 bg-violet-500 border border-gray-300 rounded"></div>
+                <span>장애</span>
+              </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-400 border border-gray-300 rounded"></div>
-                <span>기타 근태</span>
-        </div>
+                <div className="w-3 h-3 bg-purple-500 border border-gray-300 rounded"></div>
+                <span>기타</span>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
                 <span>근태 없음</span>
