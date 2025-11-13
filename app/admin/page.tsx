@@ -11,6 +11,34 @@ import dayjs from 'dayjs';
 import { FiCalendar, FiDownload, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 
+// 30분 단위로 시간 계산 헬퍼 함수
+const calculateTimeSlots = (startTime?: string, endTime?: string, type?: string): number => {
+  if (!startTime || !endTime) {
+    // 시간 정보가 없는 경우 기본값 사용
+    switch (type) {
+      case '연차':
+      case '체휴':
+      case '결근':
+        return 16; // 8시간 = 16 * 30분
+      case '오전반차':
+        return 10; // 5시간 = 10 * 30분 (9시~14시)
+      case '오후반차':
+        return 8; // 4시간 = 8 * 30분 (14시~18시)
+      case '반반차':
+        return 4; // 2시간 = 4 * 30분 (14시~16시)
+      default:
+        return 16; // 기본 8시간
+    }
+  }
+
+  // 시간 정보가 있는 경우 실제 시간 계산
+  const start = new Date(`2000-01-01T${startTime}`);
+  const end = new Date(`2000-01-01T${endTime}`);
+  const diffMs = end.getTime() - start.getTime();
+  const diffMinutes = diffMs / (1000 * 60);
+  return Math.ceil(diffMinutes / 30); // 30분 단위로 계산
+};
+
 interface User {
   id: string;
   username: string;
@@ -150,7 +178,7 @@ export default function AdminPage() {
       const department = userDepartment || currentUserDepartment;
 
       if (role === 'manager' && department) {
-        data = data.filter(user =>
+        data = data.filter((user: User) =>
           user.department === department &&
           user.role !== 'admin'  // admin은 제외, manager 자신은 포함
         );
@@ -162,7 +190,7 @@ export default function AdminPage() {
       setUsers(data);
 
       // 선택된 사용자가 필터링된 목록에 없는 경우 재설정
-      const isSelectedUserValid = data.some(user => user.id === selectedUserId);
+      const isSelectedUserValid = data.some((user: User) => user.id === selectedUserId);
       if (data.length > 0 && (!selectedUserId || !isSelectedUserValid)) {
         setSelectedUserId(data[0].id);
       }
@@ -183,12 +211,12 @@ export default function AdminPage() {
         if (usersRes.ok) {
           const allUsers = await usersRes.json();
           const departmentUserIds = allUsers
-            .filter(user =>
+            .filter((user: User) =>
               user.department === department &&
               user.role !== 'admin'  // admin은 제외, manager 자신은 포함
             )
-            .map(user => user.id);
-          data = data.filter(attendance => departmentUserIds.includes(attendance.userId));
+            .map((user: User) => user.id);
+          data = data.filter((attendance: Attendance) => departmentUserIds.includes(attendance.userId));
         }
       } else if (role === 'manager' && !department) {
         // department 정보가 없으면 빈 배열 반환
@@ -261,33 +289,6 @@ export default function AdminPage() {
     link.click();
   };
 
-  // 30분 단위로 시간 계산
-  const calculateTimeSlots = (startTime?: string, endTime?: string, type?: AttendanceType): number => {
-    if (!startTime || !endTime) {
-      // 시간 정보가 없는 경우 기본값 사용
-      switch (type) {
-        case '연차':
-        case '체휴':
-        case '결근':
-          return 16; // 8시간 = 16 * 30분
-        case '오전반차':
-          return 10; // 5시간 = 10 * 30분 (9시~14시)
-        case '오후반차':
-          return 8; // 4시간 = 8 * 30분 (14시~18시)
-        case '반반차':
-          return 4; // 2시간 = 4 * 30분 (14시~16시)
-        default:
-          return 16; // 기본 8시간
-      }
-    }
-
-    // 시간 정보가 있는 경우 실제 시간 계산
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    const diffMs = end.getTime() - start.getTime();
-    const diffMinutes = diffMs / (1000 * 60);
-    return Math.ceil(diffMinutes / 30); // 30분 단위로 계산
-  };
 
   // XLSX 다운로드 함수
   const downloadXLSX = () => {
@@ -914,7 +915,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1290,10 +1291,10 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   onClick={downloadXLSX}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                  className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
                 >
                   <FiDownload className="w-4 h-4" />
-                  XLSX
+                  Excel
                 </button>
               </div>
             </div>

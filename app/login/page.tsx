@@ -59,30 +59,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-8">
-      <div className="w-full max-w-md">
-        {/* 로고 및 타이틀 섹션 */}
-        <div className="text-center mb-10">
-          <div className="mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              근태 관리 시스템
-            </h1>
-            <p className="text-gray-600 text-sm">
-              디지털 화상고객센터
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* 애니메이션 배경 - 빨간색과 파란색이 왔다갔다 (진한 버전) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-200 via-gray-50 to-blue-200">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-300/50 via-transparent to-blue-300/50 animate-[shift_8s_ease-in-out_infinite]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-200/40 via-blue-200/40 to-red-200/40 animate-[wave_12s_ease-in-out_infinite]"></div>
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-red-400/30 rounded-full blur-xl animate-[float_8s_ease-in-out_infinite]"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-blue-400/30 rounded-full blur-xl animate-[float_12s_ease-in-out_infinite_reverse]"></div>
+          <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-red-500/25 rounded-full blur-xl animate-[float_10s_ease-in-out_infinite]"></div>
+          <div className="absolute bottom-40 right-1/3 w-16 h-16 bg-blue-500/25 rounded-full blur-xl animate-[float_14s_ease-in-out_infinite_reverse]"></div>
         </div>
+      </div>
 
+      {/* 콘텐츠 */}
+      <div className="w-full max-w-md relative z-10">
         {/* 로그인 폼 카드 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
           <div className="text-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-1">
-              로그인
+              디지털 화상고객센터 근태 관리
             </h2>
             <p className="text-gray-500 text-sm">
               계정 정보를 입력해주세요
@@ -156,8 +152,9 @@ export default function LoginPage() {
         {/* 푸터 텍스트 */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2025 디지털 화상고객센터. All rights reserved.
+            © 2025 Hanwha General Insurance Co., Ltd.
           </p>
+          <p className="text-xs text-gray-500">All rights reserved.</p>
         </div>
       </div>
     </div>

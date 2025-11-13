@@ -9,13 +9,10 @@ import { countWorkingDays, getDateRange } from '@/lib/holidays';
 import { getAttendanceTimeInfo } from '@/lib/attendance-utils';
 import { DatePickerCalendar } from './DatePickerCalendar';
 
-interface Attendance {
-  id: string;
-  userId: string;
-  userName: string;
+interface ExistingAttendance {
   date: string;
   type: AttendanceType;
-  reason?: string;
+  reason?: string | null;
   startTime?: string;
   endTime?: string;
 }
@@ -24,7 +21,7 @@ interface AttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Dayjs | null;
-  existingAttendances?: Attendance[];
+  existingAttendances?: ExistingAttendance[];
   onSave: (data: {
     startDate: string;
     endDate: string;
@@ -351,8 +348,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                   </div>
                 )}
 
-                {/* 근태 일수 표시 */}
-                {workingDays > 0 && (
+                {/* 근태 일수 표시 - 특정 유형 제외 */}
+                {workingDays > 0 && !['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무', '결근'].includes(type) && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-blue-700">근태 일수</span>
