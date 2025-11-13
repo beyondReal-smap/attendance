@@ -602,7 +602,7 @@ export default function CalendarPage() {
         <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-200 px-5 md:px-8 lg:px-12 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-xl font-black text-gray-900">{user?.name}</h1>
+              <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
               <p className="text-xs text-gray-500 mt-0.5">근태 관리</p>
             </div>
             <div className="flex gap-2">
@@ -681,7 +681,7 @@ export default function CalendarPage() {
 
         {/* Calendar */}
         <div className="p-5 md:p-6 lg:p-8 bg-blue-50/30 rounded-xl border border-blue-100 mx-2 md:mx-4 lg:mx-6 mt-4">
-          <h2 className="text-lg font-black text-gray-900 mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
             근태 달력
           </h2>
           <MobileCalendar
