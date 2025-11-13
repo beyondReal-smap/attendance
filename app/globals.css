@@ -2,14 +2,16 @@
   font-family: 'LINESeedKR';
   src: url('/fonts/LINESeedKR-Rg.woff2') format('woff2');
   font-weight: 400;
-  font-display: swap;
+  font-style: normal;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'LINESeedKR';
   src: url('/fonts/LINESeedKR-Bd.woff2') format('woff2');
   font-weight: 700;
-  font-display: swap;
+  font-style: normal;
+  font-display: block;
 }
 @import "tailwindcss";
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Head from "next/head";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,10 +26,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <Head>
+        <link
+          rel="preload"
+          href="/fonts/LINESeedKR-Rg.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/LINESeedKR-Bd.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </Head>
       <body
         className={`${inter.variable} antialiased`}
         style={{
-          fontFamily: 'SUITE, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'LINESeedKR, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           overscrollBehavior: 'none'
         }}
       >
