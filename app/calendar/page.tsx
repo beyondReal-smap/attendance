@@ -623,9 +623,9 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* 연차/체휴/근무 정보 */}
+          {/* 연차/체휴 정보 */}
           {user && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="bg-red-50 border border-red-100 rounded-xl p-3">
                 <div className="text-xs text-red-600 font-medium mb-2">연차</div>
                 <div className="space-y-1">
@@ -657,21 +657,6 @@ export default function CalendarPage() {
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs text-yellow-500">전체</span>
                     <span className="text-xs text-yellow-500">{user.compLeaveTotal}일</span>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <div className="text-xs text-gray-600 font-medium mb-2">{currentMonth.format('M월')} 결근 현황</div>
-                <div className="space-y-1">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-blue-700 font-medium">결근일</span>
-                    <span className="text-xl font-bold text-blue-700">
-                      {attendances.filter(a => {
-                        const attendanceMonth = dayjs(a.date).format('YYYY-MM');
-                        return attendanceMonth === currentMonth.format('YYYY-MM') &&
-                               a.type === '결근';
-                      }).length}일
-                    </span>
                   </div>
                 </div>
               </div>

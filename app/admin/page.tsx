@@ -844,7 +844,7 @@ export default function AdminPage() {
             {/* 사용자 리스트 */}
             <div className="mt-8 border-t border-blue-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                등록된 사용자 목록
+                등록된 사용자
               </h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {users.length === 0 ? (
@@ -887,18 +887,18 @@ export default function AdminPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                           <button
                             onClick={() => handleChangePassword(user.id)}
-                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition"
+                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition whitespace-nowrap"
                           >
                             비밀번호 변경
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition whitespace-nowrap"
                           >
-                            삭제
+                            사용자 삭제
                           </button>
                         </div>
                       </div>
@@ -946,30 +946,30 @@ export default function AdminPage() {
                         setAnnualLeaveTotal(user.annualLeaveTotal.toString());
                         setCompLeaveTotal(user.compLeaveTotal.toString());
                       }}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
                     >
                       수정
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-2.5">
-                      <div className="text-xs text-blue-600 font-medium mb-1">연차</div>
+                    <div className="bg-red-50 border border-red-100 rounded-lg p-2.5">
+                      <div className="text-xs text-red-600 font-medium mb-1">연차</div>
                       <div className="flex items-baseline gap-1">
-                        <div className="text-lg font-bold text-blue-700">
+                        <div className="text-lg font-bold text-red-700">
                           {user.annualLeaveRemaining}
                         </div>
-                        <div className="text-xs text-blue-500">
+                        <div className="text-xs text-red-500">
                           / {user.annualLeaveTotal}일
                         </div>
                       </div>
                     </div>
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
-                      <div className="text-xs text-emerald-600 font-medium mb-1">체휴</div>
+                    <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2.5">
+                      <div className="text-xs text-yellow-600 font-medium mb-1">체휴</div>
                       <div className="flex items-baseline gap-1">
-                        <div className="text-lg font-bold text-emerald-700">
+                        <div className="text-lg font-bold text-yellow-700">
                           {user.compLeaveRemaining}
                         </div>
-                        <div className="text-xs text-emerald-500">
+                        <div className="text-xs text-yellow-500">
                           / {user.compLeaveTotal}일
                         </div>
                       </div>
