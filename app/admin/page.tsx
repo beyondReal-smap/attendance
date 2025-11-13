@@ -76,6 +76,7 @@ export default function AdminPage() {
 
   // 현재 사용자 권한 상태
   const [currentUserRole, setCurrentUserRole] = useState<'user' | 'manager' | 'admin'>('user');
+  const [currentUserDepartment, setCurrentUserDepartment] = useState<string>('');
 
   // 일자 범위 필터링 상태
   const [useDateRange, setUseDateRange] = useState(false);
@@ -90,6 +91,11 @@ export default function AdminPage() {
   // 근태 추가 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+
+  // 일괄 생성 모달 상태
+  const [showBulkCreateModal, setShowBulkCreateModal] = useState(false);
+  const [bulkCreateYear, setBulkCreateYear] = useState(new Date().getFullYear().toString());
+  const [bulkCreateLoading, setBulkCreateLoading] = useState(false);
 
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
@@ -112,16 +118,18 @@ export default function AdminPage() {
       const session = await sessionRes.json();
 
       // 권한에 따른 접근 제어 - 관리자만 접근 가능
-      if (session.role !== 'admin') {
+      if (session.role !== 'admin' && session.role !== 'manager') {
         router.push('/calendar');
         return;
       }
 
       // 현재 사용자 권한 저장 (관리자 계정은 role이 없을 수 있으므로 기본값 처리)
       const userRole = session.role || (session.username === '8000000' ? 'admin' : 'user');
+      const userDepartment = session.department || '';
       setCurrentUserRole(userRole);
+      setCurrentUserDepartment(userDepartment);
 
-      await Promise.all([loadUsers(), loadAttendances()]);
+      await Promise.all([loadUsers(userRole, userDepartment), loadAttendances(userRole, userDepartment)]);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -129,21 +137,61 @@ export default function AdminPage() {
     }
   };
 
-  const loadUsers = async () => {
+  const loadUsers = async (userRole?: string, userDepartment?: string) => {
     const res = await fetch('/api/users');
     if (res.ok) {
-      const data = await res.json();
+      let data = await res.json();
+
+      // 중간관리자의 경우 자신이 속한 부서의 일반 사용자만 표시 (관리자는 제외)
+      const role = userRole || currentUserRole;
+      const department = userDepartment || currentUserDepartment;
+
+      if (role === 'manager' && department) {
+        data = data.filter(user =>
+          user.department === department &&
+          user.role !== 'admin'  // admin은 제외, manager 자신은 포함
+        );
+      } else if (role === 'manager' && !department) {
+        // department 정보가 없으면 빈 배열
+        data = [];
+      }
+
       setUsers(data);
-      if (data.length > 0 && !selectedUserId) {
+
+      // 선택된 사용자가 필터링된 목록에 없는 경우 재설정
+      const isSelectedUserValid = data.some(user => user.id === selectedUserId);
+      if (data.length > 0 && (!selectedUserId || !isSelectedUserValid)) {
         setSelectedUserId(data[0].id);
       }
     }
   };
 
-  const loadAttendances = async () => {
+  const loadAttendances = async (userRole?: string, userDepartment?: string) => {
     const res = await fetch('/api/attendance/all');
     if (res.ok) {
-      const data = await res.json();
+      let data = await res.json();
+
+      // 중간관리자의 경우 자신이 속한 부서의 사용자 근태만 표시
+      const role = userRole || currentUserRole;
+      const department = userDepartment || currentUserDepartment;
+      if (role === 'manager' && department) {
+        // 사용자 정보를 가져와서 부서 및 권한 필터링
+        const usersRes = await fetch('/api/users');
+        if (usersRes.ok) {
+          const allUsers = await usersRes.json();
+          const departmentUserIds = allUsers
+            .filter(user =>
+              user.department === department &&
+              user.role !== 'admin'  // admin은 제외, manager 자신은 포함
+            )
+            .map(user => user.id);
+          data = data.filter(attendance => departmentUserIds.includes(attendance.userId));
+        }
+      } else if (role === 'manager' && !department) {
+        // department 정보가 없으면 빈 배열 반환
+        data = [];
+      }
+
       setAttendances(data);
     }
   };
@@ -273,9 +321,9 @@ export default function AdminPage() {
   };
 
   const handleAddAttendance = async () => {
-    if (!selectedUserId) {
+    if (!selectedUserId || !users.find(u => u.id === selectedUserId)) {
       setAlertTitle('오류');
-      setAlertMessage('사용자를 선택하세요.');
+      setAlertMessage('유효한 사용자를 선택하세요.');
       setAlertType('error');
       setAlertModalOpen(true);
       return;
@@ -390,6 +438,44 @@ export default function AdminPage() {
       setAlertMessage('오류가 발생했습니다.');
       setAlertType('error');
       setAlertModalOpen(true);
+    }
+  };
+
+  const handleBulkCreateLeave = async () => {
+    setBulkCreateLoading(true);
+    try {
+      const res = await fetch('/api/users/bulk-create-leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year: parseInt(bulkCreateYear),
+          annualLeaveTotal: 15,
+          compLeaveTotal: 5,
+        }),
+      });
+
+      if (res.ok) {
+        await loadUsers();
+        setShowBulkCreateModal(false);
+        setBulkCreateYear(new Date().getFullYear().toString());
+        setAlertTitle('성공');
+        setAlertMessage(`${bulkCreateYear}년 연차/체휴가 전직원에게 일괄 생성되었습니다.`);
+        setAlertType('success');
+        setAlertModalOpen(true);
+      } else {
+        const data = await res.json();
+        setAlertTitle('오류');
+        setAlertMessage(data.error || '일괄 생성에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
+      }
+    } catch (error) {
+      setAlertTitle('오류');
+      setAlertMessage('오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
+    } finally {
+      setBulkCreateLoading(false);
     }
   };
 
@@ -586,9 +672,9 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto bg-white min-h-screen">
+      <div className="max-w-5xl lg:max-w-7xl xl:max-w-full mx-auto bg-white min-h-screen">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 md:px-8 lg:px-12 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-xl font-bold text-gray-900">관리자</h1>
@@ -611,10 +697,10 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="p-6 md:p-8 lg:p-12 space-y-8">
           {/* 사용자 추가 - 관리자만 표시 */}
           {currentUserRole === 'admin' && (
-            <div className="bg-white rounded-xl p-6 border-2 border-blue-200 shadow-lg">
+            <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -766,14 +852,25 @@ export default function AdminPage() {
 
           {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
           {currentUserRole === 'admin' && (
-            <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-green-200 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">사용자 연차/체휴 설정</h2>
               </div>
-              <h2 className="text-xl font-bold text-gray-900">사용자 연차/체휴 설정</h2>
+              <button
+                onClick={() => setShowBulkCreateModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                일괄 생성
+              </button>
             </div>
             <div className="space-y-3">
               {users.map((user) => (
@@ -872,6 +969,59 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {/* 일괄 생성 모달 */}
+            {showBulkCreateModal && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">연차/체휴 일괄 생성</h3>
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="text-sm text-blue-800">
+                        <div className="font-medium mb-2">생성 내용:</div>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>연차: 15일</li>
+                          <li>체휴: 5일</li>
+                          <li>대상: 전직원</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        생성 년도
+                      </label>
+                      <input
+                        type="number"
+                        value={bulkCreateYear}
+                        onChange={(e) => setBulkCreateYear(e.target.value)}
+                        min="2020"
+                        max="2030"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => {
+                          setShowBulkCreateModal(false);
+                          setBulkCreateYear(new Date().getFullYear().toString());
+                        }}
+                        disabled={bulkCreateLoading}
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={handleBulkCreateLeave}
+                        disabled={bulkCreateLoading}
+                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {bulkCreateLoading ? '생성 중...' : '실행'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           )}
 
@@ -897,7 +1047,7 @@ export default function AdminPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                     <span>
-                      {selectedUserId
+                      {selectedUserId && users.find(u => u.id === selectedUserId)
                         ? users.find(u => u.id === selectedUserId)?.username + ' (' + users.find(u => u.id === selectedUserId)?.name + ')'
                         : '선택하세요'
                       }
@@ -2053,7 +2203,7 @@ export default function AdminPage() {
                       const minute = i % 2 === 0 ? '00' : '30';
                       const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
                       // 종료시간이 이미 선택되어 있다면 종료시간과 같거나 늦은 시간은 비활성화
-                      const isDisabled = endTime && timeString >= endTime;
+                      const isDisabled = !!(endTime && timeString >= endTime);
                       return (
                         <button
                           key={timeString}
@@ -2121,7 +2271,7 @@ export default function AdminPage() {
                       const minute = i % 2 === 0 ? '00' : '30';
                       const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
                       // 시작시간이 이미 선택되어 있다면 시작시간과 같거나 앞서는 시간은 비활성화
-                      const isDisabled = startTime && timeString <= startTime;
+                      const isDisabled = !!(startTime && timeString <= startTime);
                       return (
                         <button
                           key={timeString}
@@ -2330,13 +2480,101 @@ function MonthlyAttendanceCalendar({
     }
   };
 
+  // 9시부터 18시까지 30분 단위 시간 슬롯 생성 (총 18개)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 9; hour < 18; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    return slots;
+  };
+
+  // 근태 시간을 시간 슬롯에 매핑
+  const getTimeSlotColors = (attendances: Attendance[]) => {
+    const timeSlots = generateTimeSlots(); // 18개 슬롯
+    const slotColors = new Array(18).fill('bg-gray-100'); // 기본 회색
+
+    attendances.forEach(attendance => {
+      const color = getAttendanceColorForSlot(attendance.type);
+      let startSlot = 0;
+      let endSlot = 17; // 기본 9시~18시 전체
+
+      if (attendance.startTime && attendance.endTime) {
+        // 실제 시간에 따른 슬롯 계산
+        const startHour = parseInt(attendance.startTime.split(':')[0]);
+        const startMinute = parseInt(attendance.startTime.split(':')[1]);
+        const endHour = parseInt(attendance.endTime.split(':')[0]);
+        const endMinute = parseInt(attendance.endTime.split(':')[1]);
+
+        // 9시부터 시작하는 인덱스 계산
+        startSlot = Math.max(0, (startHour - 9) * 2 + (startMinute >= 30 ? 1 : 0));
+        endSlot = Math.min(17, (endHour - 9) * 2 + (endMinute > 30 ? 1 : 0));
+      } else {
+        // 시간 정보가 없는 경우 근태 유형에 따른 기본 시간 적용
+        switch (attendance.type) {
+          case '오전반차':
+            endSlot = 7; // 9시~13시 (8슬롯)
+            break;
+          case '오후반차':
+            startSlot = 8; // 13시~18시 (8슬롯)
+            break;
+          case '반반차':
+            startSlot = 8; // 13시~15시 (4슬롯)
+            endSlot = 11;
+            break;
+          // 연차, 체휴, 결근 등은 전체 시간 (9시~18시)
+        }
+      }
+
+      // 해당 슬롯 범위에 색상 적용
+      for (let i = startSlot; i <= endSlot; i++) {
+        slotColors[i] = color;
+      }
+    });
+
+    return slotColors;
+  };
+
+  // 슬롯용 색상 함수
+  const getAttendanceColorForSlot = (type: AttendanceType): string => {
+    switch (type) {
+      case '연차':
+        return 'bg-red-400';
+      case '오전반차':
+        return 'bg-orange-400';
+      case '오후반차':
+        return 'bg-green-400';
+      case '반반차':
+        return 'bg-purple-400';
+      case '체휴':
+        return 'bg-yellow-400';
+      case '결근':
+        return 'bg-blue-400';
+      default:
+        return 'bg-gray-400';
+    }
+  };
+
+  // 시간을 13시 30분 형식으로 변환
+  const formatTimeDisplay = (timeString: string) => {
+    const [hour, minute] = timeString.split(':').map(Number);
+    if (minute === 0) {
+      return `${hour}시`;
+    } else {
+      return `${hour}시 ${minute}분`;
+    }
+  };
+
   const getAttendanceText = (attendances: Attendance[]): string => {
     if (attendances.length === 0) return '';
 
     if (attendances.length === 1) {
       const attendance = attendances[0];
       if (attendance.type === '반반차' && attendance.startTime && attendance.endTime) {
-        return `${attendance.type}(${attendance.startTime}~${attendance.endTime})`;
+        const startTime = formatTimeDisplay(attendance.startTime);
+        const endTime = formatTimeDisplay(attendance.endTime);
+        return `${attendance.type}\n${startTime}~${endTime}`;
       }
       return attendance.type;
     }
@@ -2401,14 +2639,11 @@ function MonthlyAttendanceCalendar({
       </div>
 
       {/* 사용자별 일별 근태 그리드 */}
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <div className="min-w-max">
           {/* 일자 헤더 */}
-          <div
-            className="grid border-b border-gray-200 bg-gray-50 sticky top-0 z-10"
-            style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, minmax(60px, 1fr))` }}
-          >
-            <div className="px-4 py-3 text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, 80px)` }}>
+            <div className="sticky left-0 z-20 px-4 py-3 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50">
               사용자
             </div>
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
@@ -2427,10 +2662,10 @@ function MonthlyAttendanceCalendar({
             <div
               key={user.id}
               className="grid border-b border-gray-100 hover:bg-gray-50 transition"
-              style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, minmax(60px, 1fr))` }}
+              style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, 80px)` }}
             >
-              {/* 사용자 이름 */}
-              <div className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center">
+              {/* 사용자 이름 - 고정 */}
+              <div className="sticky left-0 z-10 px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center">
                 {user.username}
                 <span className="text-xs text-gray-500 ml-1">({user.name})</span>
               </div>
@@ -2439,25 +2674,39 @@ function MonthlyAttendanceCalendar({
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                 const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
                 const dayAttendances = userAttendanceMap[user.id]?.[dateStr] || [];
-                const colorClass = getAttendanceColor(dayAttendances);
+                const slotColors = getTimeSlotColors(dayAttendances);
                 const text = getAttendanceText(dayAttendances);
 
                 return (
                   <motion.button
                     key={day}
                     onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
-                    className={`px-2 py-3 text-xs text-center rounded border transition-all duration-200 ${colorClass} ${
+                    className={`px-1 py-3 text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 min-h-[7rem] ${
                       dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
                     } border-r border-gray-100 last:border-r-0`}
                     whileHover={dayAttendances.length > 0 ? { scale: 1.02 } : {}}
                     whileTap={dayAttendances.length > 0 ? { scale: 0.98 } : {}}
                     title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
                   >
-                    {text && (
-                      <div className="truncate max-w-full">
-                        {text}
+                    <div className="flex flex-col gap-0.5">
+                      {/* 30분 단위 시간 슬롯들 (9시~18시, 총 18개) */}
+                      {slotColors.map((color, index) => (
+                        <div
+                          key={index}
+                          className={`h-1 w-full rounded-sm ${color} border border-gray-200`}
+                          title={`${9 + Math.floor(index / 2)}:${index % 2 === 0 ? '00' : '30'}`}
+                        />
+                      ))}
+
+                      {/* 근태 텍스트 (슬롯 아래에 표시) */}
+                      <div className="mt-1 min-h-[3rem] flex items-start justify-center">
+                        {text && (
+                          <div className="text-xs text-gray-700 leading-tight text-center break-words whitespace-pre-line">
+                            {text}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </motion.button>
                 );
               })}
@@ -2468,29 +2717,48 @@ function MonthlyAttendanceCalendar({
 
       {/* 범례 */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <div className="flex flex-wrap gap-4 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-            <span>연차</span>
+        <div className="flex flex-col gap-4">
+          {/* 시간 슬롯 색상 범례 */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-400 border border-gray-300 rounded"></div>
+                <span>연차</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-orange-400 border border-gray-300 rounded"></div>
+                <span>오전반차</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 border border-gray-300 rounded"></div>
+                <span>오후반차</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-400 border border-gray-300 rounded"></div>
+                <span>반반차</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-yellow-400 border border-gray-300 rounded"></div>
+                <span>체휴</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-400 border border-gray-300 rounded"></div>
+                <span>결근</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-400 border border-gray-300 rounded"></div>
+                <span>기타 근태</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                <span>근태 없음</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
-            <span>반차</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
-            <span>근무</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div>
-            <span>체휴</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-100 border border-gray-200 rounded"></div>
-            <span>반반차</span>
-          </div>
+
         </div>
-        <p className="text-xs text-gray-500 mt-2">셀을 클릭하면 해당 근태를 삭제할 수 있습니다.</p>
+        <p className="text-xs text-gray-500 mt-3">셀을 클릭하면 해당 근태를 삭제할 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
       </div>
     </div>
   );

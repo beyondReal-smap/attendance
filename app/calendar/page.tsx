@@ -45,13 +45,16 @@ const MobileCalendar = memo(({
   
   const attendanceMap = useMemo(() => {
     return attendances.reduce((acc, attendance) => {
-      acc[attendance.date] = {
+      if (!acc[attendance.date]) {
+        acc[attendance.date] = [];
+      }
+      acc[attendance.date].push({
         type: attendance.type,
         startTime: attendance.startTime,
         endTime: attendance.endTime
-      };
+      });
       return acc;
-    }, {} as Record<string, {type: AttendanceType, startTime?: string, endTime?: string}>);
+    }, {} as Record<string, Array<{type: AttendanceType, startTime?: string, endTime?: string}>>);
   }, [attendances]);
 
   const getAttendanceColor = (type: AttendanceType | null): string => {
@@ -144,6 +147,33 @@ const MobileCalendar = memo(({
     }
   };
 
+  // 30분 단위로 시간 계산
+  const calculateTimeSlots = (startTime?: string, endTime?: string, type?: AttendanceType): number => {
+    if (!startTime || !endTime) {
+      // 시간 정보가 없는 경우 기본값 사용
+      switch (type) {
+        case '연차':
+        case '체휴':
+        case '결근':
+          return 16; // 8시간 = 16 * 30분
+        case '오전반차':
+        case '오후반차':
+          return 8; // 4시간 = 8 * 30분
+        case '반반차':
+          return 4; // 2시간 = 4 * 30분
+        default:
+          return 16; // 기본 8시간
+      }
+    }
+
+    // 시간 정보가 있는 경우 실제 시간 계산
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+    return Math.ceil(diffMinutes / 30); // 30분 단위로 계산
+  };
+
   const handlePrevMonth = () => {
     setAnimationDirection('left');
     setIsAnimating(true);
@@ -204,8 +234,10 @@ const MobileCalendar = memo(({
       const dateString = currentDate.format('YYYY-MM-DD');
       const isSelected = selectedDay?.isSame(currentDate, 'day');
       const isToday = today.isSame(currentDate, 'day');
-      const attendanceInfo = attendanceMap[dateString] || null;
-      const attendanceType = attendanceInfo?.type || null;
+      const attendanceList = attendanceMap[dateString] || [];
+      const hasAttendance = attendanceList.length > 0;
+      const firstAttendance = attendanceList[0] || null;
+      const attendanceType = firstAttendance?.type || null;
       const colors = getAttendanceColor(attendanceType);
       const textColor = getAttendanceTextColor(attendanceType);
       const icon = getAttendanceIcon(attendanceType);
@@ -222,18 +254,18 @@ const MobileCalendar = memo(({
             ${colors}
             ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
             ${isToday && !isSelected ? 'ring-2 ring-gray-300' : ''}
-            ${!attendanceType ? 'border border-gray-200' : ''}
+            ${!hasAttendance ? 'border border-gray-200' : ''}
           `}
         >
           <span className={`${attendanceType ? textColor : 'text-black'} text-sm font-semibold`}>
             {dayIndex + 1}
           </span>
-          {attendanceType && (
+          {hasAttendance && (
             <div className="flex flex-col items-center mt-0.5">
               <span className="text-xs">{icon}</span>
-              {attendanceType === '반반차' && attendanceInfo?.startTime && attendanceInfo?.endTime && (
+              {attendanceList.length > 1 && (
                 <span className="text-xs text-gray-600 mt-0.5">
-                  {attendanceInfo.startTime}~{attendanceInfo.endTime}
+                  +{attendanceList.length - 1}
                 </span>
               )}
             </div>
@@ -563,16 +595,16 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-1">
+      <div className="w-full bg-white min-h-screen shadow-lg pb-1">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-200 px-5 py-4 shadow-sm">
+        <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-200 px-5 md:px-8 lg:px-12 py-4 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-xl font-black text-gray-900">{user?.name}</h1>
               <p className="text-xs text-gray-500 mt-0.5">근태 관리</p>
             </div>
             <div className="flex gap-2">
-              {user && user.role === 'admin' && (
+              {user && (user.role === 'admin' || user.role === 'manager') && (
                 <button
                   onClick={() => router.push('/admin')}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-all"
@@ -646,7 +678,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar */}
-        <div className="p-5 bg-blue-50/30 rounded-xl border border-blue-100 mx-2 mt-4">
+        <div className="p-5 md:p-6 lg:p-8 bg-blue-50/30 rounded-xl border border-blue-100 mx-2 md:mx-4 lg:mx-6 mt-4">
           <h2 className="text-lg font-black text-gray-900 mb-4">
             근태 달력
           </h2>
@@ -659,7 +691,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 근태 유형 범례 */}
-        <div className="mt-4 p-3 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-4">
+        <div className="mt-4 p-3 md:p-4 lg:p-6 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 md:mx-4 lg:mx-6 mb-4">
             <h3 className="text-base font-bold text-gray-900 mb-3">
               근태 유형 범례
             </h3>

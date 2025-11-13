@@ -18,7 +18,7 @@ export async function GET() {
 
     const userResult = await sql`
       SELECT
-        id, username, name, role, is_admin
+        id, username, name, role, department, is_admin
       FROM atnd_users
       WHERE id = ${session.userId}
     `;
@@ -57,6 +57,7 @@ export async function GET() {
       username: user.username,
       name: user.name,
       role: user.role,
+      department: user.department,
       isAdmin: user.is_admin === 1 || user.role === 'admin',
       annualLeaveTotal: Number(annualLeave.total),
       annualLeaveUsed: Number(annualLeave.used),

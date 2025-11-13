@@ -31,44 +31,47 @@ export async function GET() {
       }
     }
 
+    const currentYear = new Date().getFullYear();
+
     const result = await sql`
       SELECT
-        id,
-        username,
-        name,
-        department,
-        role,
-        COALESCE(is_temp_password, 0) as "isTempPassword",
-        annual_leave_total as "annualLeaveTotal",
-        annual_leave_used as "annualLeaveUsed",
-        comp_leave_total as "compLeaveTotal",
-        comp_leave_used as "compLeaveUsed"
-      FROM atnd_users
-      ORDER BY name ASC
+        u.id,
+        u.username,
+        u.name,
+        u.department,
+        u.role,
+        COALESCE(u.is_temp_password, 0) as "isTempPassword",
+        COALESCE(annual.total, 15) as "annualLeaveTotal",
+        COALESCE(annual.used, 0) as "annualLeaveUsed",
+        COALESCE(annual.total - annual.used, 15) as "annualLeaveRemaining",
+        COALESCE(comp.total, 0) as "compLeaveTotal",
+        COALESCE(comp.used, 0) as "compLeaveUsed",
+        COALESCE(comp.total - comp.used, 0) as "compLeaveRemaining"
+      FROM atnd_users u
+      LEFT JOIN leave_balances annual ON u.id = annual.user_id
+        AND annual.year = ${currentYear}
+        AND annual.leave_type = 'annual'
+      LEFT JOIN leave_balances comp ON u.id = comp.user_id
+        AND comp.year = ${currentYear}
+        AND comp.leave_type = 'compensatory'
+      ORDER BY u.name ASC
     `;
 
-    const users = result.rows.map(row => {
-      const annualLeaveTotal = Number(row.annualLeaveTotal) || 15;
-      const annualLeaveUsed = Number(row.annualLeaveUsed) || 0;
-      const compLeaveTotal = Number(row.compLeaveTotal) || 0;
-      const compLeaveUsed = Number(row.compLeaveUsed) || 0;
-
-      return {
-        id: row.id.toString(),
-        username: row.username,
-        name: row.name,
-        department: row.department || '',
-        role: row.role,
-        isAdmin: row.role === 'admin',
-        isTempPassword: Boolean(row.isTempPassword),
-        annualLeaveTotal,
-        annualLeaveUsed,
-        annualLeaveRemaining: annualLeaveTotal - annualLeaveUsed,
-        compLeaveTotal,
-        compLeaveUsed,
-        compLeaveRemaining: compLeaveTotal - compLeaveUsed,
-      };
-    });
+    const users = result.rows.map(row => ({
+      id: row.id.toString(),
+      username: row.username,
+      name: row.name,
+      department: row.department || '',
+      role: row.role,
+      isAdmin: row.role === 'admin',
+      isTempPassword: Boolean(row.isTempPassword),
+      annualLeaveTotal: Number(row.annualLeaveTotal),
+      annualLeaveUsed: Number(row.annualLeaveUsed),
+      annualLeaveRemaining: Number(row.annualLeaveRemaining),
+      compLeaveTotal: Number(row.compLeaveTotal),
+      compLeaveUsed: Number(row.compLeaveUsed),
+      compLeaveRemaining: Number(row.compLeaveRemaining),
+    }));
 
     return NextResponse.json(users);
   } catch (error) {
@@ -110,12 +113,32 @@ export async function POST(request: Request) {
 
     // 사용자 추가
     const result = await sql`
-      INSERT INTO atnd_users (username, name, department, password, role, is_temp_password, annual_leave_total, comp_leave_total)
-      VALUES (${username}, ${name}, ${department || null}, ${hashedPassword}, ${role || 'user'}, ${isTempPassword}, 15, 0)
-      RETURNING id, username, name, department, role
+      INSERT INTO atnd_users (username, name, department, password, role, is_temp_password)
+      VALUES (${username}, ${name}, ${department || null}, ${hashedPassword}, ${role || 'user'}, ${isTempPassword})
     `;
 
-    const newUser = result.rows[0];
+    // 새로 추가된 사용자의 ID 가져오기
+    const userIdResult = await sql`
+      SELECT id FROM atnd_users WHERE username = ${username}
+    `;
+    const newUserId = userIdResult.rows[0].id;
+
+    // 현재 년도에 연차/체휴 초기 데이터 생성
+    const currentYear = new Date().getFullYear();
+    await sql`
+      INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+      VALUES
+        (${newUserId}, ${currentYear}, 'annual', 15, 0, 15),
+        (${newUserId}, ${currentYear}, 'compensatory', 0, 0, 0)
+    `;
+
+    const newUser = {
+      id: newUserId,
+      username,
+      name,
+      department: department || null,
+      role: role || 'user'
+    };
 
     return NextResponse.json({
       success: true,
@@ -172,13 +195,53 @@ export async function PUT(request: Request) {
     }
 
     // 연차/체휴 설정 변경인 경우
-    await sql`
-      UPDATE atnd_users
-      SET
-        annual_leave_total = ${annualLeaveTotal ?? null},
-        comp_leave_total = ${compLeaveTotal ?? null}
-      WHERE id = ${userId}
-    `;
+    const currentYear = new Date().getFullYear();
+
+    // 연차 업데이트
+    if (annualLeaveTotal !== undefined) {
+      const existingAnnual = await sql`
+        SELECT id, used FROM leave_balances
+        WHERE user_id = ${userId} AND year = ${currentYear} AND leave_type = 'annual'
+      `;
+
+      if (existingAnnual.rows.length > 0) {
+        // 기존 데이터 업데이트
+        await sql`
+          UPDATE leave_balances
+          SET total = ${annualLeaveTotal}, remaining = ${annualLeaveTotal} - used
+          WHERE id = ${existingAnnual.rows[0].id}
+        `;
+      } else {
+        // 새 데이터 생성
+        await sql`
+          INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+          VALUES (${userId}, ${currentYear}, 'annual', ${annualLeaveTotal}, 0, ${annualLeaveTotal})
+        `;
+      }
+    }
+
+    // 체휴 업데이트
+    if (compLeaveTotal !== undefined) {
+      const existingComp = await sql`
+        SELECT id, used FROM leave_balances
+        WHERE user_id = ${userId} AND year = ${currentYear} AND leave_type = 'compensatory'
+      `;
+
+      if (existingComp.rows.length > 0) {
+        // 기존 데이터 업데이트
+        await sql`
+          UPDATE leave_balances
+          SET total = ${compLeaveTotal}, remaining = ${compLeaveTotal} - used
+          WHERE id = ${existingComp.rows[0].id}
+        `;
+      } else {
+        // 새 데이터 생성
+        await sql`
+          INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+          VALUES (${userId}, ${currentYear}, 'compensatory', ${compLeaveTotal}, 0, ${compLeaveTotal})
+        `;
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -62,6 +62,16 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
     return options;
   };
 
+  // 시간을 13시 30분 형식으로 변환
+  const formatTimeDisplay = (timeString: string) => {
+    const [hour, minute] = timeString.split(':').map(Number);
+    if (minute === 0) {
+      return `${hour}시`;
+    } else {
+      return `${hour}시 ${minute}분`;
+    }
+  };
+
   // 시작시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
 
   // 종료시간 모달이 열릴 때 초기화 (버튼 방식이므로 스크롤 설정 불필요)
@@ -270,7 +280,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         onClick={() => setShowStartTimeModal(true)}
                         className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
-                        <span>{startTime || '시간 선택'}</span>
+                        <span>{startTime ? formatTimeDisplay(startTime) : '시간 선택'}</span>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -286,7 +296,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         onClick={() => setShowEndTimeModal(true)}
                         className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
-                        <span>{endTime || '시간 선택'}</span>
+                        <span>{endTime ? formatTimeDisplay(endTime) : '시간 선택'}</span>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -787,7 +797,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         }
                       }}
                       disabled={isDisabled}
-                      className={`p-3 text-center rounded-lg transition text-sm font-medium ${
+                      className={`p-2 text-center rounded-lg transition text-xs font-medium leading-tight ${
                         startTime === time
                           ? 'bg-blue-500 text-white'
                           : isDisabled
@@ -795,7 +805,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                       }`}
                     >
-                      {time}
+                      {formatTimeDisplay(time)}
                     </button>
                   );
                 })}
@@ -844,7 +854,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         }
                       }}
                       disabled={isDisabled}
-                      className={`p-3 text-center rounded-lg transition text-sm font-medium ${
+                      className={`p-2 text-center rounded-lg transition text-xs font-medium leading-tight ${
                         endTime === time
                           ? 'bg-blue-500 text-white'
                           : isDisabled
@@ -852,7 +862,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                           : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                       }`}
                     >
-                      {time}
+                      {formatTimeDisplay(time)}
                     </button>
                   );
                 })}

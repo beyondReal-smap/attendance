@@ -43,12 +43,10 @@ export async function initDatabase() {
         username VARCHAR(50) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(100) NOT NULL,
+        department VARCHAR(100) COMMENT '부서',
+        role VARCHAR(20) DEFAULT 'user' COMMENT '역할 (user, manager, admin)',
         is_admin TINYINT(1) DEFAULT 0,
         is_temp_password TINYINT(1) DEFAULT 0 COMMENT '임시비밀번호 여부',
-        annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수',
-        annual_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 연차 수',
-        comp_leave_total INT DEFAULT 0 COMMENT '부여된 체휴 수',
-        comp_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 체휴 수',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -60,22 +58,12 @@ export async function initDatabase() {
       if (!e.message?.includes('Duplicate column')) console.error('is_admin column add error:', e);
     }
     try {
-      await sql`ALTER TABLE atnd_users ADD COLUMN annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수'`;
+      await sql`ALTER TABLE atnd_users ADD COLUMN department VARCHAR(100) COMMENT '부서'`;
     } catch (e: any) {
       if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
     }
     try {
-      await sql`ALTER TABLE atnd_users ADD COLUMN annual_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 연차 수'`;
-    } catch (e: any) {
-      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
-    }
-    try {
-      await sql`ALTER TABLE atnd_users ADD COLUMN comp_leave_total INT DEFAULT 0 COMMENT '부여된 체휴 수'`;
-    } catch (e: any) {
-      if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
-    }
-    try {
-      await sql`ALTER TABLE atnd_users ADD COLUMN comp_leave_used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 체휴 수'`;
+      await sql`ALTER TABLE atnd_users ADD COLUMN role VARCHAR(20) DEFAULT 'user' COMMENT '역할 (user, manager, admin)'`;
     } catch (e: any) {
       if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
     }
@@ -91,6 +79,23 @@ export async function initDatabase() {
         console.error('is_temp_password column add error:', e);
       }
     }
+
+    // 연차/체휴 관리 테이블 생성
+    await sql`
+      CREATE TABLE IF NOT EXISTS leave_balances (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        year INT NOT NULL COMMENT '관리 년도 (예: 2024)',
+        leave_type ENUM('annual', 'compensatory') NOT NULL COMMENT '연차/체휴 구분',
+        total DECIMAL(4,2) DEFAULT 0 COMMENT '부여된 휴가 수',
+        used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 휴가 수',
+        remaining DECIMAL(4,2) DEFAULT 0 COMMENT '잔여 휴가 수',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES atnd_users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_year_type (user_id, year, leave_type)
+      )
+    `;
 
     // Attendance 테이블 생성
     await sql`
@@ -140,23 +145,27 @@ export async function initDatabase() {
 
     if (adminExists.rows.length === 0) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
-      try {
-        // is_admin 컬럼이 있는 경우
-        await sql`
-          INSERT INTO atnd_users (username, password, name, is_admin)
-          VALUES ('admin', ${hashedPassword}, '관리자', 1)
-        `;
-      } catch (error: any) {
-        // is_admin 컬럼이 없는 경우
-        if (error.message?.includes('Unknown column')) {
-          await sql`
-            INSERT INTO atnd_users (username, password, name)
-            VALUES ('admin', ${hashedPassword}, '관리자')
-          `;
-        } else {
-          throw error;
-        }
-      }
+
+      // 관리자 계정 생성
+      await sql`
+        INSERT INTO atnd_users (username, password, name, role, is_admin)
+        VALUES ('admin', ${hashedPassword}, '관리자', 'admin', 1)
+      `;
+
+      // 새로 생성된 관리자의 ID 가져오기
+      const adminResult = await sql`
+        SELECT id FROM atnd_users WHERE username = 'admin'
+      `;
+      const adminId = adminResult.rows[0].id;
+      const currentYear = new Date().getFullYear();
+
+      // 관리자의 연차/체휴 초기 데이터 생성
+      await sql`
+        INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+        VALUES
+          (${adminId}, ${currentYear}, 'annual', 15, 0, 15),
+          (${adminId}, ${currentYear}, 'compensatory', 0, 0, 0)
+      `;
     }
   } catch (error) {
     console.error('Database initialization error:', error);

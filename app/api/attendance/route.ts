@@ -74,25 +74,60 @@ export async function POST(request: NextRequest) {
     const finalStartTime = startTime || timeInfo.startTime;
     const finalEndTime = endTime || timeInfo.endTime;
 
-    // 기존 근태 확인 - 같은 날짜에 이미 등록된 근태가 있는지 확인
+    // 기존 근태 확인 - 시간대 겹침 체크
     const leaveUsage = getLeaveUsage(type);
     let totalLeaveUsage = 0;
-    
+
     for (const date of workingDays) {
       const dateStr = date.format('YYYY-MM-DD');
       const existingResult = await sql`
-        SELECT id, type FROM atnd_attendance
+        SELECT id, type, start_time, end_time FROM atnd_attendance
         WHERE user_id = ${session.userId} AND date = ${dateStr}
       `;
-      
-      // 같은 날짜에 이미 근태가 있으면 에러
-      if (existingResult.rows.length > 0) {
-        return NextResponse.json(
-          { error: `${dateStr}에 이미 근태가 등록되어 있습니다. 기존 근태를 삭제한 후 다시 등록해주세요.` },
-          { status: 400 }
-        );
+
+      // 시간 겹침 체크 (시간 정보가 있는 근태들만)
+      if (finalStartTime && finalEndTime) {
+        const newStart = new Date(`2000-01-01T${finalStartTime}`);
+        const newEnd = new Date(`2000-01-01T${finalEndTime}`);
+
+        for (const existing of existingResult.rows) {
+          if (existing.start_time && existing.end_time) {
+            const existingStart = new Date(`2000-01-01T${existing.start_time}`);
+            const existingEnd = new Date(`2000-01-01T${existing.end_time}`);
+
+            // 시간대가 겹치는지 확인 (끝시간이 시작시간과 같거나, 시작시간이 끝시간과 같으면 겹치지 않음으로 처리)
+            if (newStart < existingEnd && newEnd > existingStart) {
+              // 겹치는 근태가 있으면 시간 정보를 포맷해서 에러 반환
+              const formatTimeDisplay = (timeString: string): string => {
+                if (!timeString) return '';
+                const [hour, minute] = timeString.split(':').map(Number);
+                const hour12 = hour > 12 ? hour - 12 : hour;
+                const period = hour >= 12 ? '오후' : '오전';
+                if (minute === 0) {
+                  return `${period} ${hour12}시`;
+                } else {
+                  return `${period} ${hour12}시 ${minute}분`;
+                }
+              };
+
+              const timeInfo = `${formatTimeDisplay(existing.start_time)} ~ ${formatTimeDisplay(existing.end_time)}`;
+              return NextResponse.json(
+                { error: `${dateStr}에 선택한 시간대와 겹치는 '${existing.type}' 근태가 이미 등록되어 있습니다.\n시간대: ${timeInfo}` },
+                { status: 400 }
+              );
+            }
+          }
+        }
+      } else {
+        // 시간 정보가 없는 근태의 경우, 같은 날짜에 이미 등록된 근태가 있으면 에러
+        if (existingResult.rows.length > 0) {
+          return NextResponse.json(
+            { error: `${dateStr}에 이미 근태가 등록되어 있습니다. 기존 근태를 삭제한 후 다시 등록해주세요.` },
+            { status: 400 }
+          );
+        }
       }
-      
+
       if (isLeaveType(type) && isWorkingDay(date)) {
         totalLeaveUsage += leaveUsage;
       }
@@ -150,6 +185,29 @@ export async function POST(request: NextRequest) {
       const currentYear = new Date().getFullYear();
 
       if (isAnnualLeaveType(type)) {
+        // leave_balances 데이터 확인 및 생성
+        let existingData = await sql`
+          SELECT used, remaining FROM leave_balances
+          WHERE user_id = ${session.userId}
+          AND year = ${currentYear}
+          AND leave_type = 'annual'
+        `;
+
+        // 데이터가 없으면 생성
+        if (existingData.rows.length === 0) {
+          await sql`
+            INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+            VALUES (${session.userId}, ${currentYear}, 'annual', 15, 0, 15)
+          `;
+          existingData = await sql`
+            SELECT used, remaining FROM leave_balances
+            WHERE user_id = ${session.userId}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
+          `;
+        }
+
+        // 사용량 업데이트
         await sql`
           UPDATE leave_balances
           SET used = used + ${totalLeaveUsage},
@@ -158,7 +216,31 @@ export async function POST(request: NextRequest) {
           AND year = ${currentYear}
           AND leave_type = 'annual'
         `;
+
       } else if (type === '체휴') {
+        // leave_balances 데이터 확인 및 생성
+        let existingData = await sql`
+          SELECT used, remaining FROM leave_balances
+          WHERE user_id = ${session.userId}
+          AND year = ${currentYear}
+          AND leave_type = 'compensatory'
+        `;
+
+        // 데이터가 없으면 생성
+        if (existingData.rows.length === 0) {
+          await sql`
+            INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+            VALUES (${session.userId}, ${currentYear}, 'compensatory', 0, 0, 0)
+          `;
+          existingData = await sql`
+            SELECT used, remaining FROM leave_balances
+            WHERE user_id = ${session.userId}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
+          `;
+        }
+
+        // 사용량 업데이트
         await sql`
           UPDATE leave_balances
           SET used = used + ${totalLeaveUsage},
@@ -330,9 +412,10 @@ export async function PUT(request: NextRequest) {
       if (isLeaveType(newType) && isWorking) {
         const newUsage = getLeaveUsage(newType);
 
-        // 사용 가능 여부 확인
+        // 사용 가능 여부 확인 및 데이터 생성
         if (isAnnualLeaveType(newType)) {
-          const leaveResult = await sql`
+          // leave_balances 데이터 확인
+          let leaveResult = await sql`
             SELECT remaining
             FROM leave_balances
             WHERE user_id = ${existing.user_id}
@@ -340,7 +423,22 @@ export async function PUT(request: NextRequest) {
             AND leave_type = 'annual'
           `;
 
-          const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 15;
+          // 데이터가 없으면 생성
+          if (leaveResult.rows.length === 0) {
+            await sql`
+              INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+              VALUES (${existing.user_id}, ${currentYear}, 'annual', 15, 0, 15)
+            `;
+            leaveResult = await sql`
+              SELECT remaining
+              FROM leave_balances
+              WHERE user_id = ${existing.user_id}
+              AND year = ${currentYear}
+              AND leave_type = 'annual'
+            `;
+          }
+
+          const remaining = Number(leaveResult.rows[0].remaining);
           if (remaining < newUsage) {
             return NextResponse.json(
               { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
@@ -357,7 +455,8 @@ export async function PUT(request: NextRequest) {
             AND leave_type = 'annual'
           `;
         } else if (newType === '체휴') {
-          const leaveResult = await sql`
+          // leave_balances 데이터 확인
+          let leaveResult = await sql`
             SELECT remaining
             FROM leave_balances
             WHERE user_id = ${existing.user_id}
@@ -365,7 +464,22 @@ export async function PUT(request: NextRequest) {
             AND leave_type = 'compensatory'
           `;
 
-          const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 0;
+          // 데이터가 없으면 생성
+          if (leaveResult.rows.length === 0) {
+            await sql`
+              INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+              VALUES (${existing.user_id}, ${currentYear}, 'compensatory', 0, 0, 0)
+            `;
+            leaveResult = await sql`
+              SELECT remaining
+              FROM leave_balances
+              WHERE user_id = ${existing.user_id}
+              AND year = ${currentYear}
+              AND leave_type = 'compensatory'
+            `;
+          }
+
+          const remaining = Number(leaveResult.rows[0].remaining);
           if (remaining < newUsage) {
             return NextResponse.json(
               { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
