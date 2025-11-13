@@ -11,6 +11,15 @@ import dayjs from 'dayjs';
 import { FiCalendar, FiDownload, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 
+// 아바타 이미지 선택 헬퍼 함수
+const getAvatarImage = (userId: string): string => {
+  const avatarList = ['avatar1', 'avatar2', 'avatar3', 'avatar4', 'avatar5', 'avatar6', 'avatar7', 'avatar8', 'avatar9', 'avatarA', 'avatarB'];
+  // 사용자 ID의 마지막 숫자를 이용해서 avatar 선택
+  const lastChar = userId.slice(-1);
+  const index = parseInt(lastChar, 16) % avatarList.length; // 16진수로 변환하여 11로 나눔
+  return `/image/${avatarList[index]}.png`;
+};
+
 // 30분 단위로 시간 계산 헬퍼 함수
 const calculateTimeSlots = (startTime?: string, endTime?: string, type?: string): number => {
   if (!startTime || !endTime) {
@@ -848,11 +857,11 @@ export default function AdminPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                            </div>
+                            <img
+                              src={getAvatarImage(user.id)}
+                              alt={user.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
                             <div>
                               <h4 className="font-semibold text-gray-900">{user.username}</h4>
                               <p className="text-sm text-gray-500">{user.name}</p>
@@ -1291,7 +1300,7 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   onClick={downloadXLSX}
-                  className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
+                  className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
                 >
                   <FiDownload className="w-4 h-4" />
                   Excel
@@ -1814,14 +1823,16 @@ export default function AdminPage() {
                           }}
                           className={`w-full p-3 text-left rounded-lg transition ${
                             selectedUserId === user.id
-                              ? 'bg-green-500 text-white'
+                              ? 'bg-purple-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
-                              {user.name.charAt(0)}
-                            </div>
+                            <img
+                              src={getAvatarImage(user.id)}
+                              alt={user.name}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
                             <div>
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
@@ -1894,9 +1905,11 @@ export default function AdminPage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
-                          👤
-                        </div>
+                        <img
+                          src="/image/avatar1.png"
+                          alt="사용자"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
                         <div>
                           <div className="font-medium">사용자</div>
                           <div className="text-xs opacity-75">기본 권한 - 자신의 근태만 관리</div>
@@ -1916,9 +1929,11 @@ export default function AdminPage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold text-orange-700">
-                          👔
-                        </div>
+                        <img
+                          src="/image/avatar2.png"
+                          alt="중간관리자"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
                         <div>
                           <div className="font-medium">중간관리자</div>
                           <div className="text-xs opacity-75">조직 구성원들의 근태 관리</div>
@@ -1938,9 +1953,11 @@ export default function AdminPage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-xs font-bold text-red-700">
-                          ⚙️
-                        </div>
+                        <img
+                          src="/image/avatar3.png"
+                          alt="관리자"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
                         <div>
                           <div className="font-medium">관리자</div>
                           <div className="text-xs opacity-75">전체 시스템 관리</div>
@@ -2527,14 +2544,16 @@ export default function AdminPage() {
                       }}
                       className={`w-full p-3 text-left rounded-lg transition ${
                         selectedUserFilter === 'all'
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
-                          전체
-                        </div>
+                        <img
+                          src="/image/avatar4.png"
+                          alt="전체 사용자"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
                         <div>
                           <div className="font-medium">전체 사용자</div>
                           <div className="text-xs opacity-75">모든 사용자의 근태 기록</div>
@@ -2558,14 +2577,16 @@ export default function AdminPage() {
                           }}
                           className={`w-full p-3 text-left rounded-lg transition ${
                             selectedUserFilter === user.name
-                              ? 'bg-green-500 text-white'
+                              ? 'bg-orange-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
-                              {user.name.charAt(0)}
-                            </div>
+                            <img
+                              src={getAvatarImage(user.id)}
+                              alt={user.name}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
                             <div>
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>

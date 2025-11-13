@@ -250,7 +250,7 @@ const MobileCalendar = memo(({
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className={`
-            h-16 w-full rounded-lg flex flex-col items-center justify-center text-sm font-semibold
+            h-16 w-full rounded-lg flex flex-col items-center justify-center text-base font-semibold
             transition-all duration-200 relative
             ${colors}
             ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
@@ -258,7 +258,7 @@ const MobileCalendar = memo(({
             ${!hasAttendance ? 'border border-gray-200' : ''}
           `}
         >
-          <span className={`${attendanceType ? textColor : 'text-black'} text-sm font-semibold`}>
+          <span className={`${attendanceType ? textColor : 'text-black'} text-base font-semibold`}>
             {dayIndex + 1}
           </span>
           {hasAttendance && (
@@ -327,7 +327,7 @@ const MobileCalendar = memo(({
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 gap-1.5 mb-2">
         {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
-          <div key={day} className={`h-10 flex items-center justify-center text-xs font-semibold ${
+          <div key={day} className={`h-10 flex items-center justify-center text-sm font-semibold ${
             index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600'
           }`}>
             {day}
@@ -694,7 +694,7 @@ export default function CalendarPage() {
 
         {/* 근태 유형 범례 */}
         <div className="mt-4 p-3 md:p-4 lg:p-6 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 md:mx-4 lg:mx-6 mb-4">
-            <h3 className="text-base font-bold text-gray-900 mb-3">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
               근태 유형 범례
             </h3>
             <div className="space-y-2">
@@ -703,7 +703,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-200">
                   <span className="text-sm">✈️</span>
                   <div>
-                    <div className="font-medium text-red-900 text-xs">연차</div>
+                    <div className="font-medium text-red-900 text-sm">연차</div>
                     <div className="text-xs text-red-600">1일</div>
                   </div>
                 </div>
@@ -711,7 +711,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded border border-yellow-200">
                   <span className="text-sm">🏠</span>
                   <div>
-                    <div className="font-medium text-yellow-900 text-xs">체휴</div>
+                    <div className="font-medium text-yellow-900 text-sm">체휴</div>
                     <div className="text-xs text-yellow-600">1일</div>
                   </div>
                 </div>
@@ -719,7 +719,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200">
                   <span className="text-sm">❌</span>
                   <div>
-                    <div className="font-medium text-blue-900 text-xs">결근</div>
+                    <div className="font-medium text-blue-900 text-sm">결근</div>
                   </div>
                 </div>
               </div>
@@ -729,7 +729,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-orange-50 rounded border border-orange-200">
                   <span className="text-sm">🌅</span>
                   <div>
-                    <div className="font-medium text-orange-900 text-xs">오전반차</div>
+                    <div className="font-medium text-orange-900 text-sm">오전반차</div>
                     <div className="text-xs text-orange-600">0.5일</div>
                   </div>
                 </div>
@@ -737,7 +737,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
                   <span className="text-sm">🌆</span>
                   <div>
-                    <div className="font-medium text-green-900 text-xs">오후반차</div>
+                    <div className="font-medium text-green-900 text-sm">오후반차</div>
                     <div className="text-xs text-green-600">0.5일</div>
                   </div>
                 </div>
@@ -745,7 +745,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-purple-50 rounded border border-purple-200">
                   <span className="text-sm">🌄</span>
                   <div>
-                    <div className="font-medium text-purple-900 text-xs">반반차</div>
+                    <div className="font-medium text-purple-900 text-sm">반반차</div>
                     <div className="text-xs text-purple-600">0.25일</div>
                   </div>
                 </div>
@@ -756,21 +756,21 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">👔</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">팀장대행</div>
+                    <div className="font-medium text-gray-900 text-sm">팀장대행</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">👨‍🏫</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">코칭</div>
+                    <div className="font-medium text-gray-900 text-sm">코칭</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">📚</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">교육</div>
+                    <div className="font-medium text-gray-900 text-sm">교육</div>
                   </div>
                 </div>
               </div>
@@ -780,21 +780,21 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">😴</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">휴식</div>
+                    <div className="font-medium text-gray-900 text-sm">휴식</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">🏢</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">출장</div>
+                    <div className="font-medium text-gray-900 text-sm">출장</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">⚠️</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">장애</div>
+                    <div className="font-medium text-gray-900 text-sm">장애</div>
                   </div>
                 </div>
               </div>
@@ -804,14 +804,14 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">❓</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">기타</div>
+                    <div className="font-medium text-gray-900 text-sm">기타</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">⏰</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-xs">연장근무</div>
+                    <div className="font-medium text-gray-900 text-sm">연장근무</div>
                   </div>
                 </div>
               </div>
