@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await createSession(session.userId, session.username, session.name, session.isAdmin);
+    await createSession(session.userId, session.username, session.name, session.department, session.isAdmin, session.role);
 
     // 임시 비밀번호(4자리 숫자)인지 확인
     const isTempPassword = /^\d{4}$/.test(password);

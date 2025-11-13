@@ -45,9 +45,13 @@ const MobileCalendar = memo(({
   
   const attendanceMap = useMemo(() => {
     return attendances.reduce((acc, attendance) => {
-      acc[attendance.date] = attendance.type;
+      acc[attendance.date] = {
+        type: attendance.type,
+        startTime: attendance.startTime,
+        endTime: attendance.endTime
+      };
       return acc;
-    }, {} as Record<string, AttendanceType>);
+    }, {} as Record<string, {type: AttendanceType, startTime?: string, endTime?: string}>);
   }, [attendances]);
 
   const getAttendanceColor = (type: AttendanceType | null): string => {
@@ -55,19 +59,31 @@ const MobileCalendar = memo(({
       case '연차':
         return 'bg-red-50 text-red-900 border border-red-200';
       case '오전반차':
+        return 'bg-orange-50 text-orange-900 border border-orange-200';
       case '오후반차':
         return 'bg-green-50 text-green-900 border border-green-200';
-      case '오전반반차A':
-      case '오전반반차B':
-      case '오후반반차A':
-      case '오후반반차B':
-        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '반반차':
+        return 'bg-purple-50 text-purple-900 border border-purple-200';
       case '체휴':
         return 'bg-yellow-50 text-yellow-900 border border-yellow-200';
-      case '근무':
+      case '팀장대행':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '코칭':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '교육':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '휴식':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '출장':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '장애':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '기타':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '연장근무':
+        return 'bg-gray-50 text-gray-900 border border-gray-200';
+      case '결근':
         return 'bg-blue-50 text-blue-900 border border-blue-200';
-      case '시차':
-        return 'bg-purple-50 text-purple-900 border border-purple-200';
       default:
         return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
     }
@@ -78,19 +94,31 @@ const MobileCalendar = memo(({
       case '연차':
         return 'text-red-900';
       case '오전반차':
+        return 'text-orange-900';
       case '오후반차':
         return 'text-green-900';
-      case '오전반반차A':
-      case '오전반반차B':
-      case '오후반반차A':
-      case '오후반반차B':
-        return 'text-gray-900';
+      case '반반차':
+        return 'text-purple-900';
       case '체휴':
         return 'text-yellow-900';
-      case '근무':
+      case '팀장대행':
+        return 'text-gray-900';
+      case '코칭':
+        return 'text-gray-900';
+      case '교육':
+        return 'text-gray-900';
+      case '휴식':
+        return 'text-gray-900';
+      case '출장':
+        return 'text-gray-900';
+      case '장애':
+        return 'text-gray-900';
+      case '기타':
+        return 'text-gray-900';
+      case '연장근무':
+        return 'text-gray-900';
+      case '결근':
         return 'text-blue-900';
-      case '시차':
-        return 'text-purple-900';
       default:
         return 'text-gray-700';
     }
@@ -101,13 +129,17 @@ const MobileCalendar = memo(({
       case '연차': return '✈️';
       case '오전반차': return '🌅';
       case '오후반차': return '🌆';
-      case '오전반반차A': return '🌄';
-      case '오전반반차B': return '☀️';
-      case '오후반반차A': return '🌤️';
-      case '오후반반차B': return '🌙';
+      case '반반차': return '🌄';
       case '체휴': return '🏠';
-      case '근무': return '💼';
-      case '시차': return '⏰';
+      case '팀장대행': return '👔';
+      case '코칭': return '👨‍🏫';
+      case '교육': return '📚';
+      case '휴식': return '😴';
+      case '출장': return '🏢';
+      case '장애': return '⚠️';
+      case '기타': return '❓';
+      case '연장근무': return '⏰';
+      case '결근': return '❌';
       default: return '';
     }
   };
@@ -172,7 +204,8 @@ const MobileCalendar = memo(({
       const dateString = currentDate.format('YYYY-MM-DD');
       const isSelected = selectedDay?.isSame(currentDate, 'day');
       const isToday = today.isSame(currentDate, 'day');
-      const attendanceType = attendanceMap[dateString] || null;
+      const attendanceInfo = attendanceMap[dateString] || null;
+      const attendanceType = attendanceInfo?.type || null;
       const colors = getAttendanceColor(attendanceType);
       const textColor = getAttendanceTextColor(attendanceType);
       const icon = getAttendanceIcon(attendanceType);
@@ -196,7 +229,14 @@ const MobileCalendar = memo(({
             {dayIndex + 1}
           </span>
           {attendanceType && (
-            <span className="text-xs mt-0.5">{icon}</span>
+            <div className="flex flex-col items-center mt-0.5">
+              <span className="text-xs">{icon}</span>
+              {attendanceType === '반반차' && attendanceInfo?.startTime && attendanceInfo?.endTime && (
+                <span className="text-xs text-gray-600 mt-0.5">
+                  {attendanceInfo.startTime}~{attendanceInfo.endTime}
+                </span>
+              )}
+            </div>
           )}
         </motion.button>
       );
@@ -298,8 +338,11 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ 
-    name: string; 
+  const [user, setUser] = useState<{
+    userId: string;
+    username: string;
+    name: string;
+    role: string;
     isAdmin: boolean;
     annualLeaveTotal: number;
     annualLeaveUsed: number;
@@ -427,13 +470,65 @@ export default function CalendarPage() {
     }
   };
 
+  const formatTimeDisplay = (timeString: string): string => {
+    if (!timeString) return '';
+
+    const [hour, minute] = timeString.split(':').map(Number);
+    const hour12 = hour > 12 ? hour - 12 : hour;
+    const period = hour >= 12 ? '오후' : '오전';
+
+    if (minute === 0) {
+      return `${period} ${hour12}시`;
+    } else {
+      return `${period} ${hour12}시 ${minute}분`;
+    }
+  };
+
+  const checkTimeOverlap = (existingAttendances: Attendance[], newStartTime?: string, newEndTime?: string): Attendance | null => {
+    if (!newStartTime || !newEndTime) return null; // 시간 정보가 없으면 겹침 체크하지 않음
+
+    const newStart = new Date(`2000-01-01T${newStartTime}`);
+    const newEnd = new Date(`2000-01-01T${newEndTime}`);
+
+    for (const attendance of existingAttendances) {
+      if (attendance.startTime && attendance.endTime) {
+        const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+        const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+        // 시간대가 겹치는지 확인 (끝시간이 시작시간과 같거나, 시작시간이 끝시간과 같으면 겹치지 않음으로 처리)
+        if (newStart < existingEnd && newEnd > existingStart) {
+          return attendance; // 겹치는 근태 정보를 반환
+        }
+      }
+    }
+    return null; // 겹치는 근태가 없음
+  };
+
   const handleSaveAttendance = async (data: {
     startDate: string;
     endDate: string;
     type: AttendanceType;
     reason: string;
     days: number;
+    startTime?: string;
+    endTime?: string;
   }) => {
+    // 같은 날짜의 기존 근태들을 확인
+    const existingAttendancesOnDate = attendances.filter(a => a.date === data.startDate);
+
+    // 시간 겹침 체크 (시간 정보가 있는 근태들만)
+    const overlappingAttendance = checkTimeOverlap(existingAttendancesOnDate, data.startTime, data.endTime);
+    if (overlappingAttendance) {
+      const timeInfo = overlappingAttendance.startTime && overlappingAttendance.endTime
+        ? `${formatTimeDisplay(overlappingAttendance.startTime)} ~ ${formatTimeDisplay(overlappingAttendance.endTime)}`
+        : '';
+      setAlertTitle('근태 시간대 중복');
+      setAlertMessage(`선택한 시간대에 이미 '${overlappingAttendance.type}' 근태가 입력되어 있습니다.\n시간대: ${timeInfo}`);
+      setAlertType('error');
+      setAlertModalOpen(true);
+      return;
+    }
+
     const res = await fetch('/api/attendance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -477,7 +572,7 @@ export default function CalendarPage() {
               <p className="text-xs text-gray-500 mt-0.5">근태 관리</p>
             </div>
             <div className="flex gap-2">
-              {user?.isAdmin && (
+              {user && user.role === 'admin' && (
                 <button
                   onClick={() => router.push('/admin')}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-all"
@@ -532,36 +627,16 @@ export default function CalendarPage() {
                 </div>
               </div>
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <div className="text-xs text-gray-600 font-medium mb-2">{currentMonth.format('M월')} 근무 현황</div>
+                <div className="text-xs text-gray-600 font-medium mb-2">{currentMonth.format('M월')} 결근 현황</div>
                 <div className="space-y-1">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-blue-700 font-medium">근무일</span>
+                    <span className="text-sm text-blue-700 font-medium">결근일</span>
                     <span className="text-xl font-bold text-blue-700">
                       {attendances.filter(a => {
                         const attendanceMonth = dayjs(a.date).format('YYYY-MM');
                         return attendanceMonth === currentMonth.format('YYYY-MM') &&
-                               a.type === '근무';
+                               a.type === '결근';
                       }).length}일
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-gray-600">시차시간</span>
-                    <span className="text-xs text-gray-600">
-                      {attendances
-                        .filter(a => {
-                          const attendanceMonth = dayjs(a.date).format('YYYY-MM');
-                          return attendanceMonth === currentMonth.format('YYYY-MM') && a.type === '시차';
-                        })
-                        .reduce((total, a) => {
-                          // 시차 근태의 경우 startTime과 endTime을 이용해 실제 근무 시간 계산
-                          if (a.startTime && a.endTime) {
-                            const start = dayjs(`2000-01-01 ${a.startTime}`);
-                            const end = dayjs(`2000-01-01 ${a.endTime}`);
-                            const hours = end.diff(start, 'hour', true); // 소수점 포함 시간 계산
-                            return total + hours;
-                          }
-                          return total + 8; // startTime/endTime이 없는 경우 기본값
-                        }, 0)}시간
                     </span>
                   </div>
                 </div>
@@ -584,133 +659,149 @@ export default function CalendarPage() {
         </div>
 
         {/* 근태 유형 범례 */}
-        <div className="mt-4 p-5 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-4">
-            <h3 className="text-lg font-black text-gray-900 mb-4">
+        <div className="mt-4 p-3 bg-gray-50/50 rounded-xl border border-gray-200 mx-2 mb-4">
+            <h3 className="text-base font-bold text-gray-900 mb-3">
               근태 유형 범례
             </h3>
-            <div className="space-y-4">
-              {/* 첫 번째 행 */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* 연차 */}
-                <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                  <span className="text-xl">✈️</span>
+            <div className="space-y-2">
+              {/* 첫 번째 행 - 연차, 체휴, 근무 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-200">
+                  <span className="text-sm">✈️</span>
                   <div>
-                    <div className="font-semibold text-red-900 text-sm">연차</div>
+                    <div className="font-medium text-red-900 text-xs">연차</div>
                     <div className="text-xs text-red-600">1일</div>
                   </div>
                 </div>
 
-                {/* 체휴 */}
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <span className="text-xl">🏠</span>
+                <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded border border-yellow-200">
+                  <span className="text-sm">🏠</span>
                   <div>
-                    <div className="font-semibold text-yellow-900 text-sm">체휴</div>
+                    <div className="font-medium text-yellow-900 text-xs">체휴</div>
                     <div className="text-xs text-yellow-600">1일</div>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200">
+                  <span className="text-sm">❌</span>
+                  <div>
+                    <div className="font-medium text-blue-900 text-xs">결근</div>
+                  </div>
+                </div>
               </div>
 
-              {/* 두 번째 행 */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* 오전반차 */}
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-xl">🌅</span>
+              {/* 두 번째 행 - 오전반차, 오후반차, 반반차 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-orange-50 rounded border border-orange-200">
+                  <span className="text-sm">🌅</span>
                   <div>
-                    <div className="font-semibold text-green-900 text-sm">오전반차</div>
+                    <div className="font-medium text-orange-900 text-xs">오전반차</div>
+                    <div className="text-xs text-orange-600">0.5일</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
+                  <span className="text-sm">🌆</span>
+                  <div>
+                    <div className="font-medium text-green-900 text-xs">오후반차</div>
                     <div className="text-xs text-green-600">0.5일</div>
                   </div>
                 </div>
 
-                {/* 근무 */}
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <span className="text-xl">💼</span>
+                <div className="flex items-center gap-2 p-2 bg-purple-50 rounded border border-purple-200">
+                  <span className="text-sm">🌄</span>
                   <div>
-                    <div className="font-semibold text-blue-900 text-sm">근무</div>
-                    <div className="text-xs text-blue-600">정상</div>
+                    <div className="font-medium text-purple-900 text-xs">반반차</div>
+                    <div className="text-xs text-purple-600">0.25일</div>
                   </div>
                 </div>
               </div>
 
-              {/* 세 번째 행 */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* 오후반차 */}
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-xl">🌆</span>
+              {/* 세 번째 행 - 팀장대행, 코칭, 교육 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">👔</span>
                   <div>
-                    <div className="font-semibold text-green-900 text-sm">오후반차</div>
-                    <div className="text-xs text-green-600">0.5일</div>
+                    <div className="font-medium text-gray-900 text-xs">팀장대행</div>
                   </div>
                 </div>
 
-                {/* 시차 */}
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <span className="text-xl">⏰</span>
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">👨‍🏫</span>
                   <div>
-                    <div className="font-semibold text-purple-900 text-sm">시차</div>
-                    <div className="text-xs text-purple-600">직접입력</div>
+                    <div className="font-medium text-gray-900 text-xs">코칭</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">📚</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-xs">교육</div>
                   </div>
                 </div>
               </div>
 
-              {/* 네 번째 행 - 반반차 오전 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-lg">🌄</span>
+              {/* 네 번째 행 - 휴식, 출장, 장애 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">😴</span>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">오전반반차A</div>
-                    <div className="text-xs text-gray-600">0.25일 (09-11시)</div>
+                    <div className="font-medium text-gray-900 text-xs">휴식</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-lg">☀️</span>
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">🏢</span>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">오전반반차B</div>
-                    <div className="text-xs text-gray-600">0.25일 (11-14시)</div>
+                    <div className="font-medium text-gray-900 text-xs">출장</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">⚠️</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-xs">장애</div>
                   </div>
                 </div>
               </div>
 
-              {/* 다섯 번째 행 - 반반차 오후 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-lg">🌤️</span>
+              {/* 다섯 번째 행 - 기타, 연장근무 */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">❓</span>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">오후반반차A</div>
-                    <div className="text-xs text-gray-600">0.25일 (14-16시)</div>
+                    <div className="font-medium text-gray-900 text-xs">기타</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-lg">🌙</span>
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-sm">⏰</span>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">오후반반차B</div>
-                    <div className="text-xs text-gray-600">0.25일 (16-18시)</div>
+                    <div className="font-medium text-gray-900 text-xs">연장근무</div>
                   </div>
                 </div>
               </div>
+
             </div>
         </div>
       </div>
 
-      {/* 근태 등록 모달 - 이미 근태가 없는 경우에만 표시 */}
-      {!selectedAttendance && (
-        <AttendanceModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          selectedDate={selectedDate}
-          onSave={handleSaveAttendance}
-          onAlert={(title, message, type) => {
-            setAlertTitle(title);
-            setAlertMessage(message);
-            setAlertType(type);
-            setAlertModalOpen(true);
-          }}
-        />
-      )}
+      {/* 근태 등록 모달 */}
+      <AttendanceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        selectedDate={selectedDate}
+        onSave={handleSaveAttendance}
+        onAlert={(title, message, type) => {
+          setAlertTitle(title);
+          setAlertMessage(message);
+          setAlertType(type);
+          setAlertModalOpen(true);
+        }}
+      />
 
-      {/* 이미 근태가 입력된 날짜 경고 모달 */}
-      <div className={`fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4 transition-opacity duration-200 ${isModalOpen && selectedAttendance ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* 이미 근태가 입력된 날짜 경고 모달 - 더 이상 사용하지 않음 */}
+      <div className={`fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none`}>
         <div className={`bg-white rounded-xl shadow-xl max-w-sm w-full transform transition-transform duration-200 ${isModalOpen && selectedAttendance ? 'scale-100' : 'scale-95'}`}>
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-center">

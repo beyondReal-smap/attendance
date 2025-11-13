@@ -9,7 +9,7 @@ import { getAttendanceTimeInfo, getLeaveUsage, isLeaveType, isAnnualLeaveType } 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || !session.isAdmin) {
+    if (!session || (!session.isAdmin && session.role !== 'manager')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -57,19 +57,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 연차/체휴인 경우 사용량 확인
-    if (isAnnualLeaveType(type) && totalLeaveUsage > 0) {
-      const userResult = await sql`
-        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
-        FROM atnd_users
-        WHERE id = ${userId}
-      `;
-      
-      if (userResult.rows.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+    const currentYear = new Date().getFullYear();
 
-      const user = userResult.rows[0];
-      const remaining = user.annual_leave_total - user.annual_leave_used;
+    if (isAnnualLeaveType(type) && totalLeaveUsage > 0) {
+      const leaveResult = await sql`
+        SELECT remaining
+        FROM leave_balances
+        WHERE user_id = ${userId}
+        AND year = ${currentYear}
+        AND leave_type = 'annual'
+      `;
+
+      const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 15;
       if (remaining < totalLeaveUsage) {
         return NextResponse.json(
           { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
@@ -77,18 +76,15 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (type === '체휴' && totalLeaveUsage > 0) {
-      const userResult = await sql`
-        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
-        FROM atnd_users
-        WHERE id = ${userId}
+      const leaveResult = await sql`
+        SELECT remaining
+        FROM leave_balances
+        WHERE user_id = ${userId}
+        AND year = ${currentYear}
+        AND leave_type = 'compensatory'
       `;
-      
-      if (userResult.rows.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
 
-      const user = userResult.rows[0];
-      const remaining = user.comp_leave_total - user.comp_leave_used;
+      const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 0;
       if (remaining < totalLeaveUsage) {
         return NextResponse.json(
           { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
@@ -109,17 +105,25 @@ export async function POST(request: NextRequest) {
 
     // 연차/체휴 사용량 업데이트
     if (totalLeaveUsage > 0) {
+      const currentYear = new Date().getFullYear();
+
       if (isAnnualLeaveType(type)) {
         await sql`
-          UPDATE atnd_users
-          SET annual_leave_used = annual_leave_used + ${totalLeaveUsage}
-          WHERE id = ${userId}
+          UPDATE leave_balances
+          SET used = used + ${totalLeaveUsage},
+              remaining = remaining - ${totalLeaveUsage}
+          WHERE user_id = ${userId}
+          AND year = ${currentYear}
+          AND leave_type = 'annual'
         `;
       } else if (type === '체휴') {
         await sql`
-          UPDATE atnd_users
-          SET comp_leave_used = comp_leave_used + ${totalLeaveUsage}
-          WHERE id = ${userId}
+          UPDATE leave_balances
+          SET used = used + ${totalLeaveUsage},
+              remaining = remaining - ${totalLeaveUsage}
+          WHERE user_id = ${userId}
+          AND year = ${currentYear}
+          AND leave_type = 'compensatory'
         `;
       }
     }

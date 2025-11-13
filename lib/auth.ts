@@ -3,8 +3,15 @@ import { Session } from '@/types';
 import bcrypt from 'bcryptjs';
 import { sql } from './db';
 
-export async function createSession(userId: string, username: string, name: string, isAdmin: boolean) {
-  const session: Session = { userId, username, name, isAdmin };
+export async function createSession(userId: string, username: string, name: string, department?: string, isAdmin?: boolean, role?: 'user' | 'manager' | 'admin') {
+  const session: Session = {
+    userId,
+    username,
+    name,
+    department,
+    isAdmin: isAdmin || false,
+    role: role || 'user'
+  };
   const cookieStore = await cookies();
   cookieStore.set('session', JSON.stringify(session), {
     httpOnly: true,
@@ -45,7 +52,7 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
 export async function loginUser(username: string, password: string): Promise<Session | null> {
   try {
     const result = await sql`
-      SELECT id, username, password, name, is_admin
+      SELECT id, username, password, name, department, role
       FROM atnd_users
       WHERE username = ${username}
     `;
@@ -65,7 +72,9 @@ export async function loginUser(username: string, password: string): Promise<Ses
       userId: user.id.toString(),
       username: user.username,
       name: user.name,
-      isAdmin: user.is_admin,
+      department: user.department || undefined,
+      isAdmin: user.role === 'admin',
+      role: user.role,
     };
   } catch (error) {
     console.error('Login error:', error);

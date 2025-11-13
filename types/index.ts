@@ -1,4 +1,6 @@
-export type AttendanceType = '연차' | '체휴' | '근무' | '시차' | '오전반차' | '오후반차' | '오전반반차A' | '오전반반차B' | '오후반반차A' | '오후반반차B';
+export type AttendanceType = '연차' | '체휴' | '근무' | '오전반차' | '오후반차' | '반반차' | '팀장대행' | '코칭' | '교육' | '휴식' | '출장' | '장애' | '기타' | '연장근무' | '결근';
+
+export type LeaveType = 'annual' | 'compensatory';
 
 export interface User {
   id: string;
@@ -6,11 +8,19 @@ export interface User {
   password: string;
   name: string;
   isAdmin: boolean;
-  annualLeaveTotal: number;
-  annualLeaveUsed: number;
-  compLeaveTotal: number;
-  compLeaveUsed: number;
   createdAt: Date;
+}
+
+export interface LeaveBalance {
+  id: string;
+  userId: string;
+  year: number;
+  leaveType: LeaveType;
+  total: number;
+  used: number;
+  remaining: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Attendance {
@@ -28,6 +38,8 @@ export interface Session {
   userId: string;
   username: string;
   name: string;
+  department?: string;
   isAdmin: boolean;
+  role: 'user' | 'manager' | 'admin';
 }
 

@@ -5,7 +5,7 @@ import { getSession, hashPassword } from '@/lib/auth';
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || !session.isAdmin) {
+    if (!session || (!session.isAdmin && session.role !== 'manager')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -36,7 +36,8 @@ export async function GET() {
         id,
         username,
         name,
-        is_admin as "isAdmin",
+        department,
+        role,
         COALESCE(is_temp_password, 0) as "isTempPassword",
         annual_leave_total as "annualLeaveTotal",
         annual_leave_used as "annualLeaveUsed",
@@ -56,8 +57,10 @@ export async function GET() {
         id: row.id.toString(),
         username: row.username,
         name: row.name,
-        isAdmin: row.isAdmin === 1,
-        isTempPassword: row.isTempPassword === 1,
+        department: row.department || '',
+        role: row.role,
+        isAdmin: row.role === 'admin',
+        isTempPassword: Boolean(row.isTempPassword),
         annualLeaveTotal,
         annualLeaveUsed,
         annualLeaveRemaining: annualLeaveTotal - annualLeaveUsed,
@@ -84,7 +87,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { username, name, password } = await request.json();
+    const { username, name, password, department, role } = await request.json();
 
     if (!username || !name || !password) {
       return NextResponse.json({ error: 'username, name, password are required' }, { status: 400 });
@@ -105,26 +108,12 @@ export async function POST(request: Request) {
     // 사용자 추가 (임시 비밀번호로 설정)
     const isTempPassword = /^\d{4}$/.test(password) ? 1 : 0;
 
-    // is_temp_password 컬럼이 있는지 확인 후 INSERT
-    let result;
-    try {
-      result = await sql`
-        INSERT INTO atnd_users (username, name, password, is_temp_password, annual_leave_total, comp_leave_total)
-        VALUES (${username}, ${name}, ${hashedPassword}, ${isTempPassword}, 15, 0)
-        RETURNING id, username, name
-      `;
-    } catch (e: any) {
-      // is_temp_password 컬럼이 없는 경우
-      if (e.message?.includes('Unknown column')) {
-        result = await sql`
-          INSERT INTO atnd_users (username, name, password, annual_leave_total, comp_leave_total)
-          VALUES (${username}, ${name}, ${hashedPassword}, 15, 0)
-          RETURNING id, username, name
-        `;
-      } else {
-        throw e;
-      }
-    }
+    // 사용자 추가
+    const result = await sql`
+      INSERT INTO atnd_users (username, name, department, password, role, is_temp_password, annual_leave_total, comp_leave_total)
+      VALUES (${username}, ${name}, ${department || null}, ${hashedPassword}, ${role || 'user'}, ${isTempPassword}, 15, 0)
+      RETURNING id, username, name, department, role
+    `;
 
     const newUser = result.rows[0];
 

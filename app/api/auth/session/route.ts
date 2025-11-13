@@ -14,11 +14,11 @@ export async function GET() {
 
   // 사용자 정보와 연차/체휴 정보 가져오기
   try {
+    const currentYear = new Date().getFullYear();
+
     const userResult = await sql`
-      SELECT 
-        id, username, name, is_admin,
-        annual_leave_total, annual_leave_used,
-        comp_leave_total, comp_leave_used
+      SELECT
+        id, username, name, role, is_admin
       FROM atnd_users
       WHERE id = ${session.userId}
     `;
@@ -30,23 +30,40 @@ export async function GET() {
       );
     }
 
+    // 연차 정보 가져오기
+    const annualLeaveResult = await sql`
+      SELECT total, used, remaining
+      FROM leave_balances
+      WHERE user_id = ${session.userId}
+      AND year = ${currentYear}
+      AND leave_type = 'annual'
+    `;
+
+    // 체휴 정보 가져오기
+    const compLeaveResult = await sql`
+      SELECT total, used, remaining
+      FROM leave_balances
+      WHERE user_id = ${session.userId}
+      AND year = ${currentYear}
+      AND leave_type = 'compensatory'
+    `;
+
     const user = userResult.rows[0];
-    const annualLeaveTotal = Number(user.annual_leave_total) || 15;
-    const annualLeaveUsed = Number(user.annual_leave_used) || 0;
-    const compLeaveTotal = Number(user.comp_leave_total) || 0;
-    const compLeaveUsed = Number(user.comp_leave_used) || 0;
-    
+    const annualLeave = annualLeaveResult.rows[0] || { total: 15, used: 0, remaining: 15 };
+    const compLeave = compLeaveResult.rows[0] || { total: 0, used: 0, remaining: 0 };
+
     return NextResponse.json({
       userId: user.id.toString(),
       username: user.username,
       name: user.name,
-      isAdmin: user.is_admin === 1,
-      annualLeaveTotal,
-      annualLeaveUsed,
-      annualLeaveRemaining: annualLeaveTotal - annualLeaveUsed,
-      compLeaveTotal,
-      compLeaveUsed,
-      compLeaveRemaining: compLeaveTotal - compLeaveUsed,
+      role: user.role,
+      isAdmin: user.is_admin === 1 || user.role === 'admin',
+      annualLeaveTotal: Number(annualLeave.total),
+      annualLeaveUsed: Number(annualLeave.used),
+      annualLeaveRemaining: Number(annualLeave.remaining),
+      compLeaveTotal: Number(compLeave.total),
+      compLeaveUsed: Number(compLeave.used),
+      compLeaveRemaining: Number(compLeave.remaining),
     });
   } catch (error) {
     console.error('Error fetching user info:', error);

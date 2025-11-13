@@ -35,7 +35,22 @@ export default function LoginPage() {
         localStorage.setItem('tempPasswordLogin', 'true');
       }
 
-      router.push('/calendar');
+      // 세션 정보를 확인해서 리다이렉트 경로 결정
+      try {
+        const sessionResponse = await fetch('/api/auth/session');
+        if (sessionResponse.ok) {
+          const session = await sessionResponse.json();
+          if (session.isAdmin || session.role === 'manager') {
+            router.push('/admin');
+          } else {
+            router.push('/calendar');
+          }
+        } else {
+          router.push('/calendar');
+        }
+      } catch {
+        router.push('/calendar');
+      }
       router.refresh();
     } catch (err) {
       setError('로그인 중 오류가 발생했습니다.');

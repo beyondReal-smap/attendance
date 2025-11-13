@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || !session.isAdmin) {
+    if (!session || (!session.isAdmin && session.role !== 'manager')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

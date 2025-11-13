@@ -8,13 +8,15 @@ import { DatePickerCalendar } from '@/components/DatePickerCalendar';
 import AlertModal from '@/components/AlertModal';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
-import { FiCalendar, FiDownload, FiX } from 'react-icons/fi';
+import { FiCalendar, FiDownload, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 
 interface User {
   id: string;
   username: string;
   name: string;
+  department?: string;
+  role: 'user' | 'manager' | 'admin';
   isAdmin: boolean;
   isTempPassword: boolean;
   annualLeaveTotal: number;
@@ -43,7 +45,9 @@ export default function AdminPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [selectedType, setSelectedType] = useState<AttendanceType>('근무');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [selectedType, setSelectedType] = useState<AttendanceType>('연차');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -51,6 +55,8 @@ export default function AdminPage() {
   const [compLeaveTotal, setCompLeaveTotal] = useState('');
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [showStartTimeModal, setShowStartTimeModal] = useState(false);
+  const [showEndTimeModal, setShowEndTimeModal] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
   const [userDeleteModalOpen, setUserDeleteModalOpen] = useState(false);
@@ -68,6 +74,19 @@ export default function AdminPage() {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
 
+  // 현재 사용자 권한 상태
+  const [currentUserRole, setCurrentUserRole] = useState<'user' | 'manager' | 'admin'>('user');
+
+  // 일자 범위 필터링 상태
+  const [useDateRange, setUseDateRange] = useState(false);
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  // 뷰 모드 (테이블 / 캘린더)
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('calendar');
+
   // 근태 추가 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
@@ -75,6 +94,8 @@ export default function AdminPage() {
   // 사용자 추가 관련 상태
   const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserName, setNewUserName] = useState('');
+  const [newUserDepartment, setNewUserDepartment] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'user' | 'manager' | 'admin'>('user');
   const [generatedPassword, setGeneratedPassword] = useState('');
 
   useEffect(() => {
@@ -89,10 +110,16 @@ export default function AdminPage() {
         return;
       }
       const session = await sessionRes.json();
-      if (!session.isAdmin) {
+
+      // 권한에 따른 접근 제어 - 관리자만 접근 가능
+      if (session.role !== 'admin') {
         router.push('/calendar');
         return;
       }
+
+      // 현재 사용자 권한 저장 (관리자 계정은 role이 없을 수 있으므로 기본값 처리)
+      const userRole = session.role || (session.username === '8000000' ? 'admin' : 'user');
+      setCurrentUserRole(userRole);
 
       await Promise.all([loadUsers(), loadAttendances()]);
     } catch (error) {
@@ -124,16 +151,30 @@ export default function AdminPage() {
   // 필터링된 근태 데이터
   const filteredAttendances = useMemo(() => {
     return attendances.filter(attendance => {
-      // 월 필터링
-      const attendanceMonth = dayjs(attendance.date).format('YYYY-MM');
-      const monthMatch = attendanceMonth === selectedMonth;
+      // 날짜 필터링
+      let dateMatch = true;
+      if (useDateRange) {
+        // 일자 범위 필터링
+        if (startDateFilter && endDateFilter) {
+          const attendanceDate = dayjs(attendance.date);
+          const start = dayjs(startDateFilter);
+          const end = dayjs(endDateFilter);
+          dateMatch = (attendanceDate.isAfter(start) || attendanceDate.isSame(start)) && (attendanceDate.isBefore(end) || attendanceDate.isSame(end));
+        } else if (startDateFilter) {
+          dateMatch = dayjs(attendance.date).isSame(dayjs(startDateFilter));
+        }
+      } else {
+        // 월 필터링
+        const attendanceMonth = dayjs(attendance.date).format('YYYY-MM');
+        dateMatch = attendanceMonth === selectedMonth;
+      }
 
       // 사용자 필터링
       const userMatch = selectedUserFilter === 'all' || attendance.userName === selectedUserFilter;
 
-      return monthMatch && userMatch;
+      return dateMatch && userMatch;
     });
-  }, [attendances, selectedMonth, selectedUserFilter]);
+  }, [attendances, selectedMonth, selectedUserFilter, useDateRange, startDateFilter, endDateFilter]);
 
   // CSV 다운로드 함수
   const downloadCSV = () => {
@@ -145,14 +186,18 @@ export default function AdminPage() {
       return;
     }
 
-    const csvData = filteredAttendances.map(attendance => ({
-      '사용자': attendance.userName,
-      '날짜': attendance.date,
-      '유형': attendance.type,
-      '사유': attendance.reason || ''
-    }));
+    const csvData = filteredAttendances.map(attendance => {
+      const user = users.find(u => u.name === attendance.userName);
+      return {
+        '사용자': attendance.userName,
+        '사번': user?.username || '',
+        '날짜': attendance.date,
+        '유형': attendance.type,
+        '사유': attendance.reason || ''
+      };
+    });
 
-    const headers = ['사용자', '날짜', '유형', '사유'];
+    const headers = ['사용자', '사번', '날짜', '유형', '사유'];
     const csvContent = [
       headers.join(','),
       ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
@@ -175,18 +220,56 @@ export default function AdminPage() {
       return;
     }
 
-    const worksheetData = filteredAttendances.map(attendance => ({
-      '사용자': attendance.userName,
-      '날짜': attendance.date,
-      '유형': attendance.type,
-      '사유': attendance.reason || ''
-    }));
+    const worksheetData = filteredAttendances.map(attendance => {
+      const user = users.find(u => u.name === attendance.userName);
+      return {
+        '사용자': attendance.userName,
+        '사번': user?.username || '',
+        '날짜': attendance.date,
+        '유형': attendance.type,
+        '사유': attendance.reason || ''
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, '근태목록');
 
     XLSX.writeFile(workbook, `근태목록_${selectedMonth}_${selectedUserFilter === 'all' ? '전체' : selectedUserFilter}.xlsx`);
+  };
+
+  const formatTimeDisplay = (timeString: string): string => {
+    if (!timeString) return '';
+
+    const [hour, minute] = timeString.split(':').map(Number);
+    const hour12 = hour > 12 ? hour - 12 : hour;
+    const period = hour >= 12 ? '오후' : '오전';
+
+    if (minute === 0) {
+      return `${period} ${hour12}시`;
+    } else {
+      return `${period} ${hour12}시 ${minute}분`;
+    }
+  };
+
+  const checkTimeOverlap = (existingAttendances: any[], newStartTime?: string, newEndTime?: string): any | null => {
+    if (!newStartTime || !newEndTime) return null; // 시간 정보가 없으면 겹침 체크하지 않음
+
+    const newStart = new Date(`2000-01-01T${newStartTime}`);
+    const newEnd = new Date(`2000-01-01T${newEndTime}`);
+
+    for (const attendance of existingAttendances) {
+      if (attendance.startTime && attendance.endTime) {
+        const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+        const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+        // 시간대가 겹치는지 확인 (끝시간이 시작시간과 같거나, 시작시간이 끝시간과 같으면 겹치지 않음으로 처리)
+        if (newStart < existingEnd && newEnd > existingStart) {
+          return attendance; // 겹치는 근태 정보를 반환
+        }
+      }
+    }
+    return null; // 겹치는 근태가 없음
   };
 
   const handleAddAttendance = async () => {
@@ -206,6 +289,30 @@ export default function AdminPage() {
       return;
     }
 
+    // 시간 겹침 체크를 위한 새로운 근태 시간 계산
+    const newStartTime = selectedType === '반반차' ? startTime :
+                        (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' : undefined);
+    const newEndTime = selectedType === '반반차' ? endTime :
+                      (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' : undefined);
+
+    // 같은 날짜의 같은 사용자의 기존 근태들을 확인
+    const existingAttendancesOnDate = attendances.filter(a =>
+      a.userId === selectedUserId && a.date === startDate
+    );
+
+    // 시간 겹침 체크 (시간 정보가 있는 근태들만)
+    const overlappingAttendance = checkTimeOverlap(existingAttendancesOnDate, newStartTime, newEndTime);
+    if (overlappingAttendance) {
+      const timeInfo = overlappingAttendance.startTime && overlappingAttendance.endTime
+        ? `${formatTimeDisplay(overlappingAttendance.startTime)} ~ ${formatTimeDisplay(overlappingAttendance.endTime)}`
+        : '';
+      setAlertTitle('근태 시간대 중복');
+      setAlertMessage(`선택한 시간대에 이미 '${overlappingAttendance.type}' 근태가 입력되어 있습니다.\n시간대: ${timeInfo}`);
+      setAlertType('error');
+      setAlertModalOpen(true);
+      return;
+    }
+
     try {
       const res = await fetch('/api/attendance/admin', {
         method: 'POST',
@@ -216,6 +323,12 @@ export default function AdminPage() {
           endDate,
           type: selectedType,
           reason: reason.trim(),
+          startTime: selectedType === '반반차' ? startTime :
+                     (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' :
+                      ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? startTime : undefined),
+          endTime: selectedType === '반반차' ? endTime :
+                   (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' :
+                    ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? endTime : undefined),
         }),
       });
 
@@ -227,6 +340,8 @@ export default function AdminPage() {
         setAlertModalOpen(true);
         setStartDate(format(new Date(), 'yyyy-MM-dd'));
         setEndDate(format(new Date(), 'yyyy-MM-dd'));
+        setStartTime('');
+        setEndTime('');
         setReason('');
       } else {
         const data = await res.json();
@@ -341,6 +456,8 @@ export default function AdminPage() {
         body: JSON.stringify({
           username: newUserUsername.trim(),
           name: newUserName.trim(),
+          department: newUserDepartment.trim() || null,
+          role: newUserRole,
           password: password,
         }),
       });
@@ -354,6 +471,8 @@ export default function AdminPage() {
         setAlertModalOpen(true);
         setNewUserUsername('');
         setNewUserName('');
+        setNewUserDepartment('');
+        setNewUserRole('user');
         setGeneratedPassword('');
       } else {
         const error = await res.json();
@@ -493,8 +612,9 @@ export default function AdminPage() {
         </div>
 
         <div className="p-6 space-y-8">
-          {/* 사용자 추가 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-blue-200 shadow-lg">
+          {/* 사용자 추가 - 관리자만 표시 */}
+          {currentUserRole === 'admin' && (
+            <div className="bg-white rounded-xl p-6 border-2 border-blue-200 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,7 +624,7 @@ export default function AdminPage() {
               <h2 className="text-xl font-bold text-gray-900">사용자 추가</h2>
             </div>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사번
@@ -528,6 +648,32 @@ export default function AdminPage() {
                     placeholder="이름을 입력하세요"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    소속
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserDepartment}
+                    onChange={(e) => setNewUserDepartment(e.target.value)}
+                    placeholder="소속을 입력하세요 (선택사항)"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    권한
+                  </label>
+                  <select
+                    value={newUserRole}
+                    onChange={(e) => setNewUserRole(e.target.value as 'user' | 'manager' | 'admin')}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white"
+                  >
+                    <option value="user">사용자</option>
+                    <option value="manager">중간관리자</option>
+                    <option value="admin">관리자</option>
+                  </select>
                 </div>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -571,14 +717,21 @@ export default function AdminPage() {
                               </svg>
                             </div>
                             <div>
-                              <h4 className="font-semibold text-gray-900">{user.name}</h4>
-                              <p className="text-sm text-gray-500">{user.username}</p>
+                              <h4 className="font-semibold text-gray-900">{user.username}</h4>
+                              <p className="text-sm text-gray-500">{user.name}</p>
+                              {user.department && (
+                                <p className="text-sm text-gray-600">{user.department}</p>
+                              )}
                               <div className="flex gap-2 mt-1">
-                                {user.isAdmin && (
-                                  <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                                    관리자
-                                  </span>
-                                )}
+                                <span className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
+                                  user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                                  user.role === 'manager' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {user.role === 'admin' ? '관리자' :
+                                   user.role === 'manager' ? '중간관리자' :
+                                   '사용자'}
+                                </span>
                                 {user.isTempPassword && (
                                   <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
                                     임시비밀번호
@@ -609,9 +762,11 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* 사용자 연차/체휴 설정 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
+          {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
+          {currentUserRole === 'admin' && (
+            <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -625,8 +780,8 @@ export default function AdminPage() {
                 <div key={user.id} className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                      <p className="text-xs text-gray-500">{user.username}</p>
+                      <h3 className="font-semibold text-gray-900">{user.username}</h3>
+                      <p className="text-xs text-gray-500">{user.name}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -718,6 +873,7 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+          )}
 
           {/* Add Attendance Form */}
           <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
@@ -742,7 +898,7 @@ export default function AdminPage() {
                   >
                     <span>
                       {selectedUserId
-                        ? users.find(u => u.id === selectedUserId)?.name + ' (' + users.find(u => u.id === selectedUserId)?.username + ')'
+                        ? users.find(u => u.id === selectedUserId)?.username + ' (' + users.find(u => u.id === selectedUserId)?.name + ')'
                         : '선택하세요'
                       }
                     </span>
@@ -764,18 +920,22 @@ export default function AdminPage() {
                     <span>
                       {selectedType
                         ? (() => {
-                            const labels: Record<string, string> = {
-                              '연차': '연차 (1일)',
-                              '오전반차': '오전반차 (0.5일)',
-                              '오후반차': '오후반차 (0.5일)',
-                              '오전반반차A': '오전반반차A (0.25일)',
-                              '오전반반차B': '오전반반차B (0.25일)',
-                              '오후반반차A': '오후반반차A (0.25일)',
-                              '오후반반차B': '오후반반차B (0.25일)',
-                              '체휴': '체휴 (1일)',
-                              '근무': '근무',
-                              '시차': '시차 (시간 직접 입력)'
-                            };
+                              const labels: Record<string, string> = {
+                                '연차': '연차 (1일)',
+                                '오전반차': '오전반차 (0.5일)',
+                                '오후반차': '오후반차 (0.5일)',
+                                '반반차': '반반차 (0.25일)',
+                                '체휴': '체휴 (1일)',
+                                '팀장대행': '팀장대행',
+                                '코칭': '코칭',
+                                '교육': '교육',
+                                '휴식': '휴식',
+                                '출장': '출장',
+                                '장애': '장애',
+                                '기타': '기타',
+                                '연장근무': '연장근무',
+                                '결근': '결근'
+                              };
                             return labels[selectedType] || selectedType;
                           })()
                         : '선택하세요'
@@ -813,24 +973,61 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      // 반차나 반반차는 종료일자 선택 불가
-                      if (!['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)) {
+                      // 반차는 종료일자 선택 불가, 반반차는 시간 지정이므로 선택 가능
+                      if (!['오전반차', '오후반차'].includes(selectedType)) {
                       setShowEndCalendar(true);
                       setShowStartCalendar(false);
                       }
                     }}
-                    disabled={['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)}
+                    disabled={['오전반차', '오후반차'].includes(selectedType)}
                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between text-left text-gray-900 ${
-                      ['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType)
+                      ['오전반차', '오후반차'].includes(selectedType)
                         ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
                         : 'border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <span>{endDate || '선택하세요'}</span>
-                    <FiCalendar className={`w-4 h-4 ${['오전반차', '오후반차', '오전반반차A', '오전반반차B', '오후반반차A', '오후반반차B'].includes(selectedType) ? 'text-gray-300' : 'text-gray-400'}`} />
+                    <FiCalendar className={`w-4 h-4 ${['오전반차', '오후반차'].includes(selectedType) ? 'text-gray-300' : 'text-gray-400'}`} />
                   </button>
                 </div>
               </div>
+
+              {/* 시간 입력 - 반반차, 팀장대행, 코칭, 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
+              {selectedType && ['반반차', '팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      시작시간
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowStartTimeModal(true)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>{startTime || '시간 선택'}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      종료시간
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEndTimeModal(true)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>{endTime || '시간 선택'}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -902,21 +1099,81 @@ export default function AdminPage() {
             </div>
 
             {/* 필터링 컨트롤 */}
-            <div className="mb-6 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    월 선택
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              {/* 필터 타입 토글 */}
+              <div className="mb-4">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="filterType"
+                      checked={!useDateRange}
+                      onChange={() => setUseDateRange(false)}
+                      className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">월별 조회</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowMonthPicker(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                  >
-                    <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
-                    <FiCalendar className="w-4 h-4 text-gray-400" />
-                  </button>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="filterType"
+                      checked={useDateRange}
+                      onChange={() => setUseDateRange(true)}
+                      className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">일자 범위 조회</span>
+                  </label>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {!useDateRange ? (
+                  // 월 선택
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      월 선택
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowMonthPicker(true)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
+                      <FiCalendar className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ) : (
+                  // 일자 범위 선택
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        시작일
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowStartDatePicker(true)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{startDateFilter || '선택하세요'}</span>
+                        <FiCalendar className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        종료일
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowEndDatePicker(true)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      >
+                        <span>{endDateFilter || '선택하세요'}</span>
+                        <FiCalendar className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사용자 필터
@@ -938,70 +1195,121 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
+
+              {/* 뷰 모드 토글 (월별 조회일 때만) */}
+              {!useDateRange && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-gray-700">보기 방식:</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewMode('calendar')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                          viewMode === 'calendar'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        캘린더
+                      </button>
+                      <button
+                        onClick={() => setViewMode('table')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                          viewMode === 'table'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        테이블
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-3 text-sm text-gray-600">
                 총 {filteredAttendances.length}개의 근태 기록이 필터링되었습니다.
               </div>
             </div>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사용자</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">날짜</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">유형</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사유</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">작업</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAttendances.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
-                          필터링된 근태 기록이 없습니다
-                        </td>
+            {/* 테이블 뷰 */}
+            {viewMode === 'table' && (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사용자</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">날짜</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">유형</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사유</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">작업</th>
                       </tr>
-                    ) : (
-                      filteredAttendances.map((attendance) => (
-                        <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                          <td className="px-4 py-3 text-sm text-gray-900">{attendance.userName}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{attendance.date}</td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
-                              attendance.type === '연차' ? 'bg-red-100 text-red-700' :
-                              (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
-                              (attendance.type.includes('반반차')) ? 'bg-gray-100 text-gray-700' :
-                              attendance.type === '체휴' ? 'bg-yellow-100 text-yellow-700' :
-                              attendance.type === '근무' ? 'bg-blue-100 text-blue-700' :
-                              attendance.type === '시차' ? 'bg-purple-100 text-purple-700' :
-                              'bg-purple-100 text-purple-700'
-                            }`}>
-                              {attendance.type}
-                              {attendance.type === '시차' && attendance.startTime && attendance.endTime && (
-                                <span className="ml-1 text-purple-600">
-                                  ({attendance.startTime.split(':')[0]}~{attendance.endTime.split(':')[0]}시)
-                                </span>
+                    </thead>
+                    <tbody>
+                      {filteredAttendances.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
+                            필터링된 근태 기록이 없습니다
+                          </td>
+                        </tr>
+                      ) : (
+                      filteredAttendances.map((attendance) => {
+                        const user = users.find(u => u.name === attendance.userName);
+                        return (
+                          <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {user?.username || attendance.userName}
+                              {user && (
+                                <span className="text-xs text-gray-500 ml-1">({user.name})</span>
                               )}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
-                            {attendance.reason || '-'}
-                          </td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => handleDeleteAttendance(attendance.id)}
-                              className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
-                            >
-                              삭제
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{attendance.date}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex px-2 py-1 rounded-md text-xs font-medium ${
+                                attendance.type === '연차' ? 'bg-red-100 text-red-700' :
+                                (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
+                                attendance.type === '반반차' ? 'bg-gray-100 text-gray-700' :
+                                attendance.type === '체휴' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-purple-100 text-purple-700'
+                              }`}>
+                                {attendance.type}
+                                {attendance.startTime && attendance.endTime && (
+                                  <span className="text-xs ml-1">
+                                    ({attendance.startTime}~{attendance.endTime})
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
+                              {attendance.reason || '-'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => handleDeleteAttendance(attendance.id)}
+                                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                              >
+                                삭제
                             </button>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* 캘린더 뷰 (월별 조회일 때만) */}
+            {viewMode === 'calendar' && !useDateRange && (
+              <MonthlyAttendanceCalendar
+                selectedMonth={selectedMonth}
+                attendances={filteredAttendances}
+                users={users}
+                onDeleteAttendance={handleDeleteAttendance}
+              />
+            )}
           </div>
 
           {/* 삭제 확인 모달 */}
@@ -1064,11 +1372,16 @@ export default function AdminPage() {
       </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-3">
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div><span className="font-medium text-gray-700">이름:</span> {userToDelete.name}</div>
                       <div><span className="font-medium text-gray-700">사번:</span> {userToDelete.username}</div>
-                      {userToDelete.isAdmin && (
-                        <div><span className="font-medium text-gray-700">권한:</span> 관리자</div>
+                      <div><span className="font-medium text-gray-700">이름:</span> {userToDelete.name}</div>
+                      {userToDelete.department && (
+                        <div><span className="font-medium text-gray-700">소속:</span> {userToDelete.department}</div>
                       )}
+                      <div><span className="font-medium text-gray-700">권한:</span> {
+                        userToDelete.role === 'admin' ? '관리자' :
+                        userToDelete.role === 'manager' ? '중간관리자' :
+                        '사용자'
+                      }</div>
     </div>
                   </div>
                 </div>
@@ -1101,6 +1414,82 @@ export default function AdminPage() {
             message={alertMessage}
             type={alertType}
           />
+
+          {/* 시작일 선택 모달 */}
+          {showStartDatePicker && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">시작일 선택</h3>
+                    <button
+                      onClick={() => setShowStartDatePicker(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <DatePickerCalendar
+                    startDate={startDateFilter ? dayjs(startDateFilter) : null}
+                    endDate={endDateFilter ? dayjs(endDateFilter) : null}
+                    onStartDateSelect={(date) => {
+                      setStartDateFilter(date.format('YYYY-MM-DD'));
+                      setShowStartDatePicker(false);
+                    }}
+                    onEndDateSelect={() => {}}
+                    onClose={() => setShowStartDatePicker(false)}
+                    initialSelectingStart={true}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 종료일 선택 모달 */}
+          {showEndDatePicker && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">종료일 선택</h3>
+                    <button
+                      onClick={() => setShowEndDatePicker(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <DatePickerCalendar
+                    startDate={startDateFilter ? dayjs(startDateFilter) : null}
+                    endDate={endDateFilter ? dayjs(endDateFilter) : null}
+                    onStartDateSelect={() => {}}
+                    onEndDateSelect={(date) => {
+                      setEndDateFilter(date.format('YYYY-MM-DD'));
+                      setShowEndDatePicker(false);
+                    }}
+                    onClose={() => setShowEndDatePicker(false)}
+                    initialSelectingStart={false}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
 
           {/* 월 선택 모달 */}
           {showMonthPicker && (
@@ -1233,8 +1622,8 @@ export default function AdminPage() {
                               {user.name.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-xs opacity-75">{user.username}</div>
+                              <div className="font-medium">{user.username}</div>
+                              <div className="text-xs opacity-75">{user.name}</div>
                             </div>
                             {user.isAdmin && (
                               <span className={`text-xs px-2 py-1 rounded-full ${
@@ -1292,46 +1681,88 @@ export default function AdminPage() {
                     <div className="text-sm font-medium text-gray-700 mb-3">
                       근태 유형을 선택하세요
                     </div>
-                    <div className="grid grid-cols-1 gap-2">
-                      {/* 연차 */}
-                      <button
-                        onClick={() => {
-                          setSelectedType('연차');
-                          setShowTypeModal(false);
-                        }}
-                        className={`w-full p-3 text-left rounded-lg transition ${
-                          selectedType === '연차'
-                            ? 'bg-red-500 text-white'
-                            : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">✈️</span>
-                          <div>
-                            <div className="font-medium">연차</div>
-                            <div className="text-xs opacity-75">1일</div>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* 반차 */}
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      {/* 첫 번째 행 - 연차, 체휴, 근무 */}
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('오전반차');
-                            setEndDate(startDate);
+                            setSelectedType('연차');
                             setShowTypeModal(false);
                           }}
-                          className={`p-3 text-left rounded-lg transition ${
-                            selectedType === '오전반차'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '연차'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">🌅</span>
+                            <span className="text-sm">✈️</span>
                             <div>
-                              <div className="font-medium text-sm">오전반차</div>
+                              <div className="font-medium text-xs">연차</div>
+                              <div className="text-xs opacity-75">1일</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('체휴');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '체휴'
+                              ? 'bg-yellow-500 text-white'
+                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🏠</span>
+                            <div>
+                              <div className="font-medium text-xs">체휴</div>
+                              <div className="text-xs opacity-75">1일</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('결근');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '결근'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">❌</span>
+                            <div>
+                              <div className="font-medium text-xs">결근</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* 두 번째 행 - 오전반차, 오후반차, 반반차 */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('오전반차');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '오전반차'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🌅</span>
+                            <div>
+                              <div className="font-medium text-xs">오전반차</div>
                               <div className="text-xs opacity-75">0.5일</div>
                             </div>
                           </div>
@@ -1340,176 +1771,223 @@ export default function AdminPage() {
                         <button
                           onClick={() => {
                             setSelectedType('오후반차');
-                            setEndDate(startDate);
                             setShowTypeModal(false);
                           }}
-                          className={`p-3 text-left rounded-lg transition ${
+                          className={`p-2 text-left rounded transition ${
                             selectedType === '오후반차'
                               ? 'bg-green-500 text-white'
                               : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">🌆</span>
+                            <span className="text-sm">🌆</span>
                             <div>
-                              <div className="font-medium text-sm">오후반차</div>
+                              <div className="font-medium text-xs">오후반차</div>
                               <div className="text-xs opacity-75">0.5일</div>
                             </div>
                           </div>
                         </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('반반차');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '반반차'
+                              ? 'bg-purple-500 text-white'
+                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🌄</span>
+                            <div>
+                              <div className="font-medium text-xs">반반차</div>
+                              <div className="text-xs opacity-75">0.25일</div>
+                            </div>
+                          </div>
+                        </button>
                       </div>
 
-                      {/* 반반차 */}
+                      {/* 세 번째 행 - 팀장대행, 코칭, 교육 */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('팀장대행');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '팀장대행'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">👔</span>
+                            <div>
+                              <div className="font-medium text-xs">팀장대행</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('코칭');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '코칭'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">👨‍🏫</span>
+                            <div>
+                              <div className="font-medium text-xs">코칭</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('교육');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '교육'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">📚</span>
+                            <div>
+                              <div className="font-medium text-xs">교육</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* 네 번째 행 - 휴식, 출장, 장애 */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedType('휴식');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '휴식'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">😴</span>
+                            <div>
+                              <div className="font-medium text-xs">휴식</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('출장');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '출장'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🏢</span>
+                            <div>
+                              <div className="font-medium text-xs">출장</div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedType('장애');
+                            setStartTime('');
+                            setEndTime('');
+                            setShowTypeModal(false);
+                          }}
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '장애'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">⚠️</span>
+                            <div>
+                              <div className="font-medium text-xs">장애</div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* 다섯 번째 행 - 기타, 연장근무 */}
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('오전반반차A');
-                            setEndDate(startDate);
+                            setSelectedType('기타');
+                            setStartTime('');
+                            setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-3 text-left rounded-lg transition ${
-                            selectedType === '오전반반차A'
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '기타'
                               ? 'bg-gray-500 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-base">🌄</span>
+                            <span className="text-sm">❓</span>
                             <div>
-                              <div className="font-medium text-sm">오전반반차A</div>
-                              <div className="text-xs opacity-75">0.25일</div>
+                              <div className="font-medium text-xs">기타</div>
                             </div>
                           </div>
                         </button>
 
                         <button
                           onClick={() => {
-                            setSelectedType('오전반반차B');
-                            setEndDate(startDate);
+                            setSelectedType('연장근무');
+                            setStartTime('');
+                            setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-3 text-left rounded-lg transition ${
-                            selectedType === '오전반반차B'
+                          className={`p-2 text-left rounded transition ${
+                            selectedType === '연장근무'
                               ? 'bg-gray-500 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-base">☀️</span>
+                            <span className="text-sm">⏰</span>
                             <div>
-                              <div className="font-medium text-sm">오전반반차B</div>
-                              <div className="text-xs opacity-75">0.25일</div>
+                              <div className="font-medium text-xs">연장근무</div>
                             </div>
                           </div>
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedType('오후반반차A');
-                            setEndDate(startDate);
-                            setShowTypeModal(false);
-                          }}
-                          className={`p-3 text-left rounded-lg transition ${
-                            selectedType === '오후반반차A'
-                              ? 'bg-gray-500 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">🌤️</span>
-                            <div>
-                              <div className="font-medium text-sm">오후반반차A</div>
-                              <div className="text-xs opacity-75">0.25일</div>
-                            </div>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setSelectedType('오후반반차B');
-                            setEndDate(startDate);
-                            setShowTypeModal(false);
-                          }}
-                          className={`p-3 text-left rounded-lg transition ${
-                            selectedType === '오후반반차B'
-                              ? 'bg-gray-500 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">🌙</span>
-                            <div>
-                              <div className="font-medium text-sm">오후반반차B</div>
-                              <div className="text-xs opacity-75">0.25일</div>
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-
-                      {/* 체휴 */}
-                      <button
-                        onClick={() => {
-                          setSelectedType('체휴');
-                          setShowTypeModal(false);
-                        }}
-                        className={`w-full p-3 text-left rounded-lg transition ${
-                          selectedType === '체휴'
-                            ? 'bg-yellow-500 text-white'
-                            : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">🏠</span>
-                          <div>
-                            <div className="font-medium">체휴</div>
-                            <div className="text-xs opacity-75">1일</div>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* 근무 */}
-                      <button
-                        onClick={() => {
-                          setSelectedType('근무');
-                          setShowTypeModal(false);
-                        }}
-                        className={`w-full p-3 text-left rounded-lg transition ${
-                          selectedType === '근무'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">💼</span>
-                          <div>
-                            <div className="font-medium">근무</div>
-                            <div className="text-xs opacity-75">정상 근무</div>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* 시차 */}
-                      <button
-                        onClick={() => {
-                          setSelectedType('시차');
-                          setShowTypeModal(false);
-                        }}
-                        className={`w-full p-3 text-left rounded-lg transition ${
-                          selectedType === '시차'
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">⏰</span>
-                          <div>
-                            <div className="font-medium">시차</div>
-                            <div className="text-xs opacity-75">시간 직접 입력</div>
-                          </div>
-                        </div>
-                      </button>
                     </div>
                   </div>
 
@@ -1517,25 +1995,155 @@ export default function AdminPage() {
                   <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-sm font-medium text-purple-700">
                       선택된 유형: {
-                        selectedType
-                          ? (() => {
-                              const labels: Record<string, string> = {
-                                '연차': '연차 (1일)',
-                                '오전반차': '오전반차 (0.5일)',
-                                '오후반차': '오후반차 (0.5일)',
-                                '오전반반차A': '오전반반차A (0.25일)',
-                                '오전반반차B': '오전반반차B (0.25일)',
-                                '오후반반차A': '오후반반차A (0.25일)',
-                                '오후반반차B': '오후반반차B (0.25일)',
-                                '체휴': '체휴 (1일)',
-                                '근무': '근무',
-                                '시차': '시차 (시간 직접 입력)'
-                              };
-                              return labels[selectedType] || selectedType;
-                            })()
-                          : '없음'
+                        (() => {
+                          const labels: Record<string, string> = {
+                            '연차': '연차 (1일)',
+                            '오전반차': '오전반차 (0.5일)',
+                            '오후반차': '오후반차 (0.5일)',
+                            '반반차': '반반차 (0.25일)',
+                            '체휴': '체휴 (1일)',
+                            '팀장대행': '팀장대행',
+                            '코칭': '코칭',
+                            '교육': '교육',
+                            '휴식': '휴식',
+                            '출장': '출장',
+                            '장애': '장애',
+                            '기타': '기타',
+                            '연장근무': '연장근무',
+                            '결근': '결근'
+                          };
+                          return labels[selectedType] || selectedType || '없음';
+                        })()
                       }
                     </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 시작시간 선택 모달 */}
+          {showStartTimeModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">시작시간 선택</h3>
+                    <button
+                      onClick={() => setShowStartTimeModal(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 max-h-96 overflow-y-auto">
+                  <div className="text-sm font-medium text-gray-700 mb-3">
+                    시간을 선택하세요 (9:00 ~ 18:00)
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 19 }, (_, i) => {
+                      const hour = Math.floor(i / 2) + 9;
+                      const minute = i % 2 === 0 ? '00' : '30';
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+                      // 종료시간이 이미 선택되어 있다면 종료시간과 같거나 늦은 시간은 비활성화
+                      const isDisabled = endTime && timeString >= endTime;
+                      return (
+                        <button
+                          key={timeString}
+                          onClick={() => {
+                            if (!isDisabled) {
+                              setStartTime(timeString);
+                              // 반반차의 경우 시작시간 입력 시 종료시간 자동 계산 (+2시간)
+                              if (selectedType === '반반차') {
+                                const [hours, minutes] = timeString.split(':').map(Number);
+                                const endDateTime = new Date();
+                                endDateTime.setHours(hours + 2, minutes);
+                                const endTimeStr = endDateTime.toTimeString().slice(0, 5);
+                                setEndTime(endTimeStr);
+                              }
+                              setShowStartTimeModal(false);
+                            }
+                          }}
+                          disabled={isDisabled}
+                          className={`p-3 text-center rounded-lg transition text-sm font-medium ${
+                            startTime === timeString
+                              ? 'bg-blue-500 text-white'
+                              : isDisabled
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {timeString}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 종료시간 선택 모달 */}
+          {showEndTimeModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">종료시간 선택</h3>
+                    <button
+                      onClick={() => setShowEndTimeModal(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 max-h-96 overflow-y-auto">
+                  <div className="text-sm font-medium text-gray-700 mb-3">
+                    시간을 선택하세요 (9:00 ~ 18:00)
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 19 }, (_, i) => {
+                      const hour = Math.floor(i / 2) + 9;
+                      const minute = i % 2 === 0 ? '00' : '30';
+                      const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+                      // 시작시간이 이미 선택되어 있다면 시작시간과 같거나 앞서는 시간은 비활성화
+                      const isDisabled = startTime && timeString <= startTime;
+                      return (
+                        <button
+                          key={timeString}
+                          onClick={() => {
+                            if (!isDisabled) {
+                              setEndTime(timeString);
+                              setShowEndTimeModal(false);
+                            }
+                          }}
+                          disabled={isDisabled}
+                          className={`p-3 text-center rounded-lg transition text-sm font-medium ${
+                            endTime === timeString
+                              ? 'bg-blue-500 text-white'
+                              : isDisabled
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {timeString}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>
@@ -1613,8 +2221,8 @@ export default function AdminPage() {
                               {user.name.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-xs opacity-75">{user.username}</div>
+                              <div className="font-medium">{user.username}</div>
+                              <div className="text-xs opacity-75">{user.name}</div>
                             </div>
                             {user.isAdmin && (
                               <span className={`text-xs px-2 py-1 rounded-full ${
@@ -1655,6 +2263,234 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// 월별 근태 캘린더 컴포넌트
+function MonthlyAttendanceCalendar({
+  selectedMonth,
+  attendances,
+  users,
+  onDeleteAttendance
+}: {
+  selectedMonth: string;
+  attendances: Attendance[];
+  users: User[];
+  onDeleteAttendance: (id: string) => void;
+}) {
+  const [currentMonth, setCurrentMonth] = useState(dayjs(selectedMonth));
+
+  useEffect(() => {
+    setCurrentMonth(dayjs(selectedMonth));
+  }, [selectedMonth]);
+
+  const daysInMonth = currentMonth.daysInMonth();
+
+  // 사용자별 근태 맵 생성
+  const userAttendanceMap = useMemo(() => {
+    const map: Record<string, Record<string, Attendance[]>> = {};
+
+    users.forEach(user => {
+      map[user.id] = {};
+      // 해당 월의 모든 날짜에 대해 빈 배열 초기화
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
+        map[user.id][dateStr] = [];
+      }
+    });
+
+    // 근태 데이터 채우기
+    attendances.forEach(attendance => {
+      const userId = users.find(u => u.name === attendance.userName)?.id;
+      if (userId && map[userId]) {
+        if (!map[userId][attendance.date]) {
+          map[userId][attendance.date] = [];
+        }
+        map[userId][attendance.date].push(attendance);
+      }
+    });
+
+    return map;
+  }, [attendances, users, currentMonth, daysInMonth]);
+
+  const getAttendanceColor = (attendances: Attendance[]): string => {
+    if (attendances.length === 0) return 'bg-white border border-gray-200';
+
+    // 여러 근태가 있는 경우 우선순위에 따라 색상 결정
+    const type = attendances[0].type;
+    switch (type) {
+      case '연차': return 'bg-red-50 border border-red-200';
+      case '오전반차':
+      case '오후반차': return 'bg-green-50 border border-green-200';
+      case '반반차': return 'bg-gray-50 border border-gray-200';
+      case '체휴': return 'bg-yellow-50 border border-yellow-200';
+      default: return 'bg-white border border-gray-200';
+    }
+  };
+
+  const getAttendanceText = (attendances: Attendance[]): string => {
+    if (attendances.length === 0) return '';
+
+    if (attendances.length === 1) {
+      const attendance = attendances[0];
+      if (attendance.type === '반반차' && attendance.startTime && attendance.endTime) {
+        return `${attendance.type}(${attendance.startTime}~${attendance.endTime})`;
+      }
+      return attendance.type;
+    }
+
+    return `${attendances.length}개`;
+  };
+
+  const getDayOfWeek = (day: number): string => {
+    const date = currentMonth.date(day);
+    const dayOfWeek = date.day();
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[dayOfWeek];
+  };
+
+  const getDayOfWeekColor = (day: number): string => {
+    const date = currentMonth.date(day);
+    const dayOfWeek = date.day();
+    if (dayOfWeek === 0) return 'text-red-600'; // 일요일
+    if (dayOfWeek === 6) return 'text-blue-600'; // 토요일
+    return 'text-gray-900'; // 평일
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(prev => prev.subtract(1, 'month'));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(prev => prev.add(1, 'month'));
+  };
+
+  const handleDayClick = (userId: string, dateStr: string, attendances: Attendance[]) => {
+    if (attendances.length === 1) {
+      onDeleteAttendance(attendances[0].id);
+    }
+  };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* 캘린더 헤더 */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+        <motion.button
+          onClick={handlePrevMonth}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FiChevronLeft className="w-5 h-5 text-gray-700" />
+        </motion.button>
+
+        <h3 className="text-lg font-bold text-gray-900">
+          {currentMonth.format('YYYY년 M월')} 근태 현황
+        </h3>
+
+        <motion.button
+          onClick={handleNextMonth}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FiChevronRight className="w-5 h-5 text-gray-700" />
+        </motion.button>
+      </div>
+
+      {/* 사용자별 일별 근태 그리드 */}
+      <div className="overflow-x-auto">
+        <div className="min-w-max">
+          {/* 일자 헤더 */}
+          <div
+            className="grid border-b border-gray-200 bg-gray-50 sticky top-0 z-10"
+            style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, minmax(60px, 1fr))` }}
+          >
+            <div className="px-4 py-3 text-xs font-semibold text-gray-700 border-r border-gray-200">
+              사용자
+            </div>
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
+              <div
+                key={day}
+                className={`px-2 py-3 text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)}`}
+              >
+                <div className="font-bold">{day}</div>
+                <div className="text-xs opacity-75">{getDayOfWeek(day)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 사용자별 행 */}
+          {users.map((user) => (
+            <div
+              key={user.id}
+              className="grid border-b border-gray-100 hover:bg-gray-50 transition"
+              style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, minmax(60px, 1fr))` }}
+            >
+              {/* 사용자 이름 */}
+              <div className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center">
+                {user.username}
+                <span className="text-xs text-gray-500 ml-1">({user.name})</span>
+              </div>
+
+              {/* 일자별 셀들 */}
+              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
+                const dayAttendances = userAttendanceMap[user.id]?.[dateStr] || [];
+                const colorClass = getAttendanceColor(dayAttendances);
+                const text = getAttendanceText(dayAttendances);
+
+                return (
+                  <motion.button
+                    key={day}
+                    onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
+                    className={`px-2 py-3 text-xs text-center rounded border transition-all duration-200 ${colorClass} ${
+                      dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
+                    } border-r border-gray-100 last:border-r-0`}
+                    whileHover={dayAttendances.length > 0 ? { scale: 1.02 } : {}}
+                    whileTap={dayAttendances.length > 0 ? { scale: 0.98 } : {}}
+                    title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
+                  >
+                    {text && (
+                      <div className="truncate max-w-full">
+                        {text}
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 범례 */}
+      <div className="p-4 bg-gray-50 border-t border-gray-200">
+        <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
+            <span>연차</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
+            <span>반차</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
+            <span>근무</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div>
+            <span>체휴</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-100 border border-gray-200 rounded"></div>
+            <span>반반차</span>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">셀을 클릭하면 해당 근태를 삭제할 수 있습니다.</p>
       </div>
     </div>
   );

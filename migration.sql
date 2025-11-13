@@ -107,6 +107,85 @@ DEALLOCATE PREPARE stmt;
 -- DROP TABLE IF EXISTS users;
 
 -- ============================================
+-- Step 5: 연차/체휴 년도별 관리 테이블 생성
+-- ============================================
+
+-- leave_balances 테이블 생성 (년도별 연차/체휴 관리)
+CREATE TABLE IF NOT EXISTS leave_balances (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  year INT NOT NULL COMMENT '관리 년도 (예: 2024)',
+  leave_type ENUM('annual', 'compensatory') NOT NULL COMMENT '연차/체휴 구분',
+  total DECIMAL(4,2) DEFAULT 0 COMMENT '부여된 휴가 수',
+  used DECIMAL(4,2) DEFAULT 0 COMMENT '사용한 휴가 수',
+  remaining DECIMAL(4,2) DEFAULT 0 COMMENT '잔여 휴가 수',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES atnd_users(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_user_year_type (user_id, year, leave_type)
+);
+
+-- 기존 데이터 마이그레이션 (현재 년도의 데이터로)
+SET @current_year = YEAR(CURDATE());
+
+-- 연차 데이터 마이그레이션
+INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+SELECT
+  id as user_id,
+  @current_year as year,
+  'annual' as leave_type,
+  COALESCE(annual_leave_total, 15) as total,
+  COALESCE(annual_leave_used, 0) as used,
+  COALESCE(annual_leave_total - annual_leave_used, 15) as remaining
+FROM atnd_users
+WHERE NOT EXISTS (
+  SELECT 1 FROM leave_balances
+  WHERE leave_balances.user_id = atnd_users.id
+  AND leave_balances.year = @current_year
+  AND leave_balances.leave_type = 'annual'
+);
+
+-- 체휴 데이터 마이그레이션
+INSERT INTO leave_balances (user_id, year, leave_type, total, used, remaining)
+SELECT
+  id as user_id,
+  @current_year as year,
+  'compensatory' as leave_type,
+  COALESCE(comp_leave_total, 0) as total,
+  COALESCE(comp_leave_used, 0) as used,
+  COALESCE(comp_leave_total - comp_leave_used, 0) as remaining
+FROM atnd_users
+WHERE NOT EXISTS (
+  SELECT 1 FROM leave_balances
+  WHERE leave_balances.user_id = atnd_users.id
+  AND leave_balances.year = @current_year
+  AND leave_balances.leave_type = 'compensatory'
+);
+
+-- ============================================
+-- Step 6: atnd_users 테이블에서 연차/체휴 필드 제거 (선택사항)
+-- ============================================
+
+-- 기존 연차/체휴 필드 백업을 위해 새로운 필드 생성 (선택사항)
+-- ALTER TABLE atnd_users ADD COLUMN annual_leave_total_old INT DEFAULT NULL;
+-- ALTER TABLE atnd_users ADD COLUMN annual_leave_used_old DECIMAL(4,2) DEFAULT NULL;
+-- ALTER TABLE atnd_users ADD COLUMN comp_leave_total_old INT DEFAULT NULL;
+-- ALTER TABLE atnd_users ADD COLUMN comp_leave_used_old DECIMAL(4,2) DEFAULT NULL;
+
+-- 백업 데이터 복사 (선택사항)
+-- UPDATE atnd_users SET
+--   annual_leave_total_old = annual_leave_total,
+--   annual_leave_used_old = annual_leave_used,
+--   comp_leave_total_old = comp_leave_total,
+--   comp_leave_used_old = comp_leave_used;
+
+-- 기존 연차/체휴 필드 제거 (주의: 데이터 손실)
+-- ALTER TABLE atnd_users DROP COLUMN annual_leave_total;
+-- ALTER TABLE atnd_users DROP COLUMN annual_leave_used;
+-- ALTER TABLE atnd_users DROP COLUMN comp_leave_total;
+-- ALTER TABLE atnd_users DROP COLUMN comp_leave_used;
+
+-- ============================================
 -- 완료 메시지
 -- ============================================
 SELECT 'Migration completed successfully!' as status;

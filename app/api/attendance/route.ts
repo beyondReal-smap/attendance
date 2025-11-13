@@ -99,19 +99,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 연차/체휴인 경우 사용량 확인
-    if (isAnnualLeaveType(type) && totalLeaveUsage > 0) {
-      const userResult = await sql`
-        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
-        FROM atnd_users
-        WHERE id = ${session.userId}
-      `;
-      
-      if (userResult.rows.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+    const currentYear = new Date().getFullYear();
 
-      const user = userResult.rows[0];
-      const remaining = user.annual_leave_total - user.annual_leave_used;
+    if (isAnnualLeaveType(type) && totalLeaveUsage > 0) {
+      const leaveResult = await sql`
+        SELECT remaining
+        FROM leave_balances
+        WHERE user_id = ${session.userId}
+        AND year = ${currentYear}
+        AND leave_type = 'annual'
+      `;
+
+      const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 15;
       if (remaining < totalLeaveUsage) {
         return NextResponse.json(
           { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
@@ -119,18 +118,15 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (type === '체휴' && totalLeaveUsage > 0) {
-      const userResult = await sql`
-        SELECT annual_leave_total, annual_leave_used, comp_leave_total, comp_leave_used
-        FROM atnd_users
-        WHERE id = ${session.userId}
+      const leaveResult = await sql`
+        SELECT remaining
+        FROM leave_balances
+        WHERE user_id = ${session.userId}
+        AND year = ${currentYear}
+        AND leave_type = 'compensatory'
       `;
-      
-      if (userResult.rows.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
 
-      const user = userResult.rows[0];
-      const remaining = user.comp_leave_total - user.comp_leave_used;
+      const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 0;
       if (remaining < totalLeaveUsage) {
         return NextResponse.json(
           { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${totalLeaveUsage}일)` },
@@ -151,17 +147,25 @@ export async function POST(request: NextRequest) {
 
     // 연차/체휴 사용량 업데이트
     if (totalLeaveUsage > 0) {
+      const currentYear = new Date().getFullYear();
+
       if (isAnnualLeaveType(type)) {
         await sql`
-          UPDATE atnd_users
-          SET annual_leave_used = annual_leave_used + ${totalLeaveUsage}
-          WHERE id = ${session.userId}
+          UPDATE leave_balances
+          SET used = used + ${totalLeaveUsage},
+              remaining = remaining - ${totalLeaveUsage}
+          WHERE user_id = ${session.userId}
+          AND year = ${currentYear}
+          AND leave_type = 'annual'
         `;
       } else if (type === '체휴') {
         await sql`
-          UPDATE atnd_users
-          SET comp_leave_used = comp_leave_used + ${totalLeaveUsage}
-          WHERE id = ${session.userId}
+          UPDATE leave_balances
+          SET used = used + ${totalLeaveUsage},
+              remaining = remaining - ${totalLeaveUsage}
+          WHERE user_id = ${session.userId}
+          AND year = ${currentYear}
+          AND leave_type = 'compensatory'
         `;
       }
     }
@@ -222,18 +226,25 @@ export async function DELETE(request: NextRequest) {
     // 연차/체휴인 경우 사용량 차감 (삭제 후 처리)
     if (isLeaveType(attendanceType) && isWorkingDay(date)) {
       const leaveUsage = getLeaveUsage(attendanceType);
-      
+      const currentYear = new Date().getFullYear();
+
       if (isAnnualLeaveType(attendanceType)) {
         await sql`
-          UPDATE atnd_users
-          SET annual_leave_used = GREATEST(0, annual_leave_used - ${leaveUsage})
-          WHERE id = ${attendance.user_id}
+          UPDATE leave_balances
+          SET used = GREATEST(0, used - ${leaveUsage}),
+              remaining = remaining + ${leaveUsage}
+          WHERE user_id = ${attendance.user_id}
+          AND year = ${currentYear}
+          AND leave_type = 'annual'
         `;
       } else if (attendanceType === '체휴') {
         await sql`
-          UPDATE atnd_users
-          SET comp_leave_used = GREATEST(0, comp_leave_used - ${leaveUsage})
-          WHERE id = ${attendance.user_id}
+          UPDATE leave_balances
+          SET used = GREATEST(0, used - ${leaveUsage}),
+              remaining = remaining + ${leaveUsage}
+          WHERE user_id = ${attendance.user_id}
+          AND year = ${currentYear}
+          AND leave_type = 'compensatory'
         `;
       }
     }
@@ -288,22 +299,29 @@ export async function PUT(request: NextRequest) {
     // 타입이 변경된 경우에만 사용량 업데이트
     if (oldType !== newType) {
       const isWorking = isWorkingDay(date);
-      
+      const currentYear = new Date().getFullYear();
+
       // 기존 타입의 사용량 차감
       if (isLeaveType(oldType) && isWorking) {
         const oldUsage = getLeaveUsage(oldType);
-        
+
         if (isAnnualLeaveType(oldType)) {
           await sql`
-            UPDATE atnd_users
-            SET annual_leave_used = GREATEST(0, annual_leave_used - ${oldUsage})
-            WHERE id = ${existing.user_id}
+            UPDATE leave_balances
+            SET used = GREATEST(0, used - ${oldUsage}),
+                remaining = remaining + ${oldUsage}
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
           `;
         } else if (oldType === '체휴') {
           await sql`
-            UPDATE atnd_users
-            SET comp_leave_used = GREATEST(0, comp_leave_used - ${oldUsage})
-            WHERE id = ${existing.user_id}
+            UPDATE leave_balances
+            SET used = GREATEST(0, used - ${oldUsage}),
+                remaining = remaining + ${oldUsage}
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
           `;
         }
       }
@@ -311,53 +329,57 @@ export async function PUT(request: NextRequest) {
       // 새 타입의 사용량 추가
       if (isLeaveType(newType) && isWorking) {
         const newUsage = getLeaveUsage(newType);
-        
+
         // 사용 가능 여부 확인
         if (isAnnualLeaveType(newType)) {
-          const userResult = await sql`
-            SELECT annual_leave_total, annual_leave_used
-            FROM atnd_users
-            WHERE id = ${existing.user_id}
+          const leaveResult = await sql`
+            SELECT remaining
+            FROM leave_balances
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
           `;
-          
-          if (userResult.rows.length > 0) {
-            const user = userResult.rows[0];
-            const remaining = user.annual_leave_total - user.annual_leave_used;
-            if (remaining < newUsage) {
-              return NextResponse.json(
-                { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
-                { status: 400 }
-              );
-            }
+
+          const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 15;
+          if (remaining < newUsage) {
+            return NextResponse.json(
+              { error: `연차가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
+              { status: 400 }
+            );
           }
-          
+
           await sql`
-            UPDATE atnd_users
-            SET annual_leave_used = annual_leave_used + ${newUsage}
-            WHERE id = ${existing.user_id}
+            UPDATE leave_balances
+            SET used = used + ${newUsage},
+                remaining = remaining - ${newUsage}
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
           `;
         } else if (newType === '체휴') {
-          const userResult = await sql`
-            SELECT comp_leave_total, comp_leave_used
-            FROM atnd_users
-            WHERE id = ${existing.user_id}
+          const leaveResult = await sql`
+            SELECT remaining
+            FROM leave_balances
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
           `;
-          
-          if (userResult.rows.length > 0) {
-            const user = userResult.rows[0];
-            const remaining = user.comp_leave_total - user.comp_leave_used;
-            if (remaining < newUsage) {
-              return NextResponse.json(
-                { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
-                { status: 400 }
-              );
-            }
+
+          const remaining = leaveResult.rows.length > 0 ? Number(leaveResult.rows[0].remaining) : 0;
+          if (remaining < newUsage) {
+            return NextResponse.json(
+              { error: `체휴가 부족합니다. (잔여: ${remaining}일, 필요: ${newUsage}일)` },
+              { status: 400 }
+            );
           }
-          
+
           await sql`
-            UPDATE atnd_users
-            SET comp_leave_used = comp_leave_used + ${newUsage}
-            WHERE id = ${existing.user_id}
+            UPDATE leave_balances
+            SET used = used + ${newUsage},
+                remaining = remaining - ${newUsage}
+            WHERE user_id = ${existing.user_id}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
           `;
         }
       }

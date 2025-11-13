@@ -55,6 +55,11 @@ export async function initDatabase() {
     
     // 기존 atnd_users 테이블에 컬럼 추가 (이미 존재하는 경우)
     try {
+      await sql`ALTER TABLE atnd_users ADD COLUMN is_admin TINYINT(1) DEFAULT 0`;
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.error('is_admin column add error:', e);
+    }
+    try {
       await sql`ALTER TABLE atnd_users ADD COLUMN annual_leave_total INT DEFAULT 15 COMMENT '부여된 연차 수'`;
     } catch (e: any) {
       if (!e.message?.includes('Duplicate column')) console.error('Column add error:', e);
@@ -132,13 +137,26 @@ export async function initDatabase() {
     const adminExists = await sql`
       SELECT id FROM atnd_users WHERE username = 'admin'
     `;
-    
+
     if (adminExists.rows.length === 0) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
-      await sql`
-        INSERT INTO atnd_users (username, password, name, is_admin)
-        VALUES ('admin', ${hashedPassword}, '관리자', 1)
-      `;
+      try {
+        // is_admin 컬럼이 있는 경우
+        await sql`
+          INSERT INTO atnd_users (username, password, name, is_admin)
+          VALUES ('admin', ${hashedPassword}, '관리자', 1)
+        `;
+      } catch (error: any) {
+        // is_admin 컬럼이 없는 경우
+        if (error.message?.includes('Unknown column')) {
+          await sql`
+            INSERT INTO atnd_users (username, password, name)
+            VALUES ('admin', ${hashedPassword}, '관리자')
+          `;
+        } else {
+          throw error;
+        }
+      }
     }
   } catch (error) {
     console.error('Database initialization error:', error);
