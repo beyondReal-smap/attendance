@@ -157,10 +157,11 @@ const MobileCalendar = memo(({
         case '결근':
           return 16; // 8시간 = 16 * 30분
         case '오전반차':
+          return 10; // 5시간 = 10 * 30분 (9시~14시)
         case '오후반차':
-          return 8; // 4시간 = 8 * 30분
+          return 8; // 4시간 = 8 * 30분 (14시~18시)
         case '반반차':
-          return 4; // 2시간 = 4 * 30분
+          return 4; // 2시간 = 4 * 30분 (14시~16시)
         default:
           return 16; // 기본 8시간
       }
@@ -219,13 +220,13 @@ const MobileCalendar = memo(({
 
       // 빈 칸 (월의 시작 전)
       if (dayIndex < 0) {
-        days.push(<div key={`empty-start-${i}`} className="h-12"></div>);
+        days.push(<div key={`empty-end-${i}`} className="h-16"></div>);
         continue;
       }
 
       // 빈 칸 (월의 끝 후)
       if (dayIndex >= daysInMonth) {
-        days.push(<div key={`empty-end-${i}`} className="h-12"></div>);
+        days.push(<div key={`empty-end-${i}`} className="h-16"></div>);
         continue;
       }
 
@@ -249,7 +250,7 @@ const MobileCalendar = memo(({
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className={`
-            h-12 w-full rounded-lg flex flex-col items-center justify-center text-sm font-semibold
+            h-16 w-full rounded-lg flex flex-col items-center justify-center text-sm font-semibold
             transition-all duration-200 relative
             ${colors}
             ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
@@ -326,7 +327,7 @@ const MobileCalendar = memo(({
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 gap-1.5 mb-2">
         {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
-          <div key={day} className={`h-8 flex items-center justify-center text-xs font-semibold ${
+          <div key={day} className={`h-10 flex items-center justify-center text-xs font-semibold ${
             index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600'
           }`}>
             {day}
@@ -592,6 +593,7 @@ export default function CalendarPage() {
   }
 
   const selectedAttendance = selectedDate ? attendances.find(a => a.date === selectedDate.format('YYYY-MM-DD')) : null;
+  const existingAttendances = selectedDate ? attendances.filter(a => a.date === selectedDate.format('YYYY-MM-DD')) : [];
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
@@ -823,6 +825,7 @@ export default function CalendarPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         selectedDate={selectedDate}
+        existingAttendances={existingAttendances}
         onSave={handleSaveAttendance}
         onAlert={(title, message, type) => {
           setAlertTitle(title);

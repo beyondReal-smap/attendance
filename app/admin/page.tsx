@@ -104,6 +104,9 @@ export default function AdminPage() {
   const [newUserRole, setNewUserRole] = useState<'user' | 'manager' | 'admin'>('user');
   const [generatedPassword, setGeneratedPassword] = useState('');
 
+  // 권한 선택 모달 상태
+  const [showRoleModal, setShowRoleModal] = useState(false);
+
   useEffect(() => {
     checkAdminAndLoadData();
   }, []);
@@ -258,6 +261,34 @@ export default function AdminPage() {
     link.click();
   };
 
+  // 30분 단위로 시간 계산
+  const calculateTimeSlots = (startTime?: string, endTime?: string, type?: AttendanceType): number => {
+    if (!startTime || !endTime) {
+      // 시간 정보가 없는 경우 기본값 사용
+      switch (type) {
+        case '연차':
+        case '체휴':
+        case '결근':
+          return 16; // 8시간 = 16 * 30분
+        case '오전반차':
+          return 10; // 5시간 = 10 * 30분 (9시~14시)
+        case '오후반차':
+          return 8; // 4시간 = 8 * 30분 (14시~18시)
+        case '반반차':
+          return 4; // 2시간 = 4 * 30분 (14시~16시)
+        default:
+          return 16; // 기본 8시간
+      }
+    }
+
+    // 시간 정보가 있는 경우 실제 시간 계산
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+    return Math.ceil(diffMinutes / 30); // 30분 단위로 계산
+  };
+
   // XLSX 다운로드 함수
   const downloadXLSX = () => {
     if (filteredAttendances.length === 0) {
@@ -270,11 +301,21 @@ export default function AdminPage() {
 
     const worksheetData = filteredAttendances.map(attendance => {
       const user = users.find(u => u.name === attendance.userName);
+      // 근태 시간 계산 (30분 단위)
+      const timeSlots = calculateTimeSlots(attendance.startTime, attendance.endTime, attendance.type);
+      const hours = (timeSlots * 0.5).toFixed(1);
+
       return {
-        '사용자': attendance.userName,
+        '소속': user?.department || '',
+        '성명': attendance.userName,
         '사번': user?.username || '',
-        '날짜': attendance.date,
-        '유형': attendance.type,
+        '시작일자': attendance.date,
+        '종료일자': attendance.date, // 단일 날짜 근태의 경우 시작일자와 종료일자가 같음
+        '시작시간': attendance.startTime || '',
+        '종료시간': attendance.endTime || '',
+        '근태일수': '1', // 단일 날짜 근태의 경우 1일
+        '근태시간': hours,
+        '근태유형': attendance.type,
         '사유': attendance.reason || ''
       };
     });
@@ -339,9 +380,13 @@ export default function AdminPage() {
 
     // 시간 겹침 체크를 위한 새로운 근태 시간 계산
     const newStartTime = selectedType === '반반차' ? startTime :
-                        (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' : undefined);
+                        (selectedType === '오전반차' ? '09:00' :
+                       selectedType === '오후반차' ? '14:00' :
+                       ['연차', '체휴', '결근'].includes(selectedType) ? '09:00' : undefined);
     const newEndTime = selectedType === '반반차' ? endTime :
-                      (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' : undefined);
+                      (selectedType === '오전반차' ? '14:00' :
+                       selectedType === '오후반차' ? '18:00' :
+                       ['연차', '체휴', '결근'].includes(selectedType) ? '18:00' : undefined);
 
     // 같은 날짜의 같은 사용자의 기존 근태들을 확인
     const existingAttendancesOnDate = attendances.filter(a =>
@@ -683,7 +728,7 @@ export default function AdminPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => router.push('/calendar')}
-                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
               >
                 캘린더
               </button>
@@ -751,15 +796,20 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     권한
                   </label>
-                  <select
-                    value={newUserRole}
-                    onChange={(e) => setNewUserRole(e.target.value as 'user' | 'manager' | 'admin')}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white"
+                  <button
+                    type="button"
+                    onClick={() => setShowRoleModal(true)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
                   >
-                    <option value="user">사용자</option>
-                    <option value="manager">중간관리자</option>
-                    <option value="admin">관리자</option>
-                  </select>
+                    <span>
+                      {newUserRole === 'user' ? '사용자' :
+                       newUserRole === 'manager' ? '중간관리자' :
+                       '관리자'}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -1805,6 +1855,103 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* 권한 선택 모달 */}
+          {showRoleModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">권한 선택</h3>
+                    <button
+                      onClick={() => setShowRoleModal(false)}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <FiX className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="text-sm font-medium text-gray-700 mb-3">
+                    사용자 권한을 선택하세요
+                  </div>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setNewUserRole('user');
+                        setShowRoleModal(false);
+                      }}
+                      className={`w-full p-3 text-left rounded-lg transition ${
+                        newUserRole === 'user'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
+                          👤
+                        </div>
+                        <div>
+                          <div className="font-medium">사용자</div>
+                          <div className="text-xs opacity-75">기본 권한 - 자신의 근태만 관리</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setNewUserRole('manager');
+                        setShowRoleModal(false);
+                      }}
+                      className={`w-full p-3 text-left rounded-lg transition ${
+                        newUserRole === 'manager'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold text-orange-700">
+                          👔
+                        </div>
+                        <div>
+                          <div className="font-medium">중간관리자</div>
+                          <div className="text-xs opacity-75">조직 구성원들의 근태 관리</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setNewUserRole('admin');
+                        setShowRoleModal(false);
+                      }}
+                      className={`w-full p-3 text-left rounded-lg transition ${
+                        newUserRole === 'admin'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-xs font-bold text-red-700">
+                          ⚙️
+                        </div>
+                        <div>
+                          <div className="font-medium">관리자</div>
+                          <div className="text-xs opacity-75">전체 시스템 관리</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {/* 근태 추가 - 유형 선택 모달 */}
           {showTypeModal && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -2196,14 +2343,36 @@ export default function AdminPage() {
                 <div className="p-4 max-h-96 overflow-y-auto">
                   <div className="text-sm font-medium text-gray-700 mb-3">
                     시간을 선택하세요 (9:00 ~ 18:00)
+                    <div className="text-xs text-red-600 mt-1">
+                      빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
                       const minute = i % 2 === 0 ? '00' : '30';
                       const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+
+                      // 선택된 날짜의 기존 근태들과 시간 겹침 확인
+                      const existingAttendances = selectedUserId ? attendances.filter(a => a.userId === selectedUserId && a.date === startDate) : [];
+                      const isTimeOccupied = existingAttendances.some(attendance => {
+                        if (!attendance.startTime || !attendance.endTime) return false;
+
+                        // 현재 근태의 시간대를 계산
+                        const currentStart = new Date(`2000-01-01T${timeString}`);
+                        const currentEnd = new Date(currentStart.getTime() + 30 * 60 * 1000); // 30분 후
+
+                        // 기존 근태의 시간대와 비교
+                        const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+                        const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+                        // 시간대가 겹치는지 확인
+                        return currentStart < existingEnd && currentEnd > existingStart;
+                      });
+
                       // 종료시간이 이미 선택되어 있다면 종료시간과 같거나 늦은 시간은 비활성화
-                      const isDisabled = !!(endTime && timeString >= endTime);
+                      // 또는 이미 차지된 시간대는 비활성화
+                      const isDisabled = !!(endTime && timeString >= endTime) || isTimeOccupied;
                       return (
                         <button
                           key={timeString}
@@ -2226,7 +2395,9 @@ export default function AdminPage() {
                             startTime === timeString
                               ? 'bg-blue-500 text-white'
                               : isDisabled
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              ? isTimeOccupied
+                                ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2264,14 +2435,36 @@ export default function AdminPage() {
                 <div className="p-4 max-h-96 overflow-y-auto">
                   <div className="text-sm font-medium text-gray-700 mb-3">
                     시간을 선택하세요 (9:00 ~ 18:00)
+                    <div className="text-xs text-red-600 mt-1">
+                      빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
                       const minute = i % 2 === 0 ? '00' : '30';
                       const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+
+                      // 선택된 날짜의 기존 근태들과 시간 겹침 확인
+                      const existingAttendances = selectedUserId ? attendances.filter(a => a.userId === selectedUserId && a.date === startDate) : [];
+                      const isTimeOccupied = existingAttendances.some(attendance => {
+                        if (!attendance.startTime || !attendance.endTime) return false;
+
+                        // 현재 근태의 시간대를 계산
+                        const currentStart = new Date(`2000-01-01T${timeString}`);
+                        const currentEnd = new Date(currentStart.getTime() + 30 * 60 * 1000); // 30분 후
+
+                        // 기존 근태의 시간대와 비교
+                        const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+                        const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+                        // 시간대가 겹치는지 확인
+                        return currentStart < existingEnd && currentEnd > existingStart;
+                      });
+
                       // 시작시간이 이미 선택되어 있다면 시작시간과 같거나 앞서는 시간은 비활성화
-                      const isDisabled = !!(startTime && timeString <= startTime);
+                      // 또는 이미 차지된 시간대는 비활성화
+                      const isDisabled = !!(startTime && timeString <= startTime) || isTimeOccupied;
                       return (
                         <button
                           key={timeString}
@@ -2286,7 +2479,9 @@ export default function AdminPage() {
                             endTime === timeString
                               ? 'bg-blue-500 text-white'
                               : isDisabled
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              ? isTimeOccupied
+                                ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2514,14 +2709,14 @@ function MonthlyAttendanceCalendar({
         // 시간 정보가 없는 경우 근태 유형에 따른 기본 시간 적용
         switch (attendance.type) {
           case '오전반차':
-            endSlot = 7; // 9시~13시 (8슬롯)
+            endSlot = 9; // 9시~14시 (10슬롯)
             break;
           case '오후반차':
-            startSlot = 8; // 13시~18시 (8슬롯)
+            startSlot = 10; // 14시~18시 (8슬롯)
             break;
           case '반반차':
-            startSlot = 8; // 13시~15시 (4슬롯)
-            endSlot = 11;
+            startSlot = 10; // 14시~16시 (4슬롯)
+            endSlot = 13;
             break;
           // 연차, 체휴, 결근 등은 전체 시간 (9시~18시)
         }
@@ -2700,11 +2895,11 @@ function MonthlyAttendanceCalendar({
 
                       {/* 근태 텍스트 (슬롯 아래에 표시) */}
                       <div className="mt-1 min-h-[3rem] flex items-start justify-center">
-                        {text && (
+                    {text && (
                           <div className="text-xs text-gray-700 leading-tight text-center break-words whitespace-pre-line">
-                            {text}
-                          </div>
-                        )}
+                        {text}
+                      </div>
+                    )}
                       </div>
                     </div>
                   </motion.button>
@@ -2721,35 +2916,35 @@ function MonthlyAttendanceCalendar({
           {/* 시간 슬롯 색상 범례 */}
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
-            <div className="flex flex-wrap gap-4 text-xs">
-              <div className="flex items-center gap-2">
+        <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-400 border border-gray-300 rounded"></div>
-                <span>연차</span>
-              </div>
-              <div className="flex items-center gap-2">
+            <span>연차</span>
+          </div>
+          <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-orange-400 border border-gray-300 rounded"></div>
                 <span>오전반차</span>
-              </div>
-              <div className="flex items-center gap-2">
+          </div>
+          <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-400 border border-gray-300 rounded"></div>
                 <span>오후반차</span>
-              </div>
-              <div className="flex items-center gap-2">
+          </div>
+          <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-purple-400 border border-gray-300 rounded"></div>
                 <span>반반차</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-yellow-400 border border-gray-300 rounded"></div>
-                <span>체휴</span>
-              </div>
-              <div className="flex items-center gap-2">
+            <span>체휴</span>
+          </div>
+          <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-400 border border-gray-300 rounded"></div>
                 <span>결근</span>
-              </div>
+          </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-400 border border-gray-300 rounded"></div>
                 <span>기타 근태</span>
-              </div>
+        </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
                 <span>근태 없음</span>

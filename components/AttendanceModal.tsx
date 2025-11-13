@@ -9,10 +9,22 @@ import { countWorkingDays, getDateRange } from '@/lib/holidays';
 import { getAttendanceTimeInfo } from '@/lib/attendance-utils';
 import { DatePickerCalendar } from './DatePickerCalendar';
 
+interface Attendance {
+  id: string;
+  userId: string;
+  userName: string;
+  date: string;
+  type: AttendanceType;
+  reason?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
 interface AttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Dayjs | null;
+  existingAttendances?: Attendance[];
   onSave: (data: {
     startDate: string;
     endDate: string;
@@ -25,7 +37,7 @@ interface AttendanceModalProps {
   onAlert?: (title: string, message: string, type: 'info' | 'success' | 'error' | 'warning') => void;
 }
 
-export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave, onAlert }: AttendanceModalProps) {
+export default function AttendanceModal({ isOpen, onClose, selectedDate, existingAttendances = [], onSave, onAlert }: AttendanceModalProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -136,10 +148,14 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
         reason: reason.trim(),
         days: workingDays,
         startTime: (type === '반반차' || type === '근무') ? startTime :
-                   (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(type) ? '09:00' :
+                   (type === '오전반차' ? '09:00' :
+                    type === '오후반차' ? '14:00' :
+                    ['연차', '체휴', '결근'].includes(type) ? '09:00' :
                     ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? startTime : undefined),
         endTime: (type === '반반차' || type === '근무') ? endTime :
-                 (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(type) ? '18:00' :
+                 (type === '오전반차' ? '14:00' :
+                  type === '오후반차' ? '18:00' :
+                  ['연차', '체휴', '결근'].includes(type) ? '18:00' :
                   ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? endTime : undefined),
       });
       // 초기화
@@ -774,11 +790,31 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="text-sm font-medium text-gray-700 mb-3">
                 시간을 선택하세요 (9:00 ~ 18:00)
+                <div className="text-xs text-red-600 mt-1">
+                  빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
+                </div>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {generateTimeOptions().map((time) => {
+                  // 선택된 날짜의 기존 근태들과 시간 겹침 확인
+                  const isTimeOccupied = existingAttendances.some(attendance => {
+                    if (!attendance.startTime || !attendance.endTime) return false;
+
+                    // 현재 근태의 시간대를 계산
+                    const currentStart = new Date(`2000-01-01T${time}`);
+                    const currentEnd = new Date(currentStart.getTime() + 30 * 60 * 1000); // 30분 후
+
+                    // 기존 근태의 시간대와 비교
+                    const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+                    const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+                    // 시간대가 겹치는지 확인
+                    return currentStart < existingEnd && currentEnd > existingStart;
+                  });
+
                   // 종료시간이 이미 선택되어 있다면 종료시간과 같거나 늦은 시간은 비활성화
-                  const isDisabled = !!(endTime && time >= endTime);
+                  // 또는 이미 차지된 시간대는 비활성화
+                  const isDisabled = !!(endTime && time >= endTime) || isTimeOccupied;
                   return (
                     <button
                       key={time}
@@ -801,7 +837,9 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         startTime === time
                           ? 'bg-blue-500 text-white'
                           : isDisabled
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          ? isTimeOccupied
+                            ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                       }`}
                     >
@@ -839,11 +877,31 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="text-sm font-medium text-gray-700 mb-3">
                 시간을 선택하세요 (9:00 ~ 18:00)
+                <div className="text-xs text-red-600 mt-1">
+                  빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
+                </div>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {generateTimeOptions().map((time) => {
+                  // 선택된 날짜의 기존 근태들과 시간 겹침 확인
+                  const isTimeOccupied = existingAttendances.some(attendance => {
+                    if (!attendance.startTime || !attendance.endTime) return false;
+
+                    // 현재 근태의 시간대를 계산
+                    const currentStart = new Date(`2000-01-01T${time}`);
+                    const currentEnd = new Date(currentStart.getTime() + 30 * 60 * 1000); // 30분 후
+
+                    // 기존 근태의 시간대와 비교
+                    const existingStart = new Date(`2000-01-01T${attendance.startTime}`);
+                    const existingEnd = new Date(`2000-01-01T${attendance.endTime}`);
+
+                    // 시간대가 겹치는지 확인
+                    return currentStart < existingEnd && currentEnd > existingStart;
+                  });
+
                   // 시작시간이 이미 선택되어 있다면 시작시간과 같거나 앞서는 시간은 비활성화
-                  const isDisabled = !!(startTime && time <= startTime);
+                  // 또는 이미 차지된 시간대는 비활성화
+                  const isDisabled = !!(startTime && time <= startTime) || isTimeOccupied;
                   return (
                     <button
                       key={time}
@@ -858,7 +916,9 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, onSave,
                         endTime === time
                           ? 'bg-blue-500 text-white'
                           : isDisabled
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          ? isTimeOccupied
+                            ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                       }`}
                     >
