@@ -920,7 +920,7 @@ export default function AdminPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">사용자 연차/체휴 설정</h2>
+                <h2 className="text-xl font-bold text-gray-900">연차/체휴 설정</h2>
               </div>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
