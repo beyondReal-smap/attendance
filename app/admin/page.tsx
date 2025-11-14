@@ -716,10 +716,18 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center" style={{ background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-sm text-gray-600">로딩 중...</div>
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute top-0 left-0 w-full h-full">
+              <div className="w-16 h-16 border-4 border-purple-100 border-t-purple-300 rounded-full animate-spin"></div>
+            </div>
+            <div className="absolute top-2 left-2 w-12 h-12">
+              <div className="w-12 h-12 border-4 border-pink-100 border-t-pink-300 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+            </div>
+          </div>
+          <div className="text-base font-semibold text-gray-700 mb-2">로딩 중...</div>
+          <div className="text-sm text-gray-500">잠시만 기다려주세요</div>
         </div>
       </div>
     );
