@@ -64,13 +64,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* 애니메이션 배경 - 빨간색과 파란색이 왔다갔다 (진한 버전) */}
       <div className="absolute inset-0 bg-gradient-to-br from-red-200 via-gray-50 to-blue-200">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-300/50 via-transparent to-blue-300/50 animate-[shift_8s_ease-in-out_infinite]"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-red-200/40 via-blue-200/40 to-red-200/40 animate-[wave_12s_ease-in-out_infinite]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-red-300/50 via-transparent to-blue-300/50" style={{ backgroundSize: '200% 200%', animation: 'shift 8s ease-in-out infinite' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-200/40 via-blue-200/40 to-red-200/40" style={{ backgroundSize: '200% 200%', animation: 'wave 12s ease-in-out infinite' }}></div>
         <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-red-400/30 rounded-full blur-xl animate-[float_8s_ease-in-out_infinite]"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-blue-400/30 rounded-full blur-xl animate-[float_12s_ease-in-out_infinite_reverse]"></div>
-          <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-red-500/25 rounded-full blur-xl animate-[float_10s_ease-in-out_infinite]"></div>
-          <div className="absolute bottom-40 right-1/3 w-16 h-16 bg-blue-500/25 rounded-full blur-xl animate-[float_14s_ease-in-out_infinite_reverse]"></div>
+          <div className="absolute top-10 left-10 w-32 h-32 bg-red-400/30 rounded-full blur-xl" style={{ animation: 'float 8s ease-in-out infinite' }}></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-blue-400/30 rounded-full blur-xl" style={{ animation: 'float 12s ease-in-out infinite reverse' }}></div>
+          <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-red-500/25 rounded-full blur-xl" style={{ animation: 'float 10s ease-in-out infinite' }}></div>
+          <div className="absolute bottom-40 right-1/3 w-16 h-16 bg-blue-500/25 rounded-full blur-xl" style={{ animation: 'float 14s ease-in-out infinite reverse' }}></div>
         </div>
       </div>
 
