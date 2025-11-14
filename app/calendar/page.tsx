@@ -633,38 +633,22 @@ export default function CalendarPage() {
 
           {/* 연차/체휴 정보 */}
           {user && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-                <div className="text-xs text-red-600 font-medium mb-2">연차</div>
-                <div className="space-y-1">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-red-700 font-medium">잔여</span>
-                    <span className="text-xl font-bold text-red-700">{user.annualLeaveRemaining}일</span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-red-600">사용</span>
-                    <span className="text-xs text-red-600">{user.annualLeaveUsed}일</span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-red-500">전체</span>
-                    <span className="text-xs text-red-500">{user.annualLeaveTotal}일</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 rounded-lg px-3 py-2 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-red-600 font-medium">연차</div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-xl font-bold text-red-700">{user.annualLeaveRemaining}</span>
+                    <span className="text-xs text-red-500 font-medium">/{user.annualLeaveTotal}</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
-                <div className="text-xs text-yellow-600 font-medium mb-2">체휴</div>
-                <div className="space-y-1">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-yellow-700 font-medium">잔여</span>
-                    <span className="text-xl font-bold text-yellow-700">{user.compLeaveRemaining}일</span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-yellow-600">사용</span>
-                    <span className="text-xs text-yellow-600">{user.compLeaveUsed}일</span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-yellow-500">전체</span>
-                    <span className="text-xs text-yellow-500">{user.compLeaveTotal}일</span>
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200 rounded-lg px-3 py-2 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-yellow-600 font-medium">체휴</div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-xl font-bold text-yellow-700">{user.compLeaveRemaining}</span>
+                    <span className="text-xs text-yellow-500 font-medium">/{user.compLeaveTotal}</span>
                   </div>
                 </div>
               </div>
