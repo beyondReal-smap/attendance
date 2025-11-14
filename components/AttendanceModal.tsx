@@ -446,7 +446,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                         <span className="text-sm">✈️</span>
                         <div>
                           <div className="font-medium text-xs">연차</div>
-                          <div className="text-xs opacity-75">1일</div>
                         </div>
                       </div>
                     </button>
@@ -466,7 +465,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                         <span className="text-sm">🏠</span>
                         <div>
                           <div className="font-medium text-xs">체휴</div>
-                          <div className="text-xs opacity-75">1일</div>
                         </div>
                       </div>
                     </button>
@@ -511,7 +509,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                         <span className="text-sm">🌅</span>
                         <div>
                           <div className="font-medium text-xs">오전반차</div>
-                          <div className="text-xs opacity-75">0.5일</div>
                         </div>
                       </div>
                     </button>
@@ -532,7 +529,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                         <span className="text-sm">🌆</span>
                         <div>
                           <div className="font-medium text-xs">오후반차</div>
-                          <div className="text-xs opacity-75">0.5일</div>
                         </div>
                       </div>
                     </button>
@@ -555,7 +551,6 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                         <span className="text-sm">🌄</span>
                         <div>
                           <div className="font-medium text-xs">반반차</div>
-                          <div className="text-xs opacity-75">0.25일</div>
                         </div>
                       </div>
                     </button>
@@ -744,18 +739,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
               {/* 현재 선택 표시 */}
               <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                 <div className="text-sm font-medium text-purple-700">
-                  선택된 유형: {
-                    (() => {
-                      const labels: Record<string, string> = {
-                        '연차': '연차 (1일)',
-                        '오전반차': '오전반차 (0.5일)',
-                        '오후반차': '오후반차 (0.5일)',
-                        '반반차': '반반차 (0.25일)',
-                        '체휴': '체휴 (1일)',
-                      };
-                      return labels[type] || type;
-                    })()
-                  }
+                  선택된 유형: {type}
                 </div>
               </div>
             </div>

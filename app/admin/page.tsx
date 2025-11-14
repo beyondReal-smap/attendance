@@ -1136,28 +1136,7 @@ export default function AdminPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                     <span>
-                      {selectedType
-                        ? (() => {
-                              const labels: Record<string, string> = {
-                                '연차': '연차 (1일)',
-                                '오전반차': '오전반차 (0.5일)',
-                                '오후반차': '오후반차 (0.5일)',
-                                '반반차': '반반차 (0.25일)',
-                                '체휴': '체휴 (1일)',
-                                '팀장대행': '팀장대행',
-                                '코칭': '코칭',
-                                '교육': '교육',
-                                '휴식': '휴식',
-                                '출장': '출장',
-                                '장애': '장애',
-                                '기타': '기타',
-                                '연장근무': '연장근무',
-                                '결근': '결근'
-                              };
-                            return labels[selectedType] || selectedType;
-                          })()
-                        : '선택하세요'
-                      }
+                      {selectedType || '선택하세요'}
                     </span>
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -2022,7 +2001,6 @@ export default function AdminPage() {
                             <span className="text-sm">✈️</span>
                             <div>
                               <div className="font-medium text-xs">연차</div>
-                              <div className="text-xs opacity-75">1일</div>
                             </div>
                           </div>
                         </button>
@@ -2042,7 +2020,6 @@ export default function AdminPage() {
                             <span className="text-sm">🏠</span>
                             <div>
                               <div className="font-medium text-xs">체휴</div>
-                              <div className="text-xs opacity-75">1일</div>
                             </div>
                           </div>
                         </button>
@@ -2086,7 +2063,6 @@ export default function AdminPage() {
                             <span className="text-sm">🌅</span>
                             <div>
                               <div className="font-medium text-xs">오전반차</div>
-                              <div className="text-xs opacity-75">0.5일</div>
                             </div>
                           </div>
                         </button>
@@ -2106,7 +2082,6 @@ export default function AdminPage() {
                             <span className="text-sm">🌆</span>
                             <div>
                               <div className="font-medium text-xs">오후반차</div>
-                              <div className="text-xs opacity-75">0.5일</div>
                             </div>
                           </div>
                         </button>
@@ -2128,7 +2103,6 @@ export default function AdminPage() {
                             <span className="text-sm">🌄</span>
                             <div>
                               <div className="font-medium text-xs">반반차</div>
-                              <div className="text-xs opacity-75">0.25일</div>
                             </div>
                           </div>
                         </button>
@@ -2317,27 +2291,7 @@ export default function AdminPage() {
                   {/* 현재 선택 표시 */}
                   <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-sm font-medium text-purple-700">
-                      선택된 유형: {
-                        (() => {
-                          const labels: Record<string, string> = {
-                            '연차': '연차 (1일)',
-                            '오전반차': '오전반차 (0.5일)',
-                            '오후반차': '오후반차 (0.5일)',
-                            '반반차': '반반차 (0.25일)',
-                            '체휴': '체휴 (1일)',
-                            '팀장대행': '팀장대행',
-                            '코칭': '코칭',
-                            '교육': '교육',
-                            '휴식': '휴식',
-                            '출장': '출장',
-                            '장애': '장애',
-                            '기타': '기타',
-                            '연장근무': '연장근무',
-                            '결근': '결근'
-                          };
-                          return labels[selectedType] || selectedType || '없음';
-                        })()
-                      }
+                      선택된 유형: {selectedType || '없음'}
                     </div>
                   </div>
                 </div>

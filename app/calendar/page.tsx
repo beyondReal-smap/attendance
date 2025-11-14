@@ -697,7 +697,6 @@ export default function CalendarPage() {
                   <span className="text-sm">✈️</span>
                   <div>
                     <div className="font-medium text-red-900 text-sm">연차</div>
-                    <div className="text-xs text-red-600">1일</div>
                   </div>
                 </div>
 
@@ -705,7 +704,6 @@ export default function CalendarPage() {
                   <span className="text-sm">🏠</span>
                   <div>
                     <div className="font-medium text-yellow-900 text-sm">체휴</div>
-                    <div className="text-xs text-yellow-600">1일</div>
                   </div>
                 </div>
 
@@ -723,7 +721,6 @@ export default function CalendarPage() {
                   <span className="text-sm">🌅</span>
                   <div>
                     <div className="font-medium text-orange-900 text-sm">오전반차</div>
-                    <div className="text-xs text-orange-600">0.5일</div>
                   </div>
                 </div>
 
@@ -731,7 +728,6 @@ export default function CalendarPage() {
                   <span className="text-sm">🌆</span>
                   <div>
                     <div className="font-medium text-green-900 text-sm">오후반차</div>
-                    <div className="text-xs text-green-600">0.5일</div>
                   </div>
                 </div>
 
@@ -739,7 +735,6 @@ export default function CalendarPage() {
                   <span className="text-sm">🌄</span>
                   <div>
                     <div className="font-medium text-purple-900 text-sm">반반차</div>
-                    <div className="text-xs text-purple-600">0.25일</div>
                   </div>
                 </div>
               </div>
