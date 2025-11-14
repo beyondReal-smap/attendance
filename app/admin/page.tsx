@@ -1321,23 +1321,23 @@ export default function AdminPage() {
               {/* 필터 타입 토글 */}
               <div className="mb-4">
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="filterType"
                       checked={!useDateRange}
                       onChange={() => setUseDateRange(false)}
-                      className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                      className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm font-medium text-gray-700">월별 조회</span>
                   </label>
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="filterType"
                       checked={useDateRange}
                       onChange={() => setUseDateRange(true)}
-                      className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                      className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
                     />
                     <span className="text-sm font-medium text-gray-700">일자 범위 조회</span>
                   </label>
