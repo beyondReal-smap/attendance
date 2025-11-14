@@ -854,7 +854,7 @@ export default function AdminPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 등록된 사용자
               </h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
                 {users.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     등록된 사용자가 없습니다
