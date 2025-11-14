@@ -2014,7 +2014,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '연차'
-                              ? 'bg-red-500 text-white'
+                              ? 'bg-red-400 text-white'
                               : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
                           }`}
                         >
@@ -2034,7 +2034,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '체휴'
-                              ? 'bg-yellow-500 text-white'
+                              ? 'bg-yellow-400 text-white'
                               : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
@@ -2056,7 +2056,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '결근'
-                              ? 'bg-blue-500 text-white'
+                              ? 'bg-blue-400 text-white'
                               : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
                           }`}
                         >
@@ -2078,7 +2078,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '오전반차'
-                              ? 'bg-orange-500 text-white'
+                              ? 'bg-orange-400 text-white'
                               : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
                           }`}
                         >
@@ -2098,7 +2098,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '오후반차'
-                              ? 'bg-green-500 text-white'
+                              ? 'bg-green-400 text-white'
                               : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                           }`}
                         >
@@ -2120,7 +2120,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '반반차'
-                              ? 'bg-purple-500 text-white'
+                              ? 'bg-purple-400 text-white'
                               : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                           }`}
                         >
@@ -2145,7 +2145,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '팀장대행'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2166,7 +2166,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '코칭'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2187,7 +2187,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '교육'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2211,7 +2211,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '휴식'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2232,7 +2232,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '출장'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2253,7 +2253,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '장애'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2277,7 +2277,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '기타'
-                              ? 'bg-gray-500 text-white'
+                                ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
@@ -2298,7 +2298,7 @@ export default function AdminPage() {
                           }}
                           className={`p-2 text-left rounded transition ${
                             selectedType === '연장근무'
-                              ? 'bg-gray-500 text-white'
+                              ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
