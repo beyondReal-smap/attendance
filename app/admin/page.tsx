@@ -912,11 +912,11 @@ export default function AdminPage() {
 
           {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
           {currentUserRole === 'admin' && (
-            <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-green-200 shadow-lg">
+            <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-red-200 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -924,7 +924,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -946,7 +946,7 @@ export default function AdminPage() {
                         setAnnualLeaveTotal(user.annualLeaveTotal.toString());
                         setCompLeaveTotal(user.compLeaveTotal.toString());
                       }}
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
+                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
                     >
                       수정
                     </button>
