@@ -96,6 +96,8 @@ export default function AdminPage() {
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
+  const [attendanceDetailModalOpen, setAttendanceDetailModalOpen] = useState(false);
+  const [attendanceToView, setAttendanceToView] = useState<Attendance | null>(null);
   const [userDeleteModalOpen, setUserDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
@@ -542,6 +544,11 @@ export default function AdminPage() {
     }
   };
 
+  const handleViewAttendance = (attendance: Attendance) => {
+    setAttendanceToView(attendance);
+    setAttendanceDetailModalOpen(true);
+  };
+
   const confirmDelete = async () => {
     if (!attendanceToDelete) return;
 
@@ -554,6 +561,7 @@ export default function AdminPage() {
         await Promise.all([loadUsers(), loadAttendances()]);
         setDeleteModalOpen(false);
         setAttendanceToDelete(null);
+        setAttendanceToView(null);
         setAlertTitle('성공');
         setAlertMessage('삭제되었습니다.');
         setAlertType('success');
@@ -990,48 +998,120 @@ export default function AdminPage() {
             {/* 수정 모달 */}
             {editingUser && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">{editingUser.name} 연차/체휴 설정</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        연차 총 수
-                      </label>
-                      <input
-                        type="number"
-                        value={annualLeaveTotal}
-                        onChange={(e) => setAnnualLeaveTotal(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                      />
+                <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                  {/* 헤더 */}
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">연차/체휴 설정</h3>
+                        <p className="text-green-100 text-sm">{editingUser.name}님의 휴가 정보를 수정하세요</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        체휴 총 수
-                      </label>
-                      <input
-                        type="number"
-                        value={compLeaveTotal}
-                        onChange={(e) => setCompLeaveTotal(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                      />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => {
-                          setEditingUser(null);
-                          setAnnualLeaveTotal('');
-                          setCompLeaveTotal('');
-                        }}
-                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
-                      >
-                        취소
-                      </button>
-                      <button
-                        onClick={() => handleUpdateUserLeave(editingUser.id)}
-                        className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
-                      >
-                        저장
-                      </button>
+                  </div>
+
+                  {/* 내용 */}
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {/* 사용자 정보 */}
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-xs text-green-600 font-medium">수정 대상</p>
+                            <p className="text-sm font-semibold text-green-900">{editingUser.name} ({editingUser.username})</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 입력 필드들 */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            연차 총 수
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={annualLeaveTotal}
+                              onChange={(e) => setAnnualLeaveTotal(e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                              placeholder="0"
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                              일
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            체휴 총 수
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={compLeaveTotal}
+                              onChange={(e) => setCompLeaveTotal(e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                              placeholder="0"
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                              일
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 현재 정보 표시 */}
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-xs text-gray-500 font-medium">현재 정보</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500">연차</p>
+                            <p className="font-semibold text-gray-900">{editingUser.annualLeaveTotal}일 (사용: {editingUser.annualLeaveUsed}일)</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">체휴</p>
+                            <p className="font-semibold text-gray-900">{editingUser.compLeaveTotal}일 (사용: {editingUser.compLeaveUsed}일)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 버튼들 */}
+                      <div className="flex gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            setEditingUser(null);
+                            setAnnualLeaveTotal('');
+                            setCompLeaveTotal('');
+                          }}
+                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          취소
+                        </button>
+                        <button
+                          onClick={() => handleUpdateUserLeave(editingUser.id)}
+                          className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          저장
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1041,50 +1121,115 @@ export default function AdminPage() {
             {/* 일괄 생성 모달 */}
             {showBulkCreateModal && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">연차/체휴 일괄 생성</h3>
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="text-sm text-blue-800">
-                        <div className="font-medium mb-2">생성 내용:</div>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>연차: 15일</li>
-                          <li>체휴: 5일</li>
-                          <li>대상: 전직원</li>
-                        </ul>
+                <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                  {/* 헤더 */}
+                  <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">연차/체휴 일괄 생성</h3>
+                        <p className="text-red-100 text-sm">전직원에게 휴가를 일괄 생성합니다</p>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        생성 년도
-                      </label>
-                      <input
-                        type="number"
-                        value={bulkCreateYear}
-                        onChange={(e) => setBulkCreateYear(e.target.value)}
-                        min="2020"
-                        max="2030"
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                      />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => {
-                          setShowBulkCreateModal(false);
-                          setBulkCreateYear(new Date().getFullYear().toString());
-                        }}
-                        disabled={bulkCreateLoading}
-                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
-                      >
-                        취소
-                      </button>
-                      <button
-                        onClick={handleBulkCreateLeave}
-                        disabled={bulkCreateLoading}
-                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {bulkCreateLoading ? '생성 중...' : '실행'}
-                      </button>
+                  </div>
+
+                  {/* 내용 */}
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {/* 생성 정보 */}
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-blue-900 font-medium mb-2">생성될 휴가 정보</p>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div className="text-center">
+                                <p className="text-blue-600 font-semibold">연차</p>
+                                <p className="text-blue-800">15일</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-blue-600 font-semibold">체휴</p>
+                                <p className="text-blue-800">5일</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-blue-600 font-semibold">대상</p>
+                                <p className="text-blue-800">전직원</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 경고 메시지 */}
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <p className="text-xs text-amber-800">
+                            이미 휴가가 생성된 사용자는 건너뜁니다. 기존 휴가에 영향을 주지 않습니다.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 년도 입력 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          생성 년도
+                        </label>
+                        <input
+                          type="number"
+                          value={bulkCreateYear}
+                          onChange={(e) => setBulkCreateYear(e.target.value)}
+                          min="2020"
+                          max="2030"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-gray-900 transition-colors duration-200"
+                          placeholder={new Date().getFullYear().toString()}
+                        />
+                      </div>
+
+                      {/* 버튼들 */}
+                      <div className="flex gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            setShowBulkCreateModal(false);
+                            setBulkCreateYear(new Date().getFullYear().toString());
+                          }}
+                          disabled={bulkCreateLoading}
+                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                        >
+                          취소
+                        </button>
+                        <button
+                          onClick={handleBulkCreateLeave}
+                          disabled={bulkCreateLoading}
+                          className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {bulkCreateLoading ? (
+                            <>
+                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              생성 중...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              실행
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1112,7 +1257,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowUserModal(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                     <span>
                       {selectedUserId && users.find(u => u.id === selectedUserId)
@@ -1133,7 +1278,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowTypeModal(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                     <span>
                       {selectedType || '선택하세요'}
@@ -1156,7 +1301,7 @@ export default function AdminPage() {
                       setShowStartCalendar(true);
                       setShowEndCalendar(false);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
                   >
                     <span>{startDate || '선택하세요'}</span>
                     <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1177,7 +1322,7 @@ export default function AdminPage() {
                       }
                     }}
                     disabled={['오전반차', '오후반차'].includes(selectedType)}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between text-left text-gray-900 ${
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between text-left text-gray-900 ${
                       ['오전반차', '오후반차'].includes(selectedType)
                         ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
                         : 'border-gray-300 hover:bg-gray-50'
@@ -1199,7 +1344,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setShowStartTimeModal(true)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                     >
                       <span>{startTime || '시간 선택'}</span>
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1215,7 +1360,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setShowEndTimeModal(true)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                     >
                       <span>{endTime || '시간 선택'}</span>
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1235,7 +1380,7 @@ export default function AdminPage() {
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
                   placeholder="근태사유를 입력하세요"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none resize-none text-gray-900"
                 />
               </div>
 
@@ -1251,25 +1396,78 @@ export default function AdminPage() {
           {/* 캘린더 모달 */}
           {(showStartCalendar || showEndCalendar) && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-xl">
-                <DatePickerCalendar
-                  startDate={startDate ? dayjs(startDate) : null}
-                  endDate={endDate ? dayjs(endDate) : null}
-                  onStartDateSelect={(date) => {
-                    setStartDate(date.format('YYYY-MM-DD'));
-                    setShowStartCalendar(false);
-                  }}
-                  onEndDateSelect={(date) => {
-                    setEndDate(date.format('YYYY-MM-DD'));
-                    setShowEndCalendar(false);
-                  }}
-                  onClose={() => {
-                    setShowStartCalendar(false);
-                    setShowEndCalendar(false);
-                  }}
-                  initialSelectingStart={showStartCalendar}
-                />
-              </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                {/* 헤더 */}
+                {showStartCalendar && (
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">시작일자 선택</h3>
+                        <p className="text-violet-100 text-sm">근태 시작일자를 선택하세요</p>
+                      </div>
+                      <button
+                        onClick={() => setShowStartCalendar(false)}
+                        className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                      >
+                        <FiX className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {showEndCalendar && (
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">종료일자 선택</h3>
+                        <p className="text-violet-100 text-sm">근태 종료일자를 선택하세요</p>
+                      </div>
+                      <button
+                        onClick={() => setShowEndCalendar(false)}
+                        className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                      >
+                        <FiX className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4">
+                  <DatePickerCalendar
+                    startDate={startDate ? dayjs(startDate) : null}
+                    endDate={endDate ? dayjs(endDate) : null}
+                    onStartDateSelect={(date) => {
+                      setStartDate(date.format('YYYY-MM-DD'));
+                      setShowStartCalendar(false);
+                    }}
+                    onEndDateSelect={(date) => {
+                      setEndDate(date.format('YYYY-MM-DD'));
+                      setShowEndCalendar(false);
+                    }}
+                    onClose={() => {
+                      setShowStartCalendar(false);
+                      setShowEndCalendar(false);
+                    }}
+                    initialSelectingStart={showStartCalendar}
+                    showConfirmButton={false}
+                  />
+                </div>
+              </motion.div>
             </div>
           )}
 
@@ -1344,7 +1542,7 @@ export default function AdminPage() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        시작일
+                        시작일자
                       </label>
                       <button
                         type="button"
@@ -1357,7 +1555,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        종료일
+                        종료일자
                       </label>
                       <button
                         type="button"
@@ -1505,45 +1703,227 @@ export default function AdminPage() {
                 attendances={filteredAttendances}
                 users={users}
                 onDeleteAttendance={handleDeleteAttendance}
+                onViewAttendance={handleViewAttendance}
               />
             )}
           </div>
 
-          {/* 삭제 확인 모달 */}
-          {deleteModalOpen && attendanceToDelete && (
+          {/* 근태 상세 정보 모달 */}
+          {attendanceDetailModalOpen && attendanceToView && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">근태 삭제 확인</h3>
-                <div className="mb-6">
-                  <p className="text-sm text-gray-700 mb-3">
-                    <span className="font-semibold">{attendanceToDelete.userName}</span>님의 근태를 삭제하시겠습니까?
-                  </p>
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div><span className="font-medium text-gray-700">날짜:</span> {attendanceToDelete.date}</div>
-                      <div><span className="font-medium text-gray-700">유형:</span> {attendanceToDelete.type}</div>
-                      {attendanceToDelete.reason && (
-                        <div><span className="font-medium text-gray-700">사유:</span> {attendanceToDelete.reason}</div>
-                      )}
+              <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">근태 상세 정보</h3>
+                      <p className="text-blue-100 text-sm">근태 기록의 세부 사항을 확인하세요</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setDeleteModalOpen(false);
-                      setAttendanceToDelete(null);
-                    }}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
-                  >
-                    취소
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-                  >
-                    삭제
-                  </button>
+
+                {/* 내용 */}
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {/* 사용자 정보 */}
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs text-blue-600 font-medium">사용자</p>
+                        <p className="text-sm font-semibold text-blue-900">{attendanceToView.userName}</p>
+                      </div>
+                    </div>
+
+                    {/* 근태 정보 그리드 */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-xs text-gray-500 font-medium">날짜</p>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">{attendanceToView.date}</p>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <p className="text-xs text-gray-500 font-medium">유형</p>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">{attendanceToView.type}</p>
+                      </div>
+
+                      {(attendanceToView.startTime || attendanceToView.endTime) && (
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-xs text-gray-500 font-medium">시간</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {attendanceToView.startTime || '미정'} ~ {attendanceToView.endTime || '미정'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 사유 */}
+                    {attendanceToView.reason && (
+                      <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-amber-600 font-medium mb-1">사유</p>
+                            <p className="text-sm text-amber-900 leading-relaxed">{attendanceToView.reason}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 버튼들 */}
+                  <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setAttendanceDetailModalOpen(false);
+                        setAttendanceToView(null);
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      닫기
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAttendanceDetailModalOpen(false);
+                        setAttendanceToView(null);
+                        setAttendanceToDelete(attendanceToView);
+                        setDeleteModalOpen(true);
+                      }}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 삭제 확인 모달 */}
+          {deleteModalOpen && attendanceToDelete && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">근태 삭제 확인</h3>
+                      <p className="text-red-100 text-sm">삭제된 데이터는 복구할 수 없습니다</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 내용 */}
+                <div className="p-6">
+                  <div className="mb-6">
+                    <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-red-900 font-medium mb-1">
+                          <span className="font-semibold">{attendanceToDelete.userName}</span>님의 근태를 삭제하시겠습니까?
+                        </p>
+                        <p className="text-xs text-red-700">이 작업은 되돌릴 수 없습니다.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 근태 정보 */}
+                  <div className="space-y-3 mb-6">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <p className="text-xs text-gray-500 font-medium">삭제할 근태 정보</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-gray-500">날짜</p>
+                          <p className="font-semibold text-gray-900">{attendanceToDelete.date}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">유형</p>
+                          <p className="font-semibold text-gray-900">{attendanceToDelete.type}</p>
+                        </div>
+                        {(attendanceToDelete.startTime || attendanceToDelete.endTime) && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500">시간</p>
+                            <p className="font-semibold text-gray-900">
+                              {attendanceToDelete.startTime || '미정'} ~ {attendanceToDelete.endTime || '미정'}
+                            </p>
+                          </div>
+                        )}
+                        {attendanceToDelete.reason && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500">사유</p>
+                            <p className="font-semibold text-gray-900">{attendanceToDelete.reason}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 버튼들 */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setDeleteModalOpen(false);
+                        setAttendanceToDelete(null);
+                        setAttendanceToView(null);
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={confirmDelete}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      삭제
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1552,52 +1932,110 @@ export default function AdminPage() {
           {/* 사용자 삭제 확인 모달 */}
           {userDeleteModalOpen && userToDelete && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">사용자 삭제 확인</h3>
-                <div className="mb-6">
-                  <p className="text-sm text-gray-700 mb-3">
-                    <span className="font-semibold">{userToDelete.name}</span>님을 삭제하시겠습니까?
-                  </p>
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <div className="text-sm text-red-700">
-                      <div className="font-medium mb-1">⚠️ 주의사항</div>
-                      <ul className="list-disc list-inside text-xs space-y-1">
-                        <li>사용자의 모든 근태 기록이 함께 삭제됩니다.</li>
-                        <li>삭제된 사용자는 복구할 수 없습니다.</li>
-                      </ul>
-        </div>
-      </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-3">
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div><span className="font-medium text-gray-700">사번:</span> {userToDelete.username}</div>
-                      <div><span className="font-medium text-gray-700">이름:</span> {userToDelete.name}</div>
-                      {userToDelete.department && (
-                        <div><span className="font-medium text-gray-700">소속:</span> {userToDelete.department}</div>
-                      )}
-                      <div><span className="font-medium text-gray-700">권한:</span> {
-                        userToDelete.role === 'admin' ? '관리자' :
-                        userToDelete.role === 'manager' ? '중간관리자' :
-                        '사용자'
-                      }</div>
-    </div>
+              <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">사용자 삭제 확인</h3>
+                      <p className="text-red-100 text-sm">삭제된 사용자는 복구할 수 없습니다</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setUserDeleteModalOpen(false);
-                      setUserToDelete(null);
-                    }}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
-                  >
-                    취소
-                  </button>
-                  <button
-                    onClick={confirmDeleteUser}
-                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-                  >
-                    삭제
-                  </button>
+
+                {/* 내용 */}
+                <div className="p-6">
+                  <div className="mb-6">
+                    <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-red-900 font-medium mb-2">
+                          <span className="font-semibold">{userToDelete.name}</span>님을 삭제하시겠습니까?
+                        </p>
+                        <div className="text-xs text-red-700 space-y-1">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            사용자의 모든 근태 기록이 함께 삭제됩니다.
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            삭제된 사용자는 복구할 수 없습니다.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 사용자 정보 */}
+                  <div className="space-y-3 mb-6">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <p className="text-xs text-gray-500 font-medium">삭제할 사용자 정보</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-gray-500">사번</p>
+                          <p className="font-semibold text-gray-900">{userToDelete.username}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">이름</p>
+                          <p className="font-semibold text-gray-900">{userToDelete.name}</p>
+                        </div>
+                        {userToDelete.department && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500">소속</p>
+                            <p className="font-semibold text-gray-900">{userToDelete.department}</p>
+                          </div>
+                        )}
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">권한</p>
+                          <p className="font-semibold text-gray-900">{
+                            userToDelete.role === 'admin' ? '관리자' :
+                            userToDelete.role === 'manager' ? '중간관리자' :
+                            '사용자'
+                          }</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 버튼들 */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setUserDeleteModalOpen(false);
+                        setUserToDelete(null);
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={confirmDeleteUser}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                      </svg>
+                      삭제
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1612,7 +2050,7 @@ export default function AdminPage() {
             type={alertType}
           />
 
-          {/* 시작일 선택 모달 */}
+          {/* 시작일자 선택 모달 */}
           {showStartDatePicker && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
               <motion.div
@@ -1621,14 +2059,23 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">시작일 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">시작일자 선택</h3>
+                      <p className="text-orange-100 text-sm">근태 조회 시작일자를 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowStartDatePicker(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -1641,16 +2088,18 @@ export default function AdminPage() {
                       setStartDateFilter(date.format('YYYY-MM-DD'));
                       setShowStartDatePicker(false);
                     }}
+                    selectedColor="orange"
                     onEndDateSelect={() => {}}
                     onClose={() => setShowStartDatePicker(false)}
                     initialSelectingStart={true}
+                    showConfirmButton={false}
                   />
                 </div>
               </motion.div>
             </div>
           )}
 
-          {/* 종료일 선택 모달 */}
+          {/* 종료일자 선택 모달 */}
           {showEndDatePicker && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
               <motion.div
@@ -1659,14 +2108,23 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">종료일 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">종료일자 선택</h3>
+                      <p className="text-orange-100 text-sm">근태 조회 종료일자를 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowEndDatePicker(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -1680,8 +2138,10 @@ export default function AdminPage() {
                       setEndDateFilter(date.format('YYYY-MM-DD'));
                       setShowEndDatePicker(false);
                     }}
+                    selectedColor="orange"
                     onClose={() => setShowEndDatePicker(false)}
                     initialSelectingStart={false}
+                    showConfirmButton={false}
                   />
                 </div>
               </motion.div>
@@ -1697,14 +2157,23 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">월 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">월 선택</h3>
+                      <p className="text-orange-100 text-sm">근태 목록을 조회할 월을 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowMonthPicker(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -1752,7 +2221,7 @@ export default function AdminPage() {
                             }}
                             className={`p-3 text-sm font-medium rounded-lg transition ${
                               isSelected
-                                ? 'bg-green-500 text-white'
+                                ? 'bg-orange-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
@@ -1783,23 +2252,29 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">사용자 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">사용자 선택</h3>
+                      <p className="text-violet-100 text-sm">근태를 추가할 사용자를 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowUserModal(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4">
                   <div className="mb-6">
-                    <div className="text-sm font-medium text-gray-700 mb-3">
-                      근태를 추가할 사용자를 선택하세요
-                    </div>
                     <div className="max-h-64 overflow-y-auto space-y-2">
                       {users.map((user) => (
                         <button
@@ -1863,22 +2338,28 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">권한 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">권한 선택</h3>
+                      <p className="text-blue-100 text-sm">사용자의 권한을 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowRoleModal(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4">
-                  <div className="text-sm font-medium text-gray-700 mb-3">
-                    사용자 권한을 선택하세요
-                  </div>
                   <div className="space-y-2">
                     <button
                       onClick={() => {
@@ -1966,23 +2447,29 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">근태 유형 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">근태 유형 선택</h3>
+                      <p className="text-violet-100 text-sm">등록할 근태의 유형을 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowTypeModal(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4">
                   <div className="mb-6">
-                    <div className="text-sm font-medium text-gray-700 mb-3">
-                      근태 유형을 선택하세요
-                    </div>
                     <div className="space-y-2">
                       {/* 첫 번째 행 - 연차, 체휴, 근무 */}
                       <div className="grid grid-cols-3 gap-2">
@@ -2308,25 +2795,28 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">시작시간 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">시작시간 선택</h3>
+                      <p className="text-violet-100 text-sm">근태 시작 시간을 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowStartTimeModal(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4 max-h-96 overflow-y-auto">
-                  <div className="text-sm font-medium text-gray-700 mb-3">
-                    시간을 선택하세요 (9:00 ~ 18:00)
-                    <div className="text-xs text-red-600 mt-1">
-                      빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
-                    </div>
-                  </div>
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
@@ -2373,7 +2863,7 @@ export default function AdminPage() {
                           disabled={isDisabled}
                           className={`p-3 text-center rounded-lg transition text-sm font-medium ${
                             startTime === timeString
-                              ? 'bg-blue-500 text-white'
+                              ? 'bg-violet-500 text-white'
                               : isDisabled
                               ? isTimeOccupied
                                 ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
@@ -2400,25 +2890,28 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">종료시간 선택</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">종료시간 선택</h3>
+                      <p className="text-violet-100 text-sm">근태 종료 시간을 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowEndTimeModal(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4 max-h-96 overflow-y-auto">
-                  <div className="text-sm font-medium text-gray-700 mb-3">
-                    시간을 선택하세요 (9:00 ~ 18:00)
-                    <div className="text-xs text-red-600 mt-1">
-                      빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
-                    </div>
-                  </div>
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
@@ -2457,7 +2950,7 @@ export default function AdminPage() {
                           disabled={isDisabled}
                           className={`p-3 text-center rounded-lg transition text-sm font-medium ${
                             endTime === timeString
-                              ? 'bg-blue-500 text-white'
+                              ? 'bg-violet-500 text-white'
                               : isDisabled
                               ? isTimeOccupied
                                 ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
@@ -2484,14 +2977,23 @@ export default function AdminPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">사용자 필터</h3>
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">사용자 필터</h3>
+                      <p className="text-orange-100 text-sm">근태 목록을 필터링할 사용자를 선택하세요</p>
+                    </div>
                     <button
                       onClick={() => setShowUserFilter(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition"
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                     >
-                      <FiX className="w-5 h-5 text-gray-400" />
+                      <FiX className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -2602,12 +3104,14 @@ function MonthlyAttendanceCalendar({
   selectedMonth,
   attendances,
   users,
-  onDeleteAttendance
+  onDeleteAttendance,
+  onViewAttendance
 }: {
   selectedMonth: string;
   attendances: Attendance[];
   users: User[];
   onDeleteAttendance: (id: string) => void;
+  onViewAttendance: (attendance: Attendance) => void;
 }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs(selectedMonth));
 
@@ -2669,10 +3173,13 @@ function MonthlyAttendanceCalendar({
     return slots;
   };
 
-  // 근태 시간을 시간 슬롯에 매핑
-  const getTimeSlotColors = (attendances: Attendance[]) => {
+  // 근태 시간을 시간 슬롯에 매핑 (색상과 근태 ID 정보 포함)
+  const getTimeSlotData = (attendances: Attendance[]) => {
     const timeSlots = generateTimeSlots(); // 18개 슬롯
-    const slotColors = new Array(18).fill('bg-gray-100'); // 기본 회색
+    const slotData = new Array(18).fill(null).map(() => ({
+      color: 'bg-gray-100',
+      attendanceId: null as string | null
+    })); // 기본 회색, ID 없음
 
     attendances.forEach(attendance => {
       const color = getAttendanceColorForSlot(attendance.type);
@@ -2706,13 +3213,16 @@ function MonthlyAttendanceCalendar({
         }
       }
 
-      // 해당 슬롯 범위에 색상 적용
+      // 해당 슬롯 범위에 색상과 근태 ID 적용
       for (let i = startSlot; i <= endSlot; i++) {
-        slotColors[i] = color;
+        slotData[i] = {
+          color: color,
+          attendanceId: attendance.id
+        };
       }
     });
 
-    return slotColors;
+    return slotData;
   };
 
   // 슬롯용 색상 함수
@@ -2801,9 +3311,8 @@ function MonthlyAttendanceCalendar({
   };
 
   const handleDayClick = (userId: string, dateStr: string, attendances: Attendance[]) => {
-    if (attendances.length === 1) {
-      onDeleteAttendance(attendances[0].id);
-    }
+    // 날짜 클릭은 이제 개별 슬롯 클릭으로 대체되었으므로 아무 동작도 하지 않음
+    // 필요시 날짜별 근태 목록 모달을 띄우는 기능으로 변경 가능
   };
 
   return (
@@ -2869,7 +3378,7 @@ function MonthlyAttendanceCalendar({
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                 const dateStr = currentMonth.date(day).format('YYYY-MM-DD');
                 const dayAttendances = userAttendanceMap[user.id]?.[dateStr] || [];
-                const slotColors = getTimeSlotColors(dayAttendances);
+                const slotData = getTimeSlotData(dayAttendances);
                 const text = getAttendanceText(dayAttendances);
 
                 return (
@@ -2885,11 +3394,22 @@ function MonthlyAttendanceCalendar({
                   >
                     <div className="flex flex-col gap-0.5">
                       {/* 30분 단위 시간 슬롯들 (9시~18시, 총 18개) */}
-                      {slotColors.map((color, index) => (
+                      {slotData.map((slot, index) => (
                         <div
                           key={index}
-                          className={`h-1 w-full rounded-sm ${color} border border-gray-200`}
-                          title={`${9 + Math.floor(index / 2)}:${index % 2 === 0 ? '00' : '30'}`}
+                          onClick={(e) => {
+                            e.stopPropagation(); // 부모 버튼 클릭 방지
+                            if (slot.attendanceId) {
+                              const attendance = attendances.find(a => a.id === slot.attendanceId);
+                              if (attendance) {
+                                onViewAttendance(attendance);
+                              }
+                            }
+                          }}
+                          className={`h-1 w-full rounded-sm ${slot.color} border border-gray-200 ${
+                            slot.attendanceId ? 'cursor-pointer hover:opacity-75 transition-opacity' : ''
+                          }`}
+                          title={`${9 + Math.floor(index / 2)}:${index % 2 === 0 ? '00' : '30'}${slot.attendanceId ? ' (클릭하여 상세정보)' : ''}`}
                         />
                       ))}
 
@@ -2981,7 +3501,7 @@ function MonthlyAttendanceCalendar({
           </div>
 
         </div>
-        <p className="text-xs text-gray-500 mt-3">셀을 클릭하면 해당 근태를 삭제할 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
+        <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
       </div>
     </div>
   );

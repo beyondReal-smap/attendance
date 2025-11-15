@@ -120,11 +120,26 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!startDate || !endDate || !reason.trim()) {
-      if (onAlert) onAlert('오류', '모든 필드를 입력해주세요.', 'error');
+
+    // 필수 필드 검증
+    if (!startDate || !endDate) {
+      if (onAlert) onAlert('오류', '시작일자와 종료일자를 선택해주세요.', 'error');
       return;
     }
 
+    if (!reason.trim()) {
+      if (onAlert) onAlert('근태 사유 입력 필요', '근태 사유를 입력해주세요.', 'error');
+      return;
+    }
+
+    // 특정 근태 유형들은 시작시간과 종료시간이 필수
+    const timeRequiredTypes = ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무', '반반차'];
+    if (timeRequiredTypes.includes(type)) {
+      if (!startTime || !endTime) {
+        if (onAlert) onAlert('시간 입력 필요', `${type} 근태는 시작시간과 종료시간을 입력해야 합니다.`, 'error');
+        return;
+      }
+    }
 
     const timeInfo = getAttendanceTimeInfo(type);
     const start = dayjs(startDate);
@@ -191,17 +206,28 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             exit={{ opacity: 0, y: 50 }}
             className="fixed left-0 right-0 bottom-0 max-w-md mx-auto bg-white rounded-t-2xl shadow-xl z-50 max-h-[90vh] overflow-y-auto"
           >
-            <div className="p-5">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-gray-900">근태 등록</h2>
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">근태 등록</h3>
+                  <p className="text-blue-100 text-sm">새로운 근태를 등록하세요</p>
+                </div>
                 <button
                   onClick={onClose}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                 >
-                  <FiX className="w-5 h-5 text-gray-500" />
+                  <FiX className="w-5 h-5 text-white" />
                 </button>
               </div>
+            </div>
+
+            <div className="p-5">
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -325,25 +351,77 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-white rounded-xl p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-xl"
+                      className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
                     >
-                      <DatePickerCalendar
-                        startDate={startDate ? dayjs(startDate) : null}
-                        endDate={endDate ? dayjs(endDate) : null}
-                        onStartDateSelect={(date) => {
-                          setStartDate(date.format('YYYY-MM-DD'));
-                          setShowStartCalendar(false);
-                        }}
-                        onEndDateSelect={(date) => {
-                          setEndDate(date.format('YYYY-MM-DD'));
-                          setShowEndCalendar(false);
-                        }}
-                        onClose={() => {
-                          setShowStartCalendar(false);
-                          setShowEndCalendar(false);
-                        }}
-                        initialSelectingStart={showStartCalendar}
-                      />
+                      {/* 헤더 */}
+                      {showStartCalendar && (
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-white">시작일자 선택</h3>
+                              <p className="text-blue-100 text-sm">근태 시작일자를 선택하세요</p>
+                            </div>
+                            <button
+                              onClick={() => setShowStartCalendar(false)}
+                              className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                            >
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {showEndCalendar && (
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-white">종료일자 선택</h3>
+                              <p className="text-blue-100 text-sm">근태 종료일자를 선택하세요</p>
+                            </div>
+                            <button
+                              onClick={() => setShowEndCalendar(false)}
+                              className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                            >
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="p-4">
+                        <DatePickerCalendar
+                          startDate={startDate ? dayjs(startDate) : null}
+                          endDate={endDate ? dayjs(endDate) : null}
+                          onStartDateSelect={(date) => {
+                            setStartDate(date.format('YYYY-MM-DD'));
+                            setShowStartCalendar(false);
+                          }}
+                          onEndDateSelect={(date) => {
+                            setEndDate(date.format('YYYY-MM-DD'));
+                            setShowEndCalendar(false);
+                          }}
+                          onClose={() => {
+                            setShowStartCalendar(false);
+                            setShowEndCalendar(false);
+                          }}
+                          initialSelectingStart={showStartCalendar}
+                          showConfirmButton={false}
+                        />
+                      </div>
                     </motion.div>
                   </div>
                 )}
@@ -411,14 +489,23 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">근태 유형 선택</h3>
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">근태 유형 선택</h3>
+                  <p className="text-blue-100 text-sm">등록할 근태의 유형을 선택하세요</p>
+                </div>
                 <button
                   onClick={() => setShowTypeModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                  className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                 >
-                  <FiX className="w-5 h-5 text-gray-400" />
+                  <FiX className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
@@ -756,25 +843,28 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">시작시간 선택</h3>
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">시작시간 선택</h3>
+                  <p className="text-blue-100 text-sm">근태 시작 시간을 선택하세요</p>
+                </div>
                 <button
                   onClick={() => setShowStartTimeModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                  className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                 >
-                  <FiX className="w-5 h-5 text-gray-400" />
+                  <FiX className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
 
             <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="text-sm font-medium text-gray-700 mb-3">
-                시간을 선택하세요 (9:00 ~ 18:00)
-                <div className="text-xs text-red-600 mt-1">
-                  빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
-                </div>
-              </div>
               <div className="grid grid-cols-4 gap-2">
                 {generateTimeOptions().map((time) => {
                   // 선택된 날짜의 기존 근태들과 시간 겹침 확인
@@ -843,25 +933,28 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">종료시간 선택</h3>
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">종료시간 선택</h3>
+                  <p className="text-blue-100 text-sm">근태 종료 시간을 선택하세요</p>
+                </div>
                 <button
                   onClick={() => setShowEndTimeModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition"
+                  className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
                 >
-                  <FiX className="w-5 h-5 text-gray-400" />
+                  <FiX className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
 
             <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="text-sm font-medium text-gray-700 mb-3">
-                시간을 선택하세요 (9:00 ~ 18:00)
-                <div className="text-xs text-red-600 mt-1">
-                  빨간색으로 표시된 시간은 이미 다른 근태가 입력되어 있어 선택할 수 없습니다.
-                </div>
-              </div>
               <div className="grid grid-cols-4 gap-2">
                 {generateTimeOptions().map((time) => {
                   // 선택된 날짜의 기존 근태들과 시간 겹침 확인

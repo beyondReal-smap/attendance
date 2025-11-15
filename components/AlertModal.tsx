@@ -55,6 +55,19 @@ export default function AlertModal({
     }
   };
 
+  const getHeaderGradient = () => {
+    switch (type) {
+      case 'success':
+        return 'from-green-500 to-emerald-600';
+      case 'error':
+        return 'from-red-500 to-pink-600';
+      case 'warning':
+        return 'from-yellow-500 to-orange-600';
+      default:
+        return 'from-blue-500 to-purple-600';
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -73,35 +86,44 @@ export default function AlertModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed left-0 right-0 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-white rounded-xl shadow-xl z-50 p-6"
+            className="fixed left-0 right-0 top-1/2 -translate-y-1/2 max-w-lg mx-auto bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
           >
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                {getIcon()}
+            {/* 헤더 */}
+            <div className={`bg-gradient-to-r ${getHeaderGradient()} px-6 py-4`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  {getIcon()}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{title}</h3>
+                  <p className="text-white/90 text-sm">알림 메시지를 확인하세요</p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                >
+                  <FiX className="w-5 h-5 text-white" />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {title}
-                </h3>
-                <p className="text-sm text-gray-600 whitespace-pre-line">
+            </div>
+
+            {/* 내용 */}
+            <div className="p-6">
+              <div className="mb-6">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                   {message}
                 </p>
               </div>
-              <button
-                onClick={onClose}
-                className="flex-shrink-0 p-1 hover:bg-gray-100 rounded-lg transition"
-              >
-                <FiX className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
 
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={handleConfirm}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition ${getButtonColor()}`}
-              >
-                {confirmText}
-              </button>
+              {/* 버튼 */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleConfirm}
+                  className={`px-6 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${getButtonColor()}`}
+                >
+                  {confirmText}
+                </button>
+              </div>
             </div>
           </motion.div>
         </>

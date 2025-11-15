@@ -12,6 +12,8 @@ interface DatePickerCalendarProps {
   onEndDateSelect: (date: Dayjs) => void;
   onClose: () => void;
   initialSelectingStart?: boolean;
+  showConfirmButton?: boolean;
+  selectedColor?: 'blue' | 'orange';
 }
 
 export function DatePickerCalendar({
@@ -21,6 +23,8 @@ export function DatePickerCalendar({
   onEndDateSelect,
   onClose,
   initialSelectingStart = true,
+  showConfirmButton = true,
+  selectedColor = 'blue',
 }: DatePickerCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectingStart, setSelectingStart] = useState(initialSelectingStart);
@@ -95,13 +99,13 @@ export function DatePickerCalendar({
               onClick={() => setSelectingStart(true)}
               className={`px-2.5 py-1 rounded-md transition ${selectingStart ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              시작일
+              시작일자
             </button>
             <button
               onClick={() => setSelectingStart(false)}
               className={`px-2.5 py-1 rounded-md transition ${!selectingStart ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              종료일
+              종료일자
             </button>
           </div>
         </div>
@@ -158,9 +162,9 @@ export function DatePickerCalendar({
                 transition-all duration-200 relative
                 ${
                   isStart || isEnd
-                    ? 'bg-blue-600 text-white'
+                    ? selectedColor === 'orange' ? 'bg-orange-500 text-white' : 'bg-blue-600 text-white'
                     : inRange
-                    ? 'bg-blue-100 text-blue-700'
+                    ? selectedColor === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                     : isToday
                     ? 'bg-gray-100 text-gray-900 ring-2 ring-gray-300'
                     : 'hover:bg-gray-100 text-gray-700'
@@ -178,24 +182,30 @@ export function DatePickerCalendar({
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between text-xs">
             <div>
-              <span className="text-gray-500">시작일: </span>
+              <span className="text-gray-500">시작일자: </span>
               <span className="font-semibold text-gray-900">
                 {startDate ? startDate.format('YYYY-MM-DD') : '-'}
               </span>
             </div>
             <div>
-              <span className="text-gray-500">종료일: </span>
+              <span className="text-gray-500">종료일자: </span>
               <span className="font-semibold text-gray-900">
                 {endDate ? endDate.format('YYYY-MM-DD') : '-'}
               </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-full mt-3 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            확인
-          </button>
+          {showConfirmButton && (
+            <button
+              onClick={onClose}
+              className={`w-full mt-3 px-4 py-2.5 text-white rounded-lg text-sm font-medium transition-colors ${
+                selectedColor === 'orange'
+                  ? 'bg-orange-500 hover:bg-orange-600'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              확인
+            </button>
+          )}
         </div>
       )}
     </div>
