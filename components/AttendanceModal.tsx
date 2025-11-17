@@ -207,7 +207,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             className="fixed left-0 right-0 bottom-0 max-w-md mx-auto bg-white rounded-t-2xl shadow-xl z-50 max-h-[90vh] overflow-y-auto"
           >
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,7 +355,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                     >
                       {/* 헤더 */}
                       {showStartCalendar && (
-                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,7 +379,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                       )}
 
                       {showEndCalendar && (
-                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,7 +490,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -844,7 +844,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -934,7 +934,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
             className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
           >
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
