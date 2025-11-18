@@ -150,6 +150,22 @@ export default function AdminPage() {
     checkAdminAndLoadData();
   }, []);
 
+  // 모달이 열려있을 때 body 스크롤 방지
+  useEffect(() => {
+    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser;
+
+    if (hasModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser]);
+
   const checkAdminAndLoadData = async () => {
     try {
       const sessionRes = await fetch('/api/auth/session');
@@ -2299,15 +2315,23 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            {user.isAdmin && (
-                              <span className={`text-xs px-2 py-1 rounded-full ${
-                                selectedUserId === user.id
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              selectedUserId === user.id
+                                ? user.role === 'admin'
                                   ? 'bg-white/20 text-white'
-                                  : 'bg-blue-100 text-blue-700'
-                              }`}>
-                                관리자
-                              </span>
-                            )}
+                                  : user.role === 'manager'
+                                  ? 'bg-green-100/50 text-green-200'
+                                  : 'bg-gray-100/50 text-gray-200'
+                                : user.role === 'admin'
+                                ? 'bg-blue-100 text-blue-700'
+                                : user.role === 'manager'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {user.role === 'admin' ? '관리자' :
+                               user.role === 'manager' ? '중간관리자' :
+                               '사용자'}
+                            </span>
                           </div>
                         </button>
                       ))}
@@ -3055,15 +3079,23 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            {user.isAdmin && (
-                              <span className={`text-xs px-2 py-1 rounded-full ${
-                                selectedUserFilter === user.name
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              selectedUserFilter === user.name
+                                ? user.role === 'admin'
                                   ? 'bg-white/20 text-white'
-                                  : 'bg-blue-100 text-blue-700'
-                              }`}>
-                                관리자
-                              </span>
-                            )}
+                                  : user.role === 'manager'
+                                  ? 'bg-green-100/50 text-green-200'
+                                  : 'bg-gray-100/50 text-gray-200'
+                                : user.role === 'admin'
+                                ? 'bg-blue-100 text-blue-700'
+                                : user.role === 'manager'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {user.role === 'admin' ? '관리자' :
+                               user.role === 'manager' ? '중간관리자' :
+                               '사용자'}
+                            </span>
                             {user.isTempPassword && (
                               <span className={`text-xs px-2 py-1 rounded-full ${
                                 selectedUserFilter === user.name

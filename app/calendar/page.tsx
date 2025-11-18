@@ -406,6 +406,22 @@ export default function CalendarPage() {
     }
   }, [currentMonth]);
 
+  // 모달이 열려있을 때 body 스크롤 방지
+  useEffect(() => {
+    const hasModalOpen = isModalOpen || alertModalOpen || showPasswordChangeModal;
+
+    if (hasModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen, alertModalOpen, showPasswordChangeModal]);
+
   const fetchUserAndAttendances = async () => {
     try {
       const userRes = await fetch('/api/auth/session');
