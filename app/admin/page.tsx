@@ -1148,7 +1148,7 @@ export default function AdminPage() {
             </div>
 
             {/* 최근 근태 기록 */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 mt-8 pt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {(() => {
