@@ -948,7 +948,7 @@ export default function AdminPage() {
                 일괄 생성
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
               {users.map((user) => (
                 <div key={user.id} className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition">
                   <div className="flex items-center justify-between mb-3">
