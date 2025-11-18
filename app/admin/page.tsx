@@ -10,6 +10,21 @@ import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import { FiCalendar, FiDownload, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from 'recharts';
 
 // 아바타 이미지 선택 헬퍼 함수
 const getAvatarImage = (userId: string): string => {
@@ -212,7 +227,7 @@ export default function AdminPage() {
       if (role === 'manager' && department) {
         data = data.filter((user: User) =>
           user.department === department &&
-          user.role !== 'admin'  // admin은 제외, manager 자신은 포함
+          user.role === 'user'  // 일반 사용자만 표시
         );
       } else if (role === 'manager' && !department) {
         // department 정보가 없으면 빈 배열
@@ -245,7 +260,7 @@ export default function AdminPage() {
           const departmentUserIds = allUsers
             .filter((user: User) =>
               user.department === department &&
-              user.role !== 'admin'  // admin은 제외, manager 자신은 포함
+              user.role === 'user'  // 일반 사용자만 표시
             )
             .map((user: User) => user.id);
           data = data.filter((attendance: Attendance) => departmentUserIds.includes(attendance.userId));
@@ -790,6 +805,386 @@ export default function AdminPage() {
         </div>
 
         <div className="p-6 md:p-8 lg:p-12 space-y-8">
+          {/* 대시보드 */}
+          <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-green-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* 총 사용자 수 */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600 mb-1">총 사용자</p>
+                    <p className="text-3xl font-bold text-blue-900">{users.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 오늘 근태 현황 */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600 mb-1">오늘 근태</p>
+                    <p className="text-3xl font-bold text-green-900">
+                      {(() => {
+                        const today = dayjs().format('YYYY-MM-DD');
+                        const todayAttendances = attendances.filter(a => a.date === today);
+                        const uniqueUsers = new Set(todayAttendances.map(a => a.userId));
+                        return uniqueUsers.size;
+                      })()}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">근태자 수</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 이번 달 근태 기록 수 */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600 mb-1">이번 달 기록</p>
+                    <p className="text-3xl font-bold text-purple-900">
+                      {(() => {
+                        const currentMonthStr = dayjs().format('YYYY-MM');
+                        return attendances.filter(a => a.date.startsWith(currentMonthStr)).length;
+                      })()}
+                    </p>
+                    <p className="text-xs text-purple-600 mt-1">총 근태 수</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 연차 사용 현황 */}
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-600 mb-1">연차 잔여</p>
+                    <p className="text-3xl font-bold text-orange-900">
+                      {(() => {
+                        const currentYear = new Date().getFullYear();
+                        return users.reduce((total, user) => total + (user.annualLeaveRemaining || 0), 0);
+                      })()}
+                    </p>
+                    <p className="text-xs text-orange-600 mt-1">총 잔여 일수</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 그래프 섹션 */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">근태 통계</h3>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                {/* 근태 유형별 분포 - 도넛 차트 */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">근태 유형별 분포</h4>
+                  <div className="h-64">
+                    {(() => {
+                      const typeStats = attendances.reduce((acc, attendance) => {
+                        acc[attendance.type] = (acc[attendance.type] || 0) + 1;
+                        return acc;
+                      }, {} as Record<string, number>);
+
+                      const total = Object.values(typeStats).reduce((sum, count) => sum + count, 0);
+                      const colors = {
+                        '연차': '#ef4444',        // bg-red-500
+                        '결근': '#f43f5e',       // bg-rose-500
+                        '오전반차': '#f97316',     // bg-orange-500
+                        '연장근무': '#f59e0b',      // bg-amber-500
+                        '체휴': '#eab308',        // bg-yellow-500
+                        '오후반차': '#84cc16',      // bg-lime-500
+                        '출장': '#22c55e',        // bg-green-500
+                        '교육': '#10b981',        // bg-emerald-500
+                        '휴식': '#14b8a6',        // bg-teal-500
+                        '팀장대행': '#06b6d4',      // bg-cyan-500
+                        '코칭': '#3b82f6',        // bg-blue-500
+                        '반반차': '#6366f1',      // bg-indigo-500
+                        '장애': '#8b5cf6',        // bg-violet-500
+                        '기타': '#a855f7'        // bg-purple-500
+                      };
+
+                      const data = Object.entries(typeStats).map(([type, count]) => ({
+                        name: type,
+                        value: count,
+                        percentage: Math.round((count / total) * 100)
+                      }));
+
+                      const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
+                        if (percentage <= 5) return null;
+
+                        const RADIAN = Math.PI / 180;
+                        const radius = outerRadius + 15; // 도넛 바깥쪽에 더 넉넉하게 배치
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                        // 각도에 따라 textAnchor 결정
+                        let textAnchor: 'start' | 'middle' | 'end' = 'middle';
+                        const angle = midAngle % 360;
+                        if (angle >= 90 && angle <= 270) {
+                          textAnchor = 'end';
+                        } else {
+                          textAnchor = 'start';
+                        }
+
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="#374151"
+                            textAnchor={textAnchor}
+                            dominantBaseline="central"
+                            className="text-xs font-medium"
+                          >
+                            {`${percentage}%`}
+                          </text>
+                        );
+                      };
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={data}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={renderCustomizedLabel}
+                              outerRadius={80}
+                              innerRadius={40}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={colors[entry.name as keyof typeof colors] || '#6b7280'} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value: any, name: any) => [`${value}건 (${data.find(d => d.name === name)?.percentage}%)`, name]}
+                              contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                              }}
+                            />
+                            <Legend
+                              verticalAlign="bottom"
+                              height={36}
+                              formatter={(value, entry: any) => (
+                                <span style={{ color: entry.color, fontSize: '12px' }}>
+                                  {value}: {data.find(d => d.name === value)?.value}건
+                                </span>
+                              )}
+                            />
+                            {/* 중앙 텍스트 */}
+                            <text x="50%" y="40%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold fill-gray-900">
+                              {total}
+                            </text>
+                            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-sm fill-gray-500">
+                              총 기록
+                            </text>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* 월별 근태 추이 - 선 그래프 */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">최근 6개월 근태 추이</h4>
+                  <div className="h-64">
+                    {(() => {
+                      const monthlyStats = [];
+                      for (let i = 5; i >= 0; i--) {
+                        const date = dayjs().subtract(i, 'month');
+                        const monthStr = date.format('YYYY-MM');
+                        const count = attendances.filter(a => a.date.startsWith(monthStr)).length;
+                        monthlyStats.push({
+                          month: date.format('M월'),
+                          count,
+                          fullMonth: date.format('YYYY년 M월')
+                        });
+                      }
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={monthlyStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                            <XAxis
+                              dataKey="month"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                              }}
+                              formatter={(value: any, name: any, props: any) => [
+                                `${value}건`,
+                                '근태 기록 수'
+                              ]}
+                              labelFormatter={(label, payload) => {
+                                if (payload && payload[0]) {
+                                  return payload[0].payload.fullMonth;
+                                }
+                                return label;
+                              }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="count"
+                              stroke="#3b82f6"
+                              strokeWidth={3}
+                              dot={{
+                                fill: '#3b82f6',
+                                strokeWidth: 2,
+                                stroke: '#ffffff',
+                                r: 5
+                              }}
+                              activeDot={{
+                                r: 7,
+                                fill: '#1d4ed8',
+                                stroke: '#ffffff',
+                                strokeWidth: 2
+                              }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* 요일별 근태 패턴 - 막대 그래프 */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">요일별 근태 패턴</h4>
+                  <div className="h-64">
+                    {(() => {
+                      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                      const dayStats = dayNames.map(day => ({ day, count: 0 }));
+
+                      attendances.forEach(attendance => {
+                        const date = dayjs(attendance.date);
+                        const dayIndex = date.day(); // 0: 일요일, 1: 월요일, ...
+                        dayStats[dayIndex].count++;
+                      });
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={dayStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                            <XAxis
+                              dataKey="day"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                              }}
+                              formatter={(value: any) => [`${value}건`, '근태 기록 수']}
+                              labelFormatter={(label) => `${label}요일`}
+                            />
+                            <Bar
+                              dataKey="count"
+                              fill="#10b981"
+                              radius={[4, 4, 0, 0]}
+                              name="근태 기록 수"
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 최근 근태 기록 */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {(() => {
+                  const recentAttendances = attendances
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .slice(0, 10);
+
+                  return recentAttendances.map((attendance) => {
+                    const user = users.find(u => u.id === attendance.userId);
+                    return (
+                      <div key={`${attendance.userId}-${attendance.date}-${attendance.type}`} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            attendance.type === '연차' ? 'bg-red-500' :
+                            attendance.type === '오전반차' ? 'bg-orange-500' :
+                            attendance.type === '오후반차' ? 'bg-green-500' :
+                            attendance.type === '반반차' ? 'bg-purple-500' :
+                            attendance.type === '체휴' ? 'bg-yellow-500' :
+                            'bg-gray-500'
+                          }`}></div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{user?.name || '알 수 없음'}</p>
+                            <p className="text-xs text-gray-500">{attendance.date} - {attendance.type}</p>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {attendance.reason ? attendance.reason.substring(0, 20) + (attendance.reason.length > 20 ? '...' : '') : '사유 없음'}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
+
           {/* 사용자 추가 - 관리자만 표시 */}
           {currentUserRole === 'admin' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
