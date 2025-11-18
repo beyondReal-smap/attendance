@@ -155,14 +155,19 @@ export default function AdminPage() {
     const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen;
 
     if (hasModalOpen) {
+      // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
     }
 
     // 컴포넌트 언마운트 시 정리
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
     };
   }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen]);
 
