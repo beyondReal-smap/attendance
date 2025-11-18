@@ -152,7 +152,7 @@ export default function AdminPage() {
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
-    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser;
+    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen;
 
     if (hasModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -164,7 +164,7 @@ export default function AdminPage() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser]);
+  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen]);
 
   const checkAdminAndLoadData = async () => {
     try {
@@ -1729,7 +1729,7 @@ export default function AdminPage() {
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
