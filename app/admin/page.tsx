@@ -126,6 +126,7 @@ export default function AdminPage() {
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
 
   // 현재 사용자 권한 상태
@@ -167,7 +168,7 @@ export default function AdminPage() {
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
-    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen;
+    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen;
 
     if (hasModalOpen) {
       // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
@@ -184,7 +185,7 @@ export default function AdminPage() {
       document.body.style.overflow = 'unset';
       document.body.style.paddingRight = '0px';
     };
-  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen]);
+  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showYearPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen]);
 
   const checkAdminAndLoadData = async () => {
     try {
@@ -2600,21 +2601,12 @@ export default function AdminPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       연도
                     </label>
-                    <select
-                      value={dayjs(selectedMonth).year()}
-                      onChange={(e) => {
-                        const currentMonth = dayjs(selectedMonth).month() + 1;
-                        const newYear = parseInt(e.target.value);
-                        setSelectedMonth(`${newYear}-${currentMonth.toString().padStart(2, '0')}`);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                    <button
+                      onClick={() => setShowYearPicker(true)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900 bg-white hover:bg-gray-50 transition-colors text-left"
                     >
-                      {Array.from({ length: 10 }, (_, i) => dayjs().year() - 2 + i).map(year => (
-                        <option key={year} value={year}>
-                          {year}년
-                        </option>
-                      ))}
-                    </select>
+                      {dayjs(selectedMonth).year()}년
+                    </button>
                   </div>
 
                   {/* 월 선택 */}
@@ -2652,6 +2644,75 @@ export default function AdminPage() {
                   <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 월: {dayjs(selectedMonth).format('YYYY년 M월')}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 연도 선택 모달 */}
+          {showYearPicker && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">연도 선택</h3>
+                      <p className="text-orange-100 text-sm">근태 목록을 조회할 연도를 선택하세요</p>
+                    </div>
+                    <button
+                      onClick={() => setShowYearPicker(false)}
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                    >
+                      <FiX className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  {/* 연도 선택 */}
+                  <div className="mb-6">
+                    <div className="grid grid-cols-3 gap-2">
+                      {Array.from({ length: 10 }, (_, i) => dayjs().year() - 2 + i).map(year => {
+                        const isSelected = dayjs(selectedMonth).year() === year;
+
+                        return (
+                          <button
+                            key={year}
+                            onClick={() => {
+                              const currentMonth = dayjs(selectedMonth).month() + 1;
+                              setSelectedMonth(`${year}-${currentMonth.toString().padStart(2, '0')}`);
+                              setShowYearPicker(false);
+                            }}
+                            className={`p-3 text-sm font-medium rounded-lg transition ${
+                              isSelected
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {year}년
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 현재 선택된 연도 표시 */}
+                  <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="text-sm font-medium text-orange-700">
+                      선택된 연도: {dayjs(selectedMonth).year()}년
                     </div>
                   </div>
                 </div>
