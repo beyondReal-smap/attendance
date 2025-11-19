@@ -203,7 +203,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            exit={{ opacity: 0, y: 50 }}
             className="fixed left-0 right-0 bottom-0 max-w-md mx-auto bg-white rounded-t-2xl shadow-xl z-50 max-h-[90vh] overflow-y-auto"
           >
             {/* 헤더 */}
