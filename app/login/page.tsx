@@ -12,6 +12,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 비밀번호 변경 모달 상태
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isTempPasswordUser, setIsTempPasswordUser] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -32,12 +38,15 @@ export default function LoginPage() {
         return;
       }
 
-      // 임시 비밀번호로 로그인한 경우 localStorage에 저장
+      // 임시 비밀번호로 로그인한 경우 비밀번호 변경 모달 표시
       if (data.isTempPassword) {
-        localStorage.setItem('tempPasswordLogin', 'true');
+        setIsTempPasswordUser(true);
+        setShowPasswordChangeModal(true);
+        setLoading(false);
+        return;
       }
 
-      // 세션 정보를 확인해서 리다이렉트 경로 결정
+      // 일반 사용자는 기존 로직대로 진행
       try {
         const sessionResponse = await fetch('/api/auth/session');
         if (sessionResponse.ok) {
@@ -56,6 +65,62 @@ export default function LoginPage() {
       router.refresh();
     } catch (err) {
       setError('로그인 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  };
+
+  // 비밀번호 변경 핸들러
+  const handlePasswordChange = async () => {
+    if (!newPassword || !confirmPassword) {
+      setError('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('비밀번호는 최소 6자리 이상이어야 합니다.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword }),
+      });
+
+      if (res.ok) {
+        // 비밀번호 변경 성공 후 세션 정보 확인해서 리다이렉트
+        try {
+          const sessionResponse = await fetch('/api/auth/session');
+          if (sessionResponse.ok) {
+            const session = await sessionResponse.json();
+            if (session.isAdmin || session.role === 'manager') {
+              router.push('/admin');
+            } else {
+              router.push('/calendar');
+            }
+          } else {
+            router.push('/calendar');
+          }
+        } catch {
+          router.push('/calendar');
+        }
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error || '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (error) {
+      setError('비밀번호 변경 중 오류가 발생했습니다.');
+    } finally {
       setLoading(false);
     }
   };
@@ -170,6 +235,84 @@ export default function LoginPage() {
           <p className="text-xs text-gray-500">All rights reserved.</p>
         </div>
       </div>
+
+      {/* 비밀번호 변경 모달 */}
+      {showPasswordChangeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">비밀번호 변경</h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 mb-4">
+                보안을 위해 임시 비밀번호로 로그인하셨습니다. 새로운 비밀번호를 설정해주세요.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <div className="text-sm text-yellow-800">
+                  <div className="font-medium mb-1">비밀번호 요구사항:</div>
+                  <ul className="list-disc list-inside text-xs space-y-1">
+                    <li>최소 6자리 이상</li>
+                    <li>보안을 위해 강력한 비밀번호를 사용하세요</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  새 비밀번호
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호를 입력하세요"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  새 비밀번호 확인
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호를 다시 입력하세요"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowPasswordChangeModal(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    setError('');
+                    setIsTempPasswordUser(false);
+                    // 일반 로그인으로 돌아가기
+                    setUsername('');
+                    setPassword('');
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  나중에 변경
+                </button>
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {loading ? '변경 중...' : '비밀번호 변경'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
