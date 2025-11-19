@@ -243,7 +243,7 @@ export default function LoginPage() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">비밀번호 변경</h3>
             <div className="mb-6">
               <p className="text-sm text-gray-700 mb-4">
-                보안을 위해 임시 비밀번호로 로그인하셨습니다. 새로운 비밀번호를 설정해주세요.
+                보안을 위해 임시 비밀번호로 로그인하셨습니다. 계속 진행하시려면 반드시 새로운 비밀번호를 설정해주세요.
               </p>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <div className="text-sm text-yellow-800">
@@ -285,26 +285,11 @@ export default function LoginPage() {
                   {error}
                 </div>
               )}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setShowPasswordChangeModal(false);
-                    setNewPassword('');
-                    setConfirmPassword('');
-                    setError('');
-                    setIsTempPasswordUser(false);
-                    // 일반 로그인으로 돌아가기
-                    setUsername('');
-                    setPassword('');
-                  }}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
-                >
-                  나중에 변경
-                </button>
+              <div className="pt-2">
                 <button
                   onClick={handlePasswordChange}
                   disabled={loading}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                  className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
                 >
                   {loading ? '변경 중...' : '비밀번호 변경'}
                 </button>
