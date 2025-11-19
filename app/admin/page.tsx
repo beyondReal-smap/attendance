@@ -467,10 +467,10 @@ export default function AdminPage() {
           reason: reason.trim(),
           startTime: selectedType === '반반차' ? startTime :
                      (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' :
-                      ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? startTime : undefined),
+                      ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? startTime : undefined),
           endTime: selectedType === '반반차' ? endTime :
                    (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' :
-                    ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? endTime : undefined),
+                    ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? endTime : undefined),
         }),
       });
 
@@ -926,7 +926,7 @@ export default function AdminPage() {
                         '교육': '#10b981',        // bg-emerald-500
                         '휴식': '#14b8a6',        // bg-teal-500
                         '팀장대행': '#06b6d4',      // bg-cyan-500
-                        '코칭': '#3b82f6',        // bg-blue-500
+                        '동석(코칭)': '#3b82f6',        // bg-blue-500
                         '반반차': '#6366f1',      // bg-indigo-500
                         '장애': '#8b5cf6',        // bg-violet-500
                         '기타': '#a855f7'        // bg-purple-500
@@ -1751,8 +1751,8 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* 시간 입력 - 반반차, 팀장대행, 코칭, 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
-              {selectedType && ['반반차', '팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) && (
+              {/* 시간 입력 - 반반차, 팀장대행, 동석(코칭), 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
+              {selectedType && ['반반차', '팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -3080,7 +3080,7 @@ export default function AdminPage() {
                         </button>
                       </div>
 
-                      {/* 세 번째 행 - 팀장대행, 코칭, 교육 */}
+                      {/* 세 번째 행 - 팀장대행, 동석(코칭), 교육 */}
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
@@ -3105,13 +3105,13 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('코칭');
+                            setSelectedType('동석(코칭)');
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
                           className={`p-2 text-left rounded transition ${
-                            selectedType === '코칭'
+                            selectedType === '동석(코칭)'
                               ? 'bg-gray-400 text-white'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
@@ -3119,7 +3119,7 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm">👨‍🏫</span>
                             <div>
-                              <div className="font-medium text-xs">코칭</div>
+                              <div className="font-medium text-xs">동석(코칭)</div>
                             </div>
                           </div>
                         </button>
@@ -3741,7 +3741,7 @@ function MonthlyAttendanceCalendar({
         return 'bg-teal-500';       // 청록
       case '팀장대행':
         return 'bg-cyan-500';       // 하늘색
-      case '코칭':
+      case '동석(코칭)':
         return 'bg-blue-500';      // 파랑
       case '반반차':
         return 'bg-indigo-500';     // 남색
@@ -3972,7 +3972,7 @@ function MonthlyAttendanceCalendar({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 border border-gray-300 rounded"></div>
-                <span>코칭</span>
+                <span>동석(코칭)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-indigo-500 border border-gray-300 rounded"></div>

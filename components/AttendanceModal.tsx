@@ -133,7 +133,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
     }
 
     // 특정 근태 유형들은 시작시간과 종료시간이 필수
-    const timeRequiredTypes = ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무', '반반차'];
+    const timeRequiredTypes = ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무', '반반차'];
     if (timeRequiredTypes.includes(type)) {
       if (!startTime || !endTime) {
         if (onAlert) onAlert('시간 입력 필요', `${type} 근태는 시작시간과 종료시간을 입력해야 합니다.`, 'error');
@@ -163,12 +163,12 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                    (type === '오전반차' ? '09:00' :
                     type === '오후반차' ? '14:00' :
                     ['연차', '체휴', '결근'].includes(type) ? '09:00' :
-                    ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? startTime : undefined),
+                    ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? startTime : undefined),
         endTime: (type === '반반차' || type === '근무') ? endTime :
                  (type === '오전반차' ? '14:00' :
                   type === '오후반차' ? '18:00' :
                   ['연차', '체휴', '결근'].includes(type) ? '18:00' :
-                  ['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? endTime : undefined),
+                  ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) ? endTime : undefined),
       });
       // 초기화
       setStartDate('');
@@ -250,7 +250,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                           '반반차': '반반차 (0.25일)',
                           '체휴': '체휴 (1일)',
                           '팀장대행': '팀장대행',
-                          '코칭': '코칭',
+                          '동석(동석(코칭))': '동석(동석(코칭))',
                           '교육': '교육',
                           '휴식': '휴식',
                           '출장': '출장',
@@ -307,8 +307,8 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                   </div>
                 </div>
 
-                {/* 시간 입력 - 반반차, 팀장대행, 코칭, 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
-                {['반반차', '팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) && (
+                {/* 시간 입력 - 반반차, 팀장대행, 동석(코칭), 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
+                {['반반차', '팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(type) && (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1.5">
@@ -427,7 +427,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                 )}
 
                 {/* 근태 일수 표시 - 특정 유형 제외 */}
-                {workingDays > 0 && !['팀장대행', '코칭', '교육', '휴식', '출장', '장애', '기타', '연장근무', '결근'].includes(type) && (
+                {workingDays > 0 && !['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무', '결근'].includes(type) && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-blue-700">근태 일수</span>
@@ -643,7 +643,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                     </button>
                   </div>
 
-                  {/* 세 번째 행 - 팀장대행, 코칭, 교육 */}
+                  {/* 세 번째 행 - 팀장대행, 동석(코칭), 교육 */}
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => {
@@ -668,13 +668,13 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
 
                     <button
                       onClick={() => {
-                        setType('코칭');
+                        setType('동석(코칭)');
                         setStartTime('');
                         setEndTime('');
                         setShowTypeModal(false);
                       }}
                       className={`p-2 text-left rounded transition ${
-                        type === '코칭'
+                        type === '동석(코칭)'
                           ? 'bg-gray-400 text-white'
                           : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                       }`}
@@ -682,7 +682,7 @@ export default function AttendanceModal({ isOpen, onClose, selectedDate, existin
                       <div className="flex items-center gap-2">
                         <span className="text-sm">👨‍🏫</span>
                         <div>
-                          <div className="font-medium text-xs">코칭</div>
+                          <div className="font-medium text-xs">동석(코칭)</div>
                         </div>
                       </div>
                     </button>

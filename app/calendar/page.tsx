@@ -71,7 +71,7 @@ const MobileCalendar = memo(({
         return 'bg-yellow-50 text-yellow-900 border border-yellow-200';
       case '팀장대행':
         return 'bg-gray-50 text-gray-900 border border-gray-200';
-      case '코칭':
+      case '동석(코칭)':
         return 'bg-gray-50 text-gray-900 border border-gray-200';
       case '교육':
         return 'bg-gray-50 text-gray-900 border border-gray-200';
@@ -106,7 +106,7 @@ const MobileCalendar = memo(({
         return 'text-yellow-900';
       case '팀장대행':
         return 'text-gray-900';
-      case '코칭':
+      case '동석(코칭)':
         return 'text-gray-900';
       case '교육':
         return 'text-gray-900';
@@ -135,7 +135,7 @@ const MobileCalendar = memo(({
       case '반반차': return '🌄';
       case '체휴': return '🏠';
       case '팀장대행': return '👔';
-      case '코칭': return '👨‍🏫';
+      case '동석(코칭)': return '👨‍🏫';
       case '교육': return '📚';
       case '휴식': return '😴';
       case '출장': return '🏢';
@@ -746,7 +746,7 @@ export default function CalendarPage() {
                 </div>
               </div>
 
-              {/* 세 번째 행 - 팀장대행, 코칭, 교육 */}
+              {/* 세 번째 행 - 팀장대행, 동석(코칭), 교육 */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">👔</span>
@@ -758,7 +758,7 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
                   <span className="text-sm">👨‍🏫</span>
                   <div>
-                    <div className="font-medium text-gray-900 text-sm">코칭</div>
+                    <div className="font-medium text-gray-900 text-sm">동석(코칭)</div>
                   </div>
                 </div>
 
