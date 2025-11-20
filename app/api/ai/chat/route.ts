@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
 
     try {
       const result = await streamText({
-        model: 'meituan/longcat-flash-chat',
+        // model: 'meituan/longcat-flash-chat',
+        model: 'google/gemini-2.0-flash-lite',
         prompt: message,
       });
 
