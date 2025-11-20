@@ -415,7 +415,7 @@ export default function CalendarPage() {
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
-    const hasModalOpen = isModalOpen || alertModalOpen || showPasswordChangeModal;
+    const hasModalOpen = isModalOpen || alertModalOpen || showPasswordChangeModal || aiChatModalOpen;
 
     if (hasModalOpen) {
       // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
@@ -432,7 +432,7 @@ export default function CalendarPage() {
       document.body.style.overflow = 'unset';
       document.body.style.paddingRight = '0px';
     };
-  }, [isModalOpen, alertModalOpen, showPasswordChangeModal]);
+  }, [isModalOpen, alertModalOpen, showPasswordChangeModal, aiChatModalOpen]);
 
   const fetchUserAndAttendances = async () => {
     try {
@@ -562,6 +562,23 @@ export default function CalendarPage() {
       handleSendMessage();
     }
   };
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && aiChatModalOpen) {
+        setAiChatModalOpen(false);
+      }
+    };
+
+    if (aiChatModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [aiChatModalOpen]);
 
   const handleDayClick = (day: Dayjs) => {
     setSelectedDate(day);
