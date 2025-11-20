@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { AttendanceType } from '@/types';
@@ -343,6 +343,15 @@ export default function AdminPage() {
     });
     setFilteredAttendances(result);
   }, [selectedUserFilter, attendances, selectedMonth, useDateRange, startDateFilter, endDateFilter]);
+
+  // 일자 범위 조회 시 테이블뷰로 자동 전환 (useDateRange가 활성화될 때만)
+  const prevUseDateRange = useRef(useDateRange);
+  useEffect(() => {
+    if (useDateRange && !prevUseDateRange.current) {
+      setViewMode('table');
+    }
+    prevUseDateRange.current = useDateRange;
+  }, [useDateRange]);
 
 
   // CSV 다운로드 함수
@@ -1068,10 +1077,6 @@ export default function AdminPage() {
                   <h4 className="text-base font-semibold text-gray-900 mb-4">근태 유형별 분포</h4>
                   <div className="h-64">
                     {(() => {
-                      const filteredAttendances = selectedUserFilter === 'all'
-                        ? attendances
-                        : attendances.filter(a => a.userName === selectedUserFilter);
-
                       const typeStats = filteredAttendances.reduce((acc, attendance) => {
                         acc[attendance.type] = (acc[attendance.type] || 0) + 1;
                         return acc;
@@ -1191,10 +1196,6 @@ export default function AdminPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {(() => {
-                  const filteredAttendances = selectedUserFilter === 'all'
-                    ? attendances
-                    : attendances.filter(a => a.userName === selectedUserFilter);
-
                   const recentAttendances = filteredAttendances
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .slice(0, 10);
@@ -2309,7 +2310,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2358,7 +2359,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2407,7 +2408,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2493,7 +2494,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3371,7 +3372,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-500 to-yellow-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -97,13 +97,25 @@ export function DatePickerCalendar({
           <div className="flex gap-2 mt-2 text-xs">
             <button
               onClick={() => setSelectingStart(true)}
-              className={`px-2.5 py-1 rounded-md transition ${selectingStart ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-2.5 py-1 rounded-md transition ${
+                selectingStart
+                  ? selectedColor === 'orange'
+                    ? 'bg-orange-100 text-orange-700 font-medium'
+                    : 'bg-blue-100 text-blue-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               시작일자
             </button>
             <button
               onClick={() => setSelectingStart(false)}
-              className={`px-2.5 py-1 rounded-md transition ${!selectingStart ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-2.5 py-1 rounded-md transition ${
+                !selectingStart
+                  ? selectedColor === 'orange'
+                    ? 'bg-orange-100 text-orange-700 font-medium'
+                    : 'bg-blue-100 text-blue-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               종료일자
             </button>
