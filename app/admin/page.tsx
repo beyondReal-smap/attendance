@@ -912,7 +912,7 @@ export default function AdminPage() {
           </div>
 
           {/* 세그먼티드 컨트롤 */}
-          <div className="px-6 md:px-8 lg:px-12 py-3">
+          <div className="px-6 md:px-8 lg:px-12">
             <div className="flex bg-gray-100 rounded-lg p-1 max-w-full overflow-x-auto">
               <button
                 onClick={() => setActiveTab('dashboard')}
