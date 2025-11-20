@@ -1035,7 +1035,7 @@ export default function AdminPage() {
               <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg px-4 py-2 border border-yellow-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-yellow-600">이번 달 기록</p>
+                    <p className="text-xs font-medium text-yellow-600">{dayjs().format('M월')} 기록</p>
                     <p className="text-2xl font-bold text-yellow-900">
                       {(() => {
                         const currentMonthStr = dayjs().format('YYYY-MM');
