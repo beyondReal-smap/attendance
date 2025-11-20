@@ -164,7 +164,9 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, annualLeaveTotal, compLeaveTotal, newPassword } = await request.json();
+    const requestData = await request.json();
+    console.log('받은 데이터:', requestData);
+    const { userId, annualLeaveTotal, compLeaveTotal, newPassword, isTempPassword } = requestData;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -173,15 +175,21 @@ export async function PUT(request: Request) {
     // 비밀번호 변경인 경우
     if (newPassword) {
       const hashedPassword = await hashPassword(newPassword);
+      const tempPasswordValue = isTempPassword !== undefined ? (isTempPassword ? 1 : 0) : 0;
+      console.log('비밀번호 변경 처리:', { userId, tempPasswordValue, isTempPassword });
+
       try {
-        await sql`
+        const result = await sql`
           UPDATE atnd_users
-          SET password = ${hashedPassword}, is_temp_password = 0
+          SET password = ${hashedPassword}, is_temp_password = ${tempPasswordValue}
           WHERE id = ${userId}
         `;
+        console.log('업데이트 결과:', result);
       } catch (e: any) {
+        console.error('업데이트 에러:', e);
         // is_temp_password 컬럼이 없는 경우
         if (e.message?.includes('Unknown column')) {
+          console.log('is_temp_password 컬럼 없음, password만 업데이트');
           await sql`
             UPDATE atnd_users
             SET password = ${hashedPassword}

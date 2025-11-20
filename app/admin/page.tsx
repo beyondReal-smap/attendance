@@ -174,6 +174,8 @@ export default function AdminPage() {
 
   // 일괄 생성 모달 상태
   const [showBulkCreateModal, setShowBulkCreateModal] = useState(false);
+  const [showUserActionModal, setShowUserActionModal] = useState(false);
+  const [selectedUserForAction, setSelectedUserForAction] = useState<User | null>(null);
   const [bulkCreateYear, setBulkCreateYear] = useState(new Date().getFullYear().toString());
   const [bulkCreateLoading, setBulkCreateLoading] = useState(false);
 
@@ -193,7 +195,7 @@ export default function AdminPage() {
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
-    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen;
+    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen || showUserActionModal;
 
     if (hasModalOpen) {
       // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
@@ -729,9 +731,9 @@ export default function AdminPage() {
 
   // 사용자 추가 핸들러
   const handleAddUser = async () => {
-    if (!newUserUsername.trim() || !newUserName.trim()) {
+    if (!newUserUsername.trim() || !newUserName.trim() || !newUserDepartment.trim()) {
       setAlertTitle('오류');
-      setAlertMessage('사번과 이름을 모두 입력해주세요.');
+      setAlertMessage('사번, 이름, 소속을 모두 입력해주세요.');
       setAlertType('error');
       setAlertModalOpen(true);
       return;
@@ -835,16 +837,27 @@ export default function AdminPage() {
     const newPassword = generatePassword();
 
     try {
+      const requestData = {
+        userId: user.id,
+        newPassword: newPassword,
+        isTempPassword: true, // 4자리 랜덤 숫자이므로 임시비밀번호
+      };
+      console.log('비밀번호 변경 요청 데이터:', requestData);
+
       const res = await fetch('/api/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          newPassword: newPassword,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (res.ok) {
+        // 로컬 상태에서 임시비밀번호 플래그 유지 (새 비밀번호도 임시비밀번호)
+        setUsers(prevUsers =>
+          prevUsers.map(u =>
+            u.id === userId ? { ...u, isTempPassword: true } : u
+          )
+        );
+
         setAlertTitle('성공');
         setAlertMessage(`${user.name}님의 비밀번호가 ${newPassword}로 변경되었습니다.`);
         setAlertType('success');
@@ -894,7 +907,7 @@ export default function AdminPage() {
                 <h1 className="text-xl font-bold text-gray-900">관리자</h1>
                 <p className="text-xs text-gray-500 mt-0.5">사용자 및 근태 관리</p>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <button
                   onClick={() => router.push('/calendar')}
                   className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
@@ -916,7 +929,7 @@ export default function AdminPage() {
             <div className="flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`flex-1 flex items-center justify-center gap-4 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'dashboard'
                     ? 'bg-blue-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -927,7 +940,7 @@ export default function AdminPage() {
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex-1 flex items-center justify-center gap-4 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                     activeTab === 'users'
                       ? 'bg-blue-500 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -938,7 +951,7 @@ export default function AdminPage() {
               )}
               <button
                 onClick={() => setActiveTab('leave')}
-                className={`flex-1 flex items-center justify-center gap-4 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'leave'
                     ? 'bg-blue-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -948,7 +961,7 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={() => setActiveTab('list')}
-                className={`flex-1 flex items-center justify-center gap-4 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'list'
                     ? 'bg-blue-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -964,12 +977,12 @@ export default function AdminPage() {
           {/* 대시보드 */}
           {activeTab === 'dashboard' && (
           <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center gap-4 py-3 mb-8">
+            <div className="flex items-center gap-2 py-3 mb-2">
               <span className="text-3xl">📊</span>
               <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-2 mb-8">
               {/* 총 사용자 수 */}
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-4 py-3 border border-blue-200">
                 <div className="flex items-center justify-between">
@@ -1110,12 +1123,15 @@ export default function AdminPage() {
           {/* 사용자 추가 - 관리자만 표시 */}
           {activeTab === 'users' && currentUserRole === 'admin' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
-            <div className="flex items-center gap-4 py-3 mb-8">
+            <div className="flex items-center gap-2 py-3 mb-2">
               <span className="text-3xl">👥</span>
               <h2 className="text-xl font-bold text-gray-900">사용자</h2>
             </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-3">
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold text-gray-900">
+                사용자 등록
+              </h3>
+              <div className="grid grid-cols-2 gap-2 py-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사번
@@ -1148,7 +1164,7 @@ export default function AdminPage() {
                     type="text"
                     value={newUserDepartment}
                     onChange={(e) => setNewUserDepartment(e.target.value)}
-                    placeholder="소속을 입력하세요 (선택사항)"
+                    placeholder="소속을 입력하세요"
                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
@@ -1172,13 +1188,13 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
                 <div className="text-sm text-blue-700">
                   <div className="font-medium mb-1">자동 생성 비밀번호:</div>
                   <div className="text-lg font-mono font-bold">
                     {generatedPassword || '사용자 추가 시 자동 생성됩니다'}
                   </div>
-                  <div className="text-xs mt-1 text-blue-600">
+                  <div className="text-xs mt-1 text-blue-600 word-break-keep">
                     4자리 숫자로 자동 생성되며, 첫 로그인 시 비밀번호 변경이 필요합니다.
                   </div>
                 </div>
@@ -1203,53 +1219,42 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   users.map((user) => (
-                    <div key={user.id} className="bg-white rounded-lg px-4 py-3 border border-blue-100 hover:border-blue-200 transition">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 py-3">
-                            <img
-                              src={getAvatarImage(user.id)}
-                              alt={user.name}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{user.username}</h4>
-                              <p className="text-sm text-gray-500">{user.name}</p>
-                              {user.department && (
-                                <p className="text-sm text-gray-600">{user.department}</p>
-                              )}
-                              <div className="flex gap-4 mt-1">
-                                <span className={`inline-flex px-3 py-1 rounded-md text-xs font-medium ${
-                                  user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
-                                  user.role === 'manager' ? 'bg-green-100 text-green-700' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {user.role === 'admin' ? '관리자' :
-                                   user.role === 'manager' ? '중간관리자' :
-                                   '사용자'}
-                                </span>
-                                {user.isTempPassword && (
-                                  <span className="inline-flex px-3 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
-                                    임시비밀번호
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                    <div
+                      key={user.id}
+                      className="bg-white rounded-lg px-4 py-3 border border-blue-100 hover:border-blue-200 transition cursor-pointer"
+                      onClick={() => {
+                        setSelectedUserForAction(user);
+                        setShowUserActionModal(true);
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={getAvatarImage(user.id)}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{user.username}</h4>
+                          <p className="text-sm text-gray-500">{user.name}</p>
+                          {user.department && (
+                            <p className="text-sm text-gray-600">{user.department}</p>
+                          )}
+                          <div className="flex gap-2 mt-1">
+                            <span className={`inline-flex px-3 py-1 rounded-md text-xs font-medium ${
+                              user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                              user.role === 'manager' ? 'bg-green-100 text-green-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {user.role === 'admin' ? '관리자' :
+                               user.role === 'manager' ? '중간관리자' :
+                               '사용자'}
+                            </span>
+                            {user.isTempPassword && (
+                              <span className="inline-flex px-3 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
+                                임시비밀번호
+                              </span>
+                            )}
                           </div>
-                        </div>
-                        <div className="flex flex-col gap-4">
-                          <button
-                            onClick={() => handleChangePassword(user.id)}
-                            className="px-3 py-1 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition whitespace-nowrap"
-                          >
-                            비밀번호 변경
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition whitespace-nowrap"
-                          >
-                            사용자 삭제
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -1260,18 +1265,89 @@ export default function AdminPage() {
           </div>
           )}
 
+          {/* 사용자 액션 모달 */}
+          {showUserActionModal && selectedUserForAction && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
+              >
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={getAvatarImage(selectedUserForAction.id)}
+                      alt={selectedUserForAction.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{selectedUserForAction.username}</h3>
+                      <p className="text-blue-100 text-sm">{selectedUserForAction.name}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowUserActionModal(false);
+                        setSelectedUserForAction(null);
+                      }}
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                    >
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 내용 */}
+                <div className="px-6 py-4">
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        handleChangePassword(selectedUserForAction.id);
+                        setShowUserActionModal(false);
+                        setSelectedUserForAction(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 hover:bg-yellow-100 transition"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H7l1 4H3l2-6H1l2.25-3A6 6 0 0115 7z" />
+                      </svg>
+                      <span className="font-medium">임시비밀번호 발급</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleDeleteUser(selectedUserForAction.id);
+                        setShowUserActionModal(false);
+                        setSelectedUserForAction(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span className="font-medium">사용자 삭제</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
           {activeTab === 'leave' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-red-200 shadow-lg">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 py-3">
                 <span className="text-3xl">📅</span>
                 <h2 className="text-xl font-bold text-gray-900">연차/체휴</h2>
               </div>
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setShowBulkCreateModal(true)}
-                  className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-4"
+                  className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1280,29 +1356,29 @@ export default function AdminPage() {
                 </button>
               )}
             </div>
-            <div className="space-y-3 max-h-[800px] overflow-y-auto scrollbar-hide">
+            <div className="space-y-2 max-h-[800px] overflow-y-auto scrollbar-hide">
               {users.map((user) => (
-                <div key={user.id} className="bg-white rounded-xl px-4 py-3 border border-gray-200 hover:border-gray-300 transition">
+                <div
+                  key={user.id}
+                  className={`bg-white rounded-xl px-3 py-2 border border-gray-200 hover:border-gray-300 transition ${
+                    currentUserRole === 'admin' ? 'cursor-pointer' : ''
+                  }`}
+                  onClick={() => {
+                    if (currentUserRole === 'admin') {
+                      setEditingUser(user);
+                      setAnnualLeaveTotal(user.annualLeaveTotal.toString());
+                      setCompLeaveTotal(user.compLeaveTotal.toString());
+                    }
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-900">{user.username}</h3>
                       <p className="text-xs text-gray-500">{user.name}</p>
                     </div>
-                    {currentUserRole === 'admin' && (
-                      <button
-                        onClick={() => {
-                          setEditingUser(user);
-                          setAnnualLeaveTotal(user.annualLeaveTotal.toString());
-                          setCompLeaveTotal(user.compLeaveTotal.toString());
-                        }}
-                        className="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
-                      >
-                        수정
-                      </button>
-                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4 py-3">
-                    <div className="bg-red-50 border border-red-100 rounded-lg p-2.5">
+                  <div className="grid grid-cols-2 gap-3 py-2">
+                    <div className="bg-red-50 border border-red-100 rounded-lg p-2">
                       <div className="text-xs text-red-600 font-medium mb-1">연차</div>
                       <div className="flex items-baseline gap-1">
                         <div className="text-lg font-bold text-red-700">
@@ -1313,7 +1389,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2.5">
+                    <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2">
                       <div className="text-xs text-yellow-600 font-medium mb-1">체휴</div>
                       <div className="flex items-baseline gap-1">
                         <div className="text-lg font-bold text-yellow-700">
@@ -1335,7 +1411,7 @@ export default function AdminPage() {
                 <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                   {/* 헤더 */}
                   <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                    <div className="flex items-center gap-4 py-3">
+                    <div className="flex items-center gap-2 py-3">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1353,7 +1429,7 @@ export default function AdminPage() {
                     <div className="space-y-4">
                       {/* 사용자 정보 */}
                       <div className="px-4 py-3 bg-green-50 rounded-lg border border-green-100">
-                        <div className="flex items-center gap-4 py-3">
+                        <div className="flex items-center gap-2 py-3">
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1367,7 +1443,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 입력 필드들 */}
-                      <div className="grid grid-cols-2 gap-4 py-3">
+                      <div className="grid grid-cols-2 gap-2 py-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             연차 총 수
@@ -1406,13 +1482,13 @@ export default function AdminPage() {
 
                       {/* 현재 정보 표시 */}
                       <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-4 mb-2">
+                        <div className="flex items-center gap-2 mb-2">
                           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <p className="text-xs text-gray-500 font-medium">현재 정보</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 py-3 text-sm">
+                        <div className="grid grid-cols-2 gap-2 py-3 text-sm">
                           <div>
                             <p className="text-gray-500">연차</p>
                             <p className="font-semibold text-gray-900">{editingUser.annualLeaveTotal}일 (사용: {editingUser.annualLeaveUsed}일)</p>
@@ -1425,7 +1501,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 버튼들 */}
-                      <div className="flex gap-4 py-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
                         <button
                           onClick={() => {
                             setEditingUser(null);
@@ -1438,7 +1514,7 @@ export default function AdminPage() {
                         </button>
                         <button
                           onClick={() => handleUpdateUserLeave(editingUser.id)}
-                          className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-4"
+                          className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1458,7 +1534,7 @@ export default function AdminPage() {
                 <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                   {/* 헤더 */}
                   <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                    <div className="flex items-center gap-4 py-3">
+                    <div className="flex items-center gap-2 py-3">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -1476,7 +1552,7 @@ export default function AdminPage() {
                     <div className="space-y-4">
                       {/* 생성 정보 */}
                       <div className="px-4 py-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-4 py-3">
+                        <div className="flex items-start gap-2 py-3">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                             <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1484,7 +1560,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex-1">
                             <p className="text-sm text-blue-900 font-medium mb-2">생성될 휴가 정보</p>
-                            <div className="grid grid-cols-3 gap-4 py-3 text-sm">
+                            <div className="grid grid-cols-3 gap-2 py-3 text-sm">
                               <div className="text-center">
                                 <p className="text-blue-600 font-semibold">연차</p>
                                 <p className="text-blue-800">15일</p>
@@ -1504,7 +1580,7 @@ export default function AdminPage() {
 
                       {/* 경고 메시지 */}
                       <div className="px-4 py-3 bg-amber-50 rounded-lg border border-amber-200">
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-2">
                           <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
@@ -1531,7 +1607,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 버튼들 */}
-                      <div className="flex gap-4 py-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
                         <button
                           onClick={() => {
                             setShowBulkCreateModal(false);
@@ -1545,7 +1621,7 @@ export default function AdminPage() {
                         <button
                           onClick={handleBulkCreateLeave}
                           disabled={bulkCreateLoading}
-                          className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4"
+                          className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {bulkCreateLoading ? (
                             <>
@@ -1584,7 +1660,7 @@ export default function AdminPage() {
                 {/* 헤더 */}
                 {showStartCalendar && (
                   <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                    <div className="flex items-center gap-4 py-3">
+                    <div className="flex items-center gap-2 py-3">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1606,7 +1682,7 @@ export default function AdminPage() {
 
                 {showEndCalendar && (
                   <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                    <div className="flex items-center gap-4 py-3">
+                    <div className="flex items-center gap-2 py-3">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1658,15 +1734,15 @@ export default function AdminPage() {
           {/* Attendance List */}
           {activeTab === 'list' && (
           <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 py-3">
               <span className="text-3xl">📋</span>
               <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <button
                   onClick={downloadXLSX}
-                  className="flex items-center gap-4 px-3 py-3 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
+                  className="flex items-center gap-2 px-3 py-3 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
                 >
                   <FiDownload className="w-4 h-4" />
                   Excel
@@ -1678,8 +1754,8 @@ export default function AdminPage() {
             <div className="mb-8 px-4 py-3 bg-gray-50 rounded-lg">
               {/* 필터 타입 토글 */}
               <div className="mb-4">
-                <div className="flex items-center gap-4 py-3">
-                  <label className="flex items-center gap-4 cursor-pointer">
+                <div className="flex items-center gap-2 py-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="filterType"
@@ -1689,7 +1765,7 @@ export default function AdminPage() {
                     />
                     <span className="text-sm font-medium text-gray-700">월별 조회</span>
                   </label>
-                  <label className="flex items-center gap-4 cursor-pointer ml-4">
+                  <label className="flex items-center gap-2 cursor-pointer ml-4">
                     <input
                       type="radio"
                       name="filterType"
@@ -1702,7 +1778,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 py-3">
                 {!useDateRange ? (
                   // 월 선택
                   <div>
@@ -1778,9 +1854,9 @@ export default function AdminPage() {
               {/* 뷰 모드 토글 (월별 조회일 때만) */}
               {!useDateRange && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     
-                    <div className="flex gap-4">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setViewMode('calendar')}
                         className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
@@ -1941,7 +2017,7 @@ export default function AdminPage() {
               <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1957,7 +2033,7 @@ export default function AdminPage() {
                 {/* 내용 */}
                 <div className="p-6">
                   <div className="mb-8">
-                    <div className="flex items-start gap-4 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-start gap-2 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -1975,13 +2051,13 @@ export default function AdminPage() {
                   {/* 근태 정보 */}
                   <div className="space-y-3 mb-8">
                     <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-4 mb-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <p className="text-xs text-gray-500 font-medium">삭제할 근태 정보</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 py-3 text-sm">
+                      <div className="grid grid-cols-2 gap-2 py-3 text-sm">
                         <div>
                           <p className="text-xs text-gray-500">날짜</p>
                           <p className="font-semibold text-gray-900">{attendanceToDelete.date}</p>
@@ -2009,7 +2085,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 버튼들 */}
-                  <div className="flex gap-4 py-3 pt-4 border-t border-gray-200">
+                  <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
                         setDeleteModalOpen(false);
@@ -2022,7 +2098,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       onClick={confirmDelete}
-                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-4"
+                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2041,7 +2117,7 @@ export default function AdminPage() {
               <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
@@ -2057,7 +2133,7 @@ export default function AdminPage() {
                 {/* 내용 */}
                 <div className="p-6">
                   <div className="mb-8">
-                    <div className="flex items-start gap-4 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-start gap-2 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -2088,13 +2164,13 @@ export default function AdminPage() {
                   {/* 사용자 정보 */}
                   <div className="space-y-3 mb-8">
                     <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-4 mb-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <p className="text-xs text-gray-500 font-medium">삭제할 사용자 정보</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 py-3 text-sm">
+                      <div className="grid grid-cols-2 gap-2 py-3 text-sm">
                         <div>
                           <p className="text-xs text-gray-500">사번</p>
                           <p className="font-semibold text-gray-900">{userToDelete.username}</p>
@@ -2122,7 +2198,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 버튼들 */}
-                  <div className="flex gap-4 py-3 pt-4 border-t border-gray-200">
+                  <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
                         setUserDeleteModalOpen(false);
@@ -2134,7 +2210,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       onClick={confirmDeleteUser}
-                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-4"
+                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
@@ -2167,7 +2243,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2216,7 +2292,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2265,7 +2341,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2303,7 +2379,7 @@ export default function AdminPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       월
                     </label>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-2">
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
                         const currentMonth = dayjs(selectedMonth).month() + 1;
                         const isSelected = currentMonth === month;
@@ -2351,7 +2427,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2373,7 +2449,7 @@ export default function AdminPage() {
                 <div className="px-4 py-3">
                   {/* 연도 선택 */}
                   <div className="mb-8">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-2">
                       {Array.from({ length: 10 }, (_, i) => dayjs().year() - 2 + i).map(year => {
                         const isSelected = dayjs(selectedMonth).year() === year;
 
@@ -2420,7 +2496,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -2455,7 +2531,7 @@ export default function AdminPage() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          <div className="flex items-center gap-4 py-3">
+                          <div className="flex items-center gap-2 py-3">
                             <img
                               src={getAvatarImage(user.id)}
                               alt={user.name}
@@ -2514,7 +2590,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -2546,7 +2622,7 @@ export default function AdminPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-4 py-3">
+                      <div className="flex items-center gap-2 py-3">
                         <img
                           src="/image/avatar1.png"
                           alt="사용자"
@@ -2570,7 +2646,7 @@ export default function AdminPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-4 py-3">
+                      <div className="flex items-center gap-2 py-3">
                         <img
                           src="/image/avatar2.png"
                           alt="중간관리자"
@@ -2594,7 +2670,7 @@ export default function AdminPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-4 py-3">
+                      <div className="flex items-center gap-2 py-3">
                         <img
                           src="/image/avatar3.png"
                           alt="관리자"
@@ -2623,7 +2699,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -2646,7 +2722,7 @@ export default function AdminPage() {
                   <div className="mb-8">
                     <div className="space-y-2">
                       {/* 첫 번째 행 - 연차, 체휴, 근무 */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
                             if (attendanceDetailModalOpen && isEditingAttendance) {
@@ -2662,7 +2738,7 @@ export default function AdminPage() {
                               : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">✈️</span>
                             <div>
                               <div className="font-medium text-xs">연차</div>
@@ -2685,7 +2761,7 @@ export default function AdminPage() {
                               : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">🏠</span>
                             <div>
                               <div className="font-medium text-xs">체휴</div>
@@ -2710,7 +2786,7 @@ export default function AdminPage() {
                               : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">❌</span>
                             <div>
                               <div className="font-medium text-xs">결근</div>
@@ -2720,7 +2796,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 두 번째 행 - 오전반차, 오후반차, 반반차 */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
                             if (attendanceDetailModalOpen && isEditingAttendance) {
@@ -2736,7 +2812,7 @@ export default function AdminPage() {
                               : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">🌅</span>
                             <div>
                               <div className="font-medium text-xs">오전반차</div>
@@ -2759,7 +2835,7 @@ export default function AdminPage() {
                               : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">🌆</span>
                             <div>
                               <div className="font-medium text-xs">오후반차</div>
@@ -2784,7 +2860,7 @@ export default function AdminPage() {
                               : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">🌄</span>
                             <div>
                               <div className="font-medium text-xs">반반차</div>
@@ -2794,7 +2870,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 세 번째 행 - 팀장대행, 동석(코칭), 교육 */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
                             if (attendanceDetailModalOpen && isEditingAttendance) {
@@ -2812,7 +2888,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">👔</span>
                             <div>
                               <div className="font-medium text-xs">팀장대행</div>
@@ -2837,7 +2913,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">👨‍🏫</span>
                             <div>
                               <div className="font-medium text-xs">동석(코칭)</div>
@@ -2862,7 +2938,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">📚</span>
                             <div>
                               <div className="font-medium text-xs">교육</div>
@@ -2872,7 +2948,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 네 번째 행 - 휴식, 출장, 장애 */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
                             if (attendanceDetailModalOpen && isEditingAttendance) {
@@ -2890,7 +2966,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">😴</span>
                             <div>
                               <div className="font-medium text-xs">휴식</div>
@@ -2915,7 +2991,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">🏢</span>
                             <div>
                               <div className="font-medium text-xs">출장</div>
@@ -2940,7 +3016,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">⚠️</span>
                             <div>
                               <div className="font-medium text-xs">장애</div>
@@ -2950,7 +3026,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 다섯 번째 행 - 기타, 연장근무 */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => {
                             if (attendanceDetailModalOpen && isEditingAttendance) {
@@ -2968,7 +3044,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">❓</span>
                             <div>
                               <div className="font-medium text-xs">기타</div>
@@ -2993,7 +3069,7 @@ export default function AdminPage() {
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">⏰</span>
                             <div>
                               <div className="font-medium text-xs">연장근무</div>
@@ -3031,7 +3107,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -3051,7 +3127,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="px-4 py-3 max-h-96 overflow-y-auto">
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
                       const minute = i % 2 === 0 ? '00' : '30';
@@ -3138,7 +3214,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -3158,7 +3234,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="px-4 py-3 max-h-96 overflow-y-auto">
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
                       const minute = i % 2 === 0 ? '00' : '30';
@@ -3229,7 +3305,7 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-4 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -3263,7 +3339,7 @@ export default function AdminPage() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-4 py-3">
+                      <div className="flex items-center gap-2 py-3">
                         <img
                           src="/image/avatar4.png"
                           alt="전체 사용자"
@@ -3297,7 +3373,7 @@ export default function AdminPage() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          <div className="flex items-center gap-4 py-3">
+                          <div className="flex items-center gap-2 py-3">
                             <img
                               src={getAvatarImage(user.id)}
                               alt={user.name}
@@ -3725,69 +3801,69 @@ function MonthlyAttendanceCalendar({
 
       {/* 범례 */}
       <div className={`${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-3'} bg-gray-50 border-t border-gray-200`}>
-        <div className="flex flex-col gap-4 py-3">
+        <div className="flex flex-col gap-2 py-3">
           {/* 시간 슬롯 색상 범례 (타임슬롯 모드에서만 표시) */}
           {viewMode === 'timeslot' && (
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
-        <div className="flex flex-wrap gap-4 py-3 text-xs">
-              <div className="flex items-center gap-4">
+        <div className="flex flex-wrap gap-2 py-3 text-xs">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-500 border border-gray-300 rounded"></div>
                 <span>연차</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-rose-500 border border-gray-300 rounded"></div>
                 <span>결근</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-orange-500 border border-gray-300 rounded"></div>
                 <span>오전반차</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-amber-500 border border-gray-300 rounded"></div>
                 <span>연장근무</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-yellow-500 border border-gray-300 rounded"></div>
                 <span>체휴</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-lime-500 border border-gray-300 rounded"></div>
                 <span>오후반차</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 border border-gray-300 rounded"></div>
                 <span>출장</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-emerald-500 border border-gray-300 rounded"></div>
                 <span>교육</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-teal-500 border border-gray-300 rounded"></div>
                 <span>휴식</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-cyan-500 border border-gray-300 rounded"></div>
                 <span>팀장대행</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 border border-gray-300 rounded"></div>
                 <span>동석(코칭)</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-indigo-500 border border-gray-300 rounded"></div>
                 <span>반반차</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-violet-500 border border-gray-300 rounded"></div>
                 <span>장애</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-purple-500 border border-gray-300 rounded"></div>
                 <span>기타</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
                 <span>근태 없음</span>
               </div>
