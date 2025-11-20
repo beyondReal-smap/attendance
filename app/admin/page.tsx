@@ -1928,9 +1928,9 @@ export default function AdminPage() {
                         return (
                           <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onClick={() => handleViewAttendance(attendance)}>
                             <td className="px-4 py-2 text-sm text-gray-900">
-                              {user?.username || attendance.userName}
+                              <div className="font-medium">{user?.username || attendance.userName}</div>
                               {user && (
-                                <span className="text-xs text-gray-500 ml-1">({user.name})</span>
+                                <div className="text-xs text-gray-500">({user.name})</div>
                               )}
                             </td>
                             <td className="px-4 py-2 text-sm text-gray-600">{attendance.date}</td>
@@ -3699,7 +3699,7 @@ function MonthlyAttendanceCalendar({
         </motion.button>
 
         <h3 className="text-lg font-bold text-gray-900">
-          {currentMonth.format('YYYY년 M월')} 근태 현황
+          {currentMonth.format('YYYY년 M월')}
         </h3>
 
         <motion.button
@@ -3716,7 +3716,7 @@ function MonthlyAttendanceCalendar({
       <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-2'}`}>
         <div className="min-w-max">
           {/* 일자 헤더 */}
-          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `120px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `120px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}>
+          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}>
             <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
               viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
             }`}>
@@ -3740,14 +3740,14 @@ function MonthlyAttendanceCalendar({
             <div
               key={user.id}
               className="grid border-b border-gray-100 hover:bg-gray-50 transition"
-              style={{ gridTemplateColumns: viewMode === 'calendar' ? `120px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `120px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}
+              style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}
             >
               {/* 사용자 이름 - 고정 */}
-              <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center ${
+              <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 ${
                 viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
               }`}>
-                {user.username}
-                <span className="text-xs text-gray-500 ml-1">({user.name})</span>
+                <div className="font-medium">{user.username}</div>
+                <div className="text-xs text-gray-500">({user.name})</div>
               </div>
 
               {/* 일자별 셀들 */}
