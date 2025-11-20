@@ -143,6 +143,7 @@ export default function AdminPage() {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error' | 'warning'>('info');
 
+
   // 근태 목록 필터링 상태
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
@@ -195,8 +196,9 @@ export default function AdminPage() {
   }, []);
 
   // 모달이 열려있을 때 body 스크롤 방지
+  const hasModalOpen = useMemo(() => showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen || showUserActionModal, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showYearPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen, attendanceDetailModalOpen, showUserActionModal]);
+
   useEffect(() => {
-    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen || showUserActionModal;
 
     if (hasModalOpen) {
       // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
@@ -213,7 +215,7 @@ export default function AdminPage() {
       document.body.style.overflow = 'unset';
       document.body.style.paddingRight = '0px';
     };
-  }, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showYearPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen]);
+  }, [hasModalOpen]);
 
   const checkAdminAndLoadData = async () => {
     try {
@@ -806,6 +808,7 @@ export default function AdminPage() {
   };
 
   // 사용자 삭제 핸들러
+  // 사용자 삭제 핸들러
   const handleDeleteUser = async (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (user) {
@@ -933,13 +936,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => router.push('/calendar')}
-                  className="px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all"
                 >
                   캘린더
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all"
                 >
                   로그아웃
                 </button>
@@ -3502,6 +3505,8 @@ function MonthlyAttendanceCalendar({
     setCurrentMonth(dayjs(selectedMonth));
   }, [selectedMonth]);
 
+
+
   const daysInMonth = currentMonth.daysInMonth();
 
   // 사용자별 근태 맵 생성
@@ -3744,7 +3749,7 @@ function MonthlyAttendanceCalendar({
           {/* 일자 헤더 */}
           <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 40px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 40px)` : `150px repeat(${daysInMonth}, 80px)` }}>
             <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
-              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
+              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
             }`}>
               사용자
             </div>
@@ -3752,7 +3757,7 @@ function MonthlyAttendanceCalendar({
               <div
                 key={day}
                 className={`text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)} ${
-                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0.5' : 'px-3 py-2'
+                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0' : 'px-3 py-2'
                 }`}
               >
                 <div className="font-bold">{day}</div>
@@ -3770,7 +3775,7 @@ function MonthlyAttendanceCalendar({
             >
               {/* 사용자 이름 - 고정 */}
               <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 ${
-                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
+                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
               }`}>
                 <div className="font-medium">{user.username}</div>
                 <div className="text-xs text-gray-500">({user.name})</div>
@@ -3788,7 +3793,7 @@ function MonthlyAttendanceCalendar({
                     key={day}
                     onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
                     className={`text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 ${
-                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[1rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[7rem]' : 'px-1 py-2 min-h-[7rem]'
+                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[0.75rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[6rem]' : 'px-1 py-2 min-h-[7rem]'
                     } ${
                       dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
                     } border-r border-gray-100 last:border-r-0`}
@@ -3929,6 +3934,7 @@ function MonthlyAttendanceCalendar({
         </div>
 
         </div>
+
     </div>
   );
 }
