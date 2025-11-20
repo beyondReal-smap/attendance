@@ -186,6 +186,24 @@ WHERE NOT EXISTS (
 -- ALTER TABLE atnd_users DROP COLUMN comp_leave_used;
 
 -- ============================================
+-- Step 7: AI 채팅 로그 테이블 생성
+-- ============================================
+
+-- AI 채팅 로그 테이블
+CREATE TABLE IF NOT EXISTS ai_chat_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    user_message TEXT NOT NULL,
+    ai_response TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES atnd_users(id) ON DELETE CASCADE
+);
+
+-- 인덱스 추가
+CREATE INDEX IF NOT EXISTS idx_ai_chat_logs_user_id ON ai_chat_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_logs_created_at ON ai_chat_logs(created_at);
+
+-- ============================================
 -- 완료 메시지
 -- ============================================
 SELECT 'Migration completed successfully!' as status;

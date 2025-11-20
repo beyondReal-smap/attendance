@@ -9,6 +9,7 @@ import { FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
 import { AttendanceType } from '@/types';
 import AttendanceModal from '@/components/AttendanceModal';
 import AlertModal from '@/components/AlertModal';
+import ReactMarkdown from 'react-markdown';
 
 dayjs.locale('ko');
 
@@ -694,7 +695,7 @@ export default function CalendarPage() {
               )}
               <button
                 onClick={() => setAiChatModalOpen(true)}
-                className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-all mr-2"
+                className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-all mr-1"
               >
                 AI 챗
               </button>
@@ -1013,7 +1014,7 @@ export default function CalendarPage() {
             </div>
 
             {/* 채팅 영역 */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-blue-50/40">
               {chatMessages.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1036,7 +1037,13 @@ export default function CalendarPage() {
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'user' ? (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      ) : (
+                        <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-code:text-gray-800 prose-pre:bg-gray-200 prose-pre:text-gray-800">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
