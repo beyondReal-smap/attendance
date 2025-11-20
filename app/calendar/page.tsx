@@ -477,7 +477,7 @@ export default function CalendarPage() {
 
     const userMessage = chatInput.trim();
     setChatInput('');
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }, { role: 'assistant', content: '' }]);
     setIsChatLoading(true);
 
     try {
@@ -491,14 +491,66 @@ export default function CalendarPage() {
         throw new Error('AI 채팅 요청 실패');
       }
 
-      const data = await response.json();
-      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedResponse = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+
+              if (data.type === 'token' || data.type === 'chunk') {
+                accumulatedResponse += data.content;
+                setChatMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  if (lastMessage.role === 'assistant') {
+                    lastMessage.content = accumulatedResponse;
+                  }
+                  return newMessages;
+                });
+              } else if (data.type === 'complete' || data.done) {
+                // 스트리밍 완료
+                break;
+              } else if (data.type === 'error') {
+                throw new Error(data.error || '스트리밍 중 오류 발생');
+              }
+            } catch (parseError) {
+              console.error('JSON 파싱 오류:', parseError, 'Line:', line);
+            }
+          }
+        }
+      } else {
+        // 스트리밍을 지원하지 않는 경우 폴백
+        const data = await response.json();
+        setChatMessages(prev => {
+          const newMessages = [...prev];
+          const lastMessage = newMessages[newMessages.length - 1];
+          if (lastMessage.role === 'assistant') {
+            lastMessage.content = data.response;
+          }
+          return newMessages;
+        });
+      }
+
     } catch (error) {
       console.error('AI 채팅 오류:', error);
-      setChatMessages(prev => [...prev, {
-        role: 'assistant',
-        content: '죄송합니다. AI 응답을 가져오는 중 오류가 발생했습니다.'
-      }]);
+      setChatMessages(prev => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage.role === 'assistant') {
+          lastMessage.content = '죄송합니다. AI 응답을 가져오는 중 오류가 발생했습니다.';
+        }
+        return newMessages;
+      });
     } finally {
       setIsChatLoading(false);
     }
@@ -1001,7 +1053,7 @@ export default function CalendarPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">AI 어시스턴트</h3>
+                <h3 className="text-lg font-semibold text-gray-900">AI 챗</h3>
               </div>
               <button
                 onClick={() => setAiChatModalOpen(false)}
