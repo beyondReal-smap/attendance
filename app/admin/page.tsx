@@ -1344,7 +1344,7 @@ export default function AdminPage() {
                       <span className="font-medium">임시비밀번호 발급</span>
                     </button>
 
-                    {selectedUserForAction.role !== 'user' && (
+                    {(currentUserRole === 'admin' || (currentUserRole === 'manager' && selectedUserForAction.role !== 'user')) && (
                       <button
                         onClick={() => {
                           handleDeleteUser(selectedUserForAction.id);
