@@ -17,14 +17,25 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTempPasswordUser, setIsTempPasswordUser] = useState(false);
+  const [rememberUsername, setRememberUsername] = useState(false);
 
-  // URL 파라미터 확인
+  // URL 파라미터 확인 및 저장된 사원번호 불러오기
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // URL 파라미터 확인
       const urlParams = new URLSearchParams(window.location.search);
       const tempPassword = urlParams.get('tempPassword');
       if (tempPassword === 'true') {
         setError('보안을 위해 반드시 새로운 비밀번호로 변경해주세요.');
+      }
+
+      // 로컬스토리지에서 저장된 사원번호 불러오기
+      const savedUsername = localStorage.getItem('savedUsername');
+      const rememberSetting = localStorage.getItem('rememberUsername') === 'true';
+
+      if (savedUsername && rememberSetting) {
+        setUsername(savedUsername);
+        setRememberUsername(true);
       }
     }
   }, []);
@@ -47,6 +58,15 @@ export default function LoginPage() {
         setError(data.error || '로그인에 실패했습니다.');
         setLoading(false);
         return;
+      }
+
+      // 사원번호 저장 설정 처리
+      if (rememberUsername) {
+        localStorage.setItem('savedUsername', username);
+        localStorage.setItem('rememberUsername', 'true');
+      } else {
+        localStorage.removeItem('savedUsername');
+        localStorage.removeItem('rememberUsername');
       }
 
       // 임시 비밀번호로 로그인한 경우 비밀번호 변경 모달 표시
@@ -207,6 +227,20 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* 사원번호 저장 옵션 */}
+            <div className="flex items-center">
+              <input
+                id="rememberUsername"
+                type="checkbox"
+                checked={rememberUsername}
+                onChange={(e) => setRememberUsername(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="rememberUsername" className="ml-2 block text-sm text-gray-700">
+                사원번호 저장
+              </label>
             </div>
 
             {error && (
