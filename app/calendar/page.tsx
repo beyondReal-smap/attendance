@@ -660,7 +660,6 @@ export default function CalendarPage() {
                   <div className="text-xs text-red-600 font-medium">연차</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-xl font-bold text-red-700">{user.annualLeaveRemaining}</span>
-                    <span className="text-sm text-red-600 font-medium">일</span>
                     <span className="text-xs text-red-500 font-medium">/{user.annualLeaveTotal}일</span>
                   </div>
                 </div>
@@ -670,7 +669,6 @@ export default function CalendarPage() {
                   <div className="text-xs text-yellow-600 font-medium">체휴</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-xl font-bold text-yellow-700">{user.compLeaveRemaining}</span>
-                    <span className="text-sm text-yellow-600 font-medium">일</span>
                     <span className="text-xs text-yellow-500 font-medium">/{user.compLeaveTotal}일</span>
                   </div>
                 </div>

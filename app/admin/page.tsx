@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { AttendanceType } from '@/types';
 import { DatePickerCalendar } from '@/components/DatePickerCalendar';
 import AlertModal from '@/components/AlertModal';
+import AttendanceDetailModal from '@/components/AttendanceDetailModal';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import { FiCalendar, FiDownload, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -33,6 +34,21 @@ const getAvatarImage = (userId: string): string => {
   const lastChar = userId.slice(-1);
   const index = parseInt(lastChar, 16) % avatarList.length; // 16진수로 변환하여 11로 나눔
   return `/image/${avatarList[index]}.png`;
+};
+
+// 시간을 한국어 형식으로 표시하는 헬퍼 함수
+const formatTimeKorean = (timeString?: string): string => {
+  if (!timeString) return '미정';
+
+  const [hours, minutes] = timeString.split(':');
+  const hour = parseInt(hours, 10);
+  const minute = parseInt(minutes, 10);
+
+  if (minute === 0) {
+    return `${hour}시`;
+  } else {
+    return `${hour}시 ${minute}분`;
+  }
 };
 
 // 30분 단위로 시간 계산 헬퍼 함수
@@ -113,6 +129,11 @@ export default function AdminPage() {
   const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
   const [attendanceDetailModalOpen, setAttendanceDetailModalOpen] = useState(false);
   const [attendanceToView, setAttendanceToView] = useState<Attendance | null>(null);
+  const [isEditingAttendance, setIsEditingAttendance] = useState(false);
+  const [editDate, setEditDate] = useState('');
+  const [editType, setEditType] = useState<AttendanceType>('연차');
+  const [editStartTime, setEditStartTime] = useState('');
+  const [editEndTime, setEditEndTime] = useState('');
   const [userDeleteModalOpen, setUserDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
@@ -125,6 +146,7 @@ export default function AdminPage() {
   // 근태 목록 필터링 상태
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
+  const [tempSelectedUserFilter, setTempSelectedUserFilter] = useState<string>('all');
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
@@ -140,8 +162,11 @@ export default function AdminPage() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // 뷰 모드 (테이블 / 캘린더)
-  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('calendar');
+  // 뷰 모드 (캘린더 / 테이블 / 타임슬롯)
+  const [viewMode, setViewMode] = useState<'table' | 'calendar' | 'timeslot'>('calendar');
+
+  // 탭 상태
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'leave' | 'list'>('dashboard');
 
   // 근태 추가 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
@@ -168,7 +193,7 @@ export default function AdminPage() {
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
-    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen;
+    const hasModalOpen = showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen;
 
     if (hasModalOpen) {
       // 스크롤바 너비만큼 padding-right을 추가해서 레이아웃 시프트 방지
@@ -235,6 +260,9 @@ export default function AdminPage() {
         data = [];
       }
 
+      // username 기준으로 정렬
+      data = data.sort((a: User, b: User) => a.username.localeCompare(b.username));
+
       setUsers(data);
 
       // 선택된 사용자가 필터링된 목록에 없는 경우 재설정
@@ -276,8 +304,20 @@ export default function AdminPage() {
   };
 
   // 필터링된 근태 데이터
-  const filteredAttendances = useMemo(() => {
-    return attendances.filter(attendance => {
+  const [filteredAttendances, setFilteredAttendances] = useState<Attendance[]>([]);
+  
+  // 필터링된 사용자 목록 (캘린더 뷰용)
+  const filteredUsers = useMemo(() => {
+    if (selectedUserFilter === 'all') {
+      return users;
+    }
+    return users.filter(user => user.username === selectedUserFilter);
+  }, [users, selectedUserFilter]);
+
+
+  // 필터 적용
+  useEffect(() => {
+    const result = attendances.filter(attendance => {
       // 날짜 필터링
       let dateMatch = true;
       if (useDateRange) {
@@ -301,7 +341,9 @@ export default function AdminPage() {
 
       return dateMatch && userMatch;
     });
-  }, [attendances, selectedMonth, selectedUserFilter, useDateRange, startDateFilter, endDateFilter]);
+    setFilteredAttendances(result);
+  }, [selectedUserFilter, attendances, selectedMonth, useDateRange, startDateFilter, endDateFilter]);
+
 
   // CSV 다운로드 함수
   const downloadCSV = () => {
@@ -314,7 +356,7 @@ export default function AdminPage() {
     }
 
     const csvData = filteredAttendances.map(attendance => {
-      const user = users.find(u => u.name === attendance.userName);
+      const user = users.find(u => u.username === attendance.userName);
       return {
         '사용자': attendance.userName,
         '사번': user?.username || '',
@@ -349,7 +391,7 @@ export default function AdminPage() {
     }
 
     const worksheetData = filteredAttendances.map(attendance => {
-      const user = users.find(u => u.name === attendance.userName);
+      const user = users.find(u => u.username === attendance.userName);
       // 근태 시간 계산 (30분 단위)
       const timeSlots = calculateTimeSlots(attendance.startTime, attendance.endTime, attendance.type);
       const hours = (timeSlots * 0.5).toFixed(1);
@@ -581,6 +623,60 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdateAttendance = async (data: {
+    id: string;
+    startDate: string;
+    endDate: string;
+    type: AttendanceType;
+    startTime?: string;
+    endTime?: string;
+  }) => {
+    try {
+      // 현재는 단일 날짜 수정만 지원하므로 startDate를 date로 사용
+      const res = await fetch('/api/attendance/admin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: data.id,
+          date: data.startDate, // startDate를 date로 사용
+          type: data.type,
+          startTime: data.startTime || null,
+          endTime: data.endTime || null,
+          reason: attendanceToView?.reason || null,
+        }),
+      });
+
+      if (res.ok) {
+        // 근태 목록 새로고침
+        const userRole = localStorage.getItem('userRole') || undefined;
+        const userDepartment = localStorage.getItem('userDepartment') || undefined;
+        await loadAttendances(userRole, userDepartment);
+
+        setAlertTitle('성공');
+        setAlertMessage('근태가 수정되었습니다.');
+        setAlertType('success');
+        setAlertModalOpen(true);
+
+        // 수정 모드 종료 및 모달 닫기
+        setIsEditingAttendance(false);
+        setAttendanceDetailModalOpen(false);
+        setAttendanceToView(null);
+      } else {
+        const errorData = await res.json();
+        setAlertTitle('오류');
+        setAlertMessage(errorData.error || '근태 수정에 실패했습니다.');
+        setAlertType('error');
+        setAlertModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      setAlertTitle('오류');
+      setAlertMessage('근태 수정 중 오류가 발생했습니다.');
+      setAlertType('error');
+      setAlertModalOpen(true);
+    }
+  };
+
   const handleViewAttendance = (attendance: Attendance) => {
     setAttendanceToView(attendance);
     setAttendanceDetailModalOpen(true);
@@ -782,24 +878,78 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl lg:max-w-7xl xl:max-w-full mx-auto bg-white min-h-screen">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 md:px-8 lg:px-12 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">관리자</h1>
-              <p className="text-xs text-gray-500 mt-0.5">사용자 및 근태 관리</p>
+        <div className="sticky top-0 z-50 bg-white border-b-2 border-blue-200">
+          <div className="px-6 md:px-8 lg:px-12 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">관리자</h1>
+                <p className="text-xs text-gray-500 mt-0.5">사용자 및 근태 관리</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => router.push('/calendar')}
+                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                >
+                  캘린더
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                >
+                  로그아웃
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
+          </div>
+
+          {/* 세그먼티드 컨트롤 */}
+          <div className="px-6 md:px-8 lg:px-12 py-3">
+            <div className="flex bg-gray-100 rounded-lg p-1 max-w-full overflow-x-auto">
               <button
-                onClick={() => router.push('/calendar')}
-                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                onClick={() => setActiveTab('dashboard')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  activeTab === 'dashboard'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
-                캘린더
+                <span>📊</span>
+                <span>대시보드</span>
+              </button>
+              {currentUserRole === 'admin' && (
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                    activeTab === 'users'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span>👥</span>
+                  <span>사용자</span>
+                </button>
+              )}
+              <button
+                onClick={() => setActiveTab('leave')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  activeTab === 'leave'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span>📅</span>
+                <span>연차/체휴</span>
               </button>
               <button
-                onClick={handleLogout}
-                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                onClick={() => setActiveTab('list')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  activeTab === 'list'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
-                로그아웃
+                <span>📋</span>
+                <span>근태목록</span>
               </button>
             </div>
           </div>
@@ -807,26 +957,27 @@ export default function AdminPage() {
 
         <div className="p-6 md:p-8 lg:p-12 space-y-8">
           {/* 대시보드 */}
-          <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-green-200 shadow-lg">
+          {activeTab === 'dashboard' && (
+          <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-purple-200 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* 총 사용자 수 */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600 mb-1">총 사용자</p>
-                    <p className="text-3xl font-bold text-blue-900">{users.length}</p>
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-blue-600">총 사용자</p>
+                    <p className="text-2xl font-bold text-blue-900">{users.length}</p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                     </svg>
                   </div>
@@ -834,22 +985,26 @@ export default function AdminPage() {
               </div>
 
               {/* 오늘 근태 현황 */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-600 mb-1">오늘 근태</p>
-                    <p className="text-3xl font-bold text-green-900">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-purple-600">오늘 근태</p>
+                    <p className="text-2xl font-bold text-purple-900">
                       {(() => {
                         const today = dayjs().format('YYYY-MM-DD');
-                        const todayAttendances = attendances.filter(a => a.date === today);
+                        const todayAttendances = attendances.filter(a => {
+                          const dateMatch = a.date === today;
+                          const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
+                          return dateMatch && userMatch;
+                        });
                         const uniqueUsers = new Set(todayAttendances.map(a => a.userId));
                         return uniqueUsers.size;
                       })()}
                     </p>
-                    <p className="text-xs text-green-600 mt-1">근태자 수</p>
+                    <p className="text-xs text-purple-600">근태자 수</p>
                   </div>
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -857,20 +1012,24 @@ export default function AdminPage() {
               </div>
 
               {/* 이번 달 근태 기록 수 */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border border-yellow-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-600 mb-1">이번 달 기록</p>
-                    <p className="text-3xl font-bold text-purple-900">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-yellow-600">이번 달 기록</p>
+                    <p className="text-2xl font-bold text-yellow-900">
                       {(() => {
                         const currentMonthStr = dayjs().format('YYYY-MM');
-                        return attendances.filter(a => a.date.startsWith(currentMonthStr)).length;
+                        return attendances.filter(a => {
+                          const dateMatch = a.date.startsWith(currentMonthStr);
+                          const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
+                          return dateMatch && userMatch;
+                        }).length;
                       })()}
                     </p>
-                    <p className="text-xs text-purple-600 mt-1">총 근태 수</p>
+                    <p className="text-xs text-yellow-600">총 근태 수</p>
                   </div>
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -878,20 +1037,20 @@ export default function AdminPage() {
               </div>
 
               {/* 연차 사용 현황 */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-600 mb-1">연차 잔여</p>
-                    <p className="text-3xl font-bold text-orange-900">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-orange-600">연차 잔여</p>
+                    <p className="text-2xl font-bold text-orange-900">
                       {(() => {
                         const currentYear = new Date().getFullYear();
                         return users.reduce((total, user) => total + (user.annualLeaveRemaining || 0), 0);
                       })()}
                     </p>
-                    <p className="text-xs text-orange-600 mt-1">총 잔여 일수</p>
+                    <p className="text-xs text-orange-600">총 잔여 일수</p>
                   </div>
-                  <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -909,7 +1068,11 @@ export default function AdminPage() {
                   <h4 className="text-base font-semibold text-gray-900 mb-4">근태 유형별 분포</h4>
                   <div className="h-64">
                     {(() => {
-                      const typeStats = attendances.reduce((acc, attendance) => {
+                      const filteredAttendances = selectedUserFilter === 'all'
+                        ? attendances
+                        : attendances.filter(a => a.userName === selectedUserFilter);
+
+                      const typeStats = filteredAttendances.reduce((acc, attendance) => {
                         acc[attendance.type] = (acc[attendance.type] || 0) + 1;
                         return acc;
                       }, {} as Record<string, number>);
@@ -1019,132 +1182,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 월별 근태 추이 - 선 그래프 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h4 className="text-base font-semibold text-gray-900 mb-4">최근 6개월 근태 추이</h4>
-                  <div className="h-64">
-                    {(() => {
-                      const monthlyStats = [];
-                      for (let i = 5; i >= 0; i--) {
-                        const date = dayjs().subtract(i, 'month');
-                        const monthStr = date.format('YYYY-MM');
-                        const count = attendances.filter(a => a.date.startsWith(monthStr)).length;
-                        monthlyStats.push({
-                          month: date.format('M월'),
-                          count,
-                          fullMonth: date.format('YYYY년 M월')
-                        });
-                      }
 
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={monthlyStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                            <XAxis
-                              dataKey="month"
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 12, fill: '#6b7280' }}
-                            />
-                            <YAxis
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 12, fill: '#6b7280' }}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                              }}
-                              formatter={(value: any, name: any, props: any) => [
-                                `${value}건`,
-                                '근태 기록 수'
-                              ]}
-                              labelFormatter={(label, payload) => {
-                                if (payload && payload[0]) {
-                                  return payload[0].payload.fullMonth;
-                                }
-                                return label;
-                              }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="count"
-                              stroke="#3b82f6"
-                              strokeWidth={3}
-                              dot={{
-                                fill: '#3b82f6',
-                                strokeWidth: 2,
-                                stroke: '#ffffff',
-                                r: 5
-                              }}
-                              activeDot={{
-                                r: 7,
-                                fill: '#1d4ed8',
-                                stroke: '#ffffff',
-                                strokeWidth: 2
-                              }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {/* 요일별 근태 패턴 - 막대 그래프 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h4 className="text-base font-semibold text-gray-900 mb-4">요일별 근태 패턴</h4>
-                  <div className="h-64">
-                    {(() => {
-                      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-                      const dayStats = dayNames.map(day => ({ day, count: 0 }));
-
-                      attendances.forEach(attendance => {
-                        const date = dayjs(attendance.date);
-                        const dayIndex = date.day(); // 0: 일요일, 1: 월요일, ...
-                        dayStats[dayIndex].count++;
-                      });
-
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={dayStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                            <XAxis
-                              dataKey="day"
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 12, fill: '#6b7280' }}
-                            />
-                            <YAxis
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 12, fill: '#6b7280' }}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                              }}
-                              formatter={(value: any) => [`${value}건`, '근태 기록 수']}
-                              labelFormatter={(label) => `${label}요일`}
-                            />
-                            <Bar
-                              dataKey="count"
-                              fill="#10b981"
-                              radius={[4, 4, 0, 0]}
-                              name="근태 기록 수"
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -1153,7 +1191,11 @@ export default function AdminPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {(() => {
-                  const recentAttendances = attendances
+                  const filteredAttendances = selectedUserFilter === 'all'
+                    ? attendances
+                    : attendances.filter(a => a.userName === selectedUserFilter);
+
+                  const recentAttendances = filteredAttendances
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .slice(0, 10);
 
@@ -1164,10 +1206,19 @@ export default function AdminPage() {
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${
                             attendance.type === '연차' ? 'bg-red-500' :
+                            attendance.type === '결근' ? 'bg-rose-500' :
                             attendance.type === '오전반차' ? 'bg-orange-500' :
-                            attendance.type === '오후반차' ? 'bg-green-500' :
-                            attendance.type === '반반차' ? 'bg-purple-500' :
+                            attendance.type === '연장근무' ? 'bg-amber-500' :
                             attendance.type === '체휴' ? 'bg-yellow-500' :
+                            attendance.type === '오후반차' ? 'bg-lime-500' :
+                            attendance.type === '출장' ? 'bg-green-500' :
+                            attendance.type === '교육' ? 'bg-emerald-500' :
+                            attendance.type === '휴식' ? 'bg-teal-500' :
+                            attendance.type === '팀장대행' ? 'bg-cyan-500' :
+                            attendance.type === '동석(코칭)' ? 'bg-blue-500' :
+                            attendance.type === '반반차' ? 'bg-indigo-500' :
+                            attendance.type === '장애' ? 'bg-violet-500' :
+                            attendance.type === '기타' ? 'bg-purple-500' :
                             'bg-gray-500'
                           }`}></div>
                           <div>
@@ -1185,9 +1236,10 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* 사용자 추가 - 관리자만 표시 */}
-          {currentUserRole === 'admin' && (
+          {activeTab === 'users' && currentUserRole === 'admin' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1195,7 +1247,7 @@ export default function AdminPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-900">사용자 추가</h2>
+              <h2 className="text-xl font-bold text-gray-900">사용자</h2>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1344,7 +1396,7 @@ export default function AdminPage() {
           )}
 
           {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
-          {currentUserRole === 'admin' && (
+          {activeTab === 'leave' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-red-200 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -1353,19 +1405,21 @@ export default function AdminPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">연차/체휴 설정</h2>
+                <h2 className="text-xl font-bold text-gray-900">연차/체휴</h2>
               </div>
-              <button
-                onClick={() => setShowBulkCreateModal(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                일괄 생성
-              </button>
+              {currentUserRole === 'admin' && (
+                <button
+                  onClick={() => setShowBulkCreateModal(true)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  일괄 생성
+                </button>
+              )}
             </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
+            <div className="space-y-3 max-h-[800px] overflow-y-auto scrollbar-hide">
               {users.map((user) => (
                 <div key={user.id} className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition">
                   <div className="flex items-center justify-between mb-3">
@@ -1373,16 +1427,18 @@ export default function AdminPage() {
                       <h3 className="font-semibold text-gray-900">{user.username}</h3>
                       <p className="text-xs text-gray-500">{user.name}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setEditingUser(user);
-                        setAnnualLeaveTotal(user.annualLeaveTotal.toString());
-                        setCompLeaveTotal(user.compLeaveTotal.toString());
-                      }}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
-                    >
-                      수정
-                    </button>
+                    {currentUserRole === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setEditingUser(user);
+                          setAnnualLeaveTotal(user.annualLeaveTotal.toString());
+                          setCompLeaveTotal(user.compLeaveTotal.toString());
+                        }}
+                        className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
+                      >
+                        수정
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-red-50 border border-red-100 rounded-lg p-2.5">
@@ -1425,7 +1481,7 @@ export default function AdminPage() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-white">연차/체휴 설정</h3>
+                        <h3 className="text-lg font-bold text-white">연차/체휴</h3>
                         <p className="text-green-100 text-sm">{editingUser.name}님의 휴가 정보를 수정하세요</p>
                       </div>
                     </div>
@@ -1655,161 +1711,6 @@ export default function AdminPage() {
           </div>
           )}
 
-          {/* Add Attendance Form */}
-          <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">근태 추가</h2>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    사용자
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowUserModal(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                  >
-                    <span>
-                      {selectedUserId && users.find(u => u.id === selectedUserId)
-                        ? users.find(u => u.id === selectedUserId)?.username + ' (' + users.find(u => u.id === selectedUserId)?.name + ')'
-                        : '선택하세요'
-                      }
-                    </span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    근태 유형
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowTypeModal(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                  >
-                    <span>
-                      {selectedType || '선택하세요'}
-                    </span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    시작일자
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowStartCalendar(true);
-                      setShowEndCalendar(false);
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-left text-gray-900"
-                  >
-                    <span>{startDate || '선택하세요'}</span>
-                    <FiCalendar className="w-4 h-4 text-gray-400" />
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    종료일자
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // 반차는 종료일자 선택 불가, 반반차는 시간 지정이므로 선택 가능
-                      if (!['오전반차', '오후반차'].includes(selectedType)) {
-                      setShowEndCalendar(true);
-                      setShowStartCalendar(false);
-                      }
-                    }}
-                    disabled={['오전반차', '오후반차'].includes(selectedType)}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between text-left text-gray-900 ${
-                      ['오전반차', '오후반차'].includes(selectedType)
-                        ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                        : 'border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span>{endDate || '선택하세요'}</span>
-                    <FiCalendar className={`w-4 h-4 ${['오전반차', '오후반차'].includes(selectedType) ? 'text-gray-300' : 'text-gray-400'}`} />
-                  </button>
-                </div>
-              </div>
-
-              {/* 시간 입력 - 반반차, 팀장대행, 동석(코칭), 교육, 휴식, 출장, 장애, 기타, 연장근무 */}
-              {selectedType && ['반반차', '팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      시작시간
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowStartTimeModal(true)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                    >
-                      <span>{startTime || '시간 선택'}</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      종료시간
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowEndTimeModal(true)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                    >
-                      <span>{endTime || '시간 선택'}</span>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  근태사유
-                </label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                  placeholder="근태사유를 입력하세요"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none resize-none text-gray-900"
-                />
-              </div>
-
-              <button
-                onClick={handleAddAttendance}
-                className="w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition"
-              >
-                추가
-              </button>
-            </div>
-          </div>
-
           {/* 캘린더 모달 */}
           {(showStartCalendar || showEndCalendar) && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -1869,7 +1770,12 @@ export default function AdminPage() {
                     startDate={startDate ? dayjs(startDate) : null}
                     endDate={endDate ? dayjs(endDate) : null}
                     onStartDateSelect={(date) => {
-                      setStartDate(date.format('YYYY-MM-DD'));
+                      // 근태 상세 정보 수정 모드인 경우
+                      if (attendanceDetailModalOpen && isEditingAttendance) {
+                        setEditDate(date.format('YYYY-MM-DD'));
+                      } else {
+                        setStartDate(date.format('YYYY-MM-DD'));
+                      }
                       setShowStartCalendar(false);
                     }}
                     onEndDateSelect={(date) => {
@@ -1889,6 +1795,7 @@ export default function AdminPage() {
           )}
 
           {/* Attendance List */}
+          {activeTab === 'list' && (
           <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -1992,15 +1899,18 @@ export default function AdminPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowUserFilter(true)}
+                    onClick={() => {
+                      setTempSelectedUserFilter(selectedUserFilter);
+                      setShowUserFilter(true);
+                    }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
-                    <span>
-                      {selectedUserFilter === 'all'
-                        ? '전체 사용자'
-                        : users.find(u => u.name === selectedUserFilter)?.name || '전체 사용자'
-                      }
-                    </span>
+                  <span>
+                    {selectedUserFilter === 'all'
+                      ? '전체 사용자'
+                      : users.find(u => u.username === selectedUserFilter)?.username || '전체 사용자'
+                    }
+                  </span>
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -2034,6 +1944,16 @@ export default function AdminPage() {
                       >
                         테이블
                       </button>
+                      <button
+                        onClick={() => setViewMode('timeslot')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                          viewMode === 'timeslot'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        타임슬롯
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2054,21 +1974,20 @@ export default function AdminPage() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">날짜</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">유형</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사유</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">작업</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAttendances.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
+                          <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-400">
                             필터링된 근태 기록이 없습니다
                           </td>
                         </tr>
                       ) : (
                       filteredAttendances.map((attendance) => {
-                        const user = users.find(u => u.name === attendance.userName);
+                        const user = users.find(u => u.username === attendance.userName);
                         return (
-                          <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                          <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onClick={() => handleViewAttendance(attendance)}>
                             <td className="px-4 py-3 text-sm text-gray-900">
                               {user?.username || attendance.userName}
                               {user && (
@@ -2095,14 +2014,6 @@ export default function AdminPage() {
                             <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
                               {attendance.reason || '-'}
                             </td>
-                            <td className="px-4 py-3">
-                              <button
-                                onClick={() => handleDeleteAttendance(attendance.id)}
-                                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
-                              >
-                                삭제
-                            </button>
-                          </td>
                         </tr>
                         );
                       })
@@ -2118,133 +2029,54 @@ export default function AdminPage() {
               <MonthlyAttendanceCalendar
                 selectedMonth={selectedMonth}
                 attendances={filteredAttendances}
-                users={users}
+                users={filteredUsers}
                 onDeleteAttendance={handleDeleteAttendance}
                 onViewAttendance={handleViewAttendance}
+                viewMode="calendar"
               />
             )}
+
+            {/* 타임슬롯 뷰 (월별 조회일 때만) */}
+            {viewMode === 'timeslot' && !useDateRange && (
+              <div className="mt-6">
+                <MonthlyAttendanceCalendar
+                  selectedMonth={selectedMonth}
+                  attendances={filteredAttendances}
+                  users={filteredUsers}
+                  onDeleteAttendance={handleDeleteAttendance}
+                  onViewAttendance={handleViewAttendance}
+                  viewMode="timeslot"
+                />
+                <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
+              </div>
+            )}
           </div>
+          )}
 
           {/* 근태 상세 정보 모달 */}
-          {attendanceDetailModalOpen && attendanceToView && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
-                {/* 헤더 */}
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">근태 상세 정보</h3>
-                      <p className="text-blue-100 text-sm">근태 기록의 세부 사항을 확인하세요</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 내용 */}
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {/* 사용자 정보 */}
-                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-xs text-blue-600 font-medium">사용자</p>
-                        <p className="text-sm font-semibold text-blue-900">{attendanceToView.userName}</p>
-                      </div>
-                    </div>
-
-                    {/* 근태 정보 그리드 */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-xs text-gray-500 font-medium">날짜</p>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{attendanceToView.date}</p>
-                      </div>
-
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <p className="text-xs text-gray-500 font-medium">유형</p>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{attendanceToView.type}</p>
-                      </div>
-
-                      {(attendanceToView.startTime || attendanceToView.endTime) && (
-                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-2 mb-1">
-                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <p className="text-xs text-gray-500 font-medium">시간</p>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {attendanceToView.startTime || '미정'} ~ {attendanceToView.endTime || '미정'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 사유 */}
-                    {attendanceToView.reason && (
-                      <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs text-amber-600 font-medium mb-1">사유</p>
-                            <p className="text-sm text-amber-900 leading-relaxed">{attendanceToView.reason}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 버튼들 */}
-                  <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        setAttendanceDetailModalOpen(false);
-                        setAttendanceToView(null);
-                      }}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      닫기
-                    </button>
-                    <button
-                      onClick={() => {
-                        setAttendanceDetailModalOpen(false);
-                        setAttendanceToView(null);
-                        setAttendanceToDelete(attendanceToView);
-                        setDeleteModalOpen(true);
-                      }}
-                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <AttendanceDetailModal
+            isOpen={attendanceDetailModalOpen}
+            onClose={() => {
+              setAttendanceDetailModalOpen(false);
+              setAttendanceToView(null);
+              setIsEditingAttendance(false);
+            }}
+            attendance={attendanceToView}
+            users={users}
+            onSave={handleUpdateAttendance}
+            onDelete={(attendance) => {
+              setAttendanceDetailModalOpen(false);
+              setAttendanceToView(null);
+              setAttendanceToDelete(attendance);
+              setDeleteModalOpen(true);
+            }}
+            onAlert={(title, message, type) => {
+              setAlertTitle(title);
+              setAlertMessage(message);
+              setAlertType(type);
+              setAlertModalOpen(true);
+            }}
+          />
 
           {/* 삭제 확인 모달 */}
           {deleteModalOpen && attendanceToDelete && (
@@ -2960,7 +2792,11 @@ export default function AdminPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('연차');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('연차');
+                            } else {
+                              setSelectedType('연차');
+                            }
                             setShowTypeModal(false);
                           }}
                           className={`p-2 text-left rounded transition ${
@@ -2979,7 +2815,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('체휴');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('체휴');
+                            } else {
+                              setSelectedType('체휴');
+                            }
                             setShowTypeModal(false);
                           }}
                           className={`p-2 text-left rounded transition ${
@@ -2998,7 +2838,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('결근');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('결근');
+                            } else {
+                              setSelectedType('결근');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3022,7 +2866,11 @@ export default function AdminPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('오전반차');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('오전반차');
+                            } else {
+                              setSelectedType('오전반차');
+                            }
                             setShowTypeModal(false);
                           }}
                           className={`p-2 text-left rounded transition ${
@@ -3041,7 +2889,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('오후반차');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('오후반차');
+                            } else {
+                              setSelectedType('오후반차');
+                            }
                             setShowTypeModal(false);
                           }}
                           className={`p-2 text-left rounded transition ${
@@ -3060,7 +2912,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('반반차');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('반반차');
+                            } else {
+                              setSelectedType('반반차');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3084,7 +2940,11 @@ export default function AdminPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('팀장대행');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('팀장대행');
+                            } else {
+                              setSelectedType('팀장대행');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3105,7 +2965,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('동석(코칭)');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('동석(코칭)');
+                            } else {
+                              setSelectedType('동석(코칭)');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3126,7 +2990,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('교육');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('교육');
+                            } else {
+                              setSelectedType('교육');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3150,7 +3018,11 @@ export default function AdminPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('휴식');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('휴식');
+                            } else {
+                              setSelectedType('휴식');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3171,7 +3043,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('출장');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('출장');
+                            } else {
+                              setSelectedType('출장');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3192,7 +3068,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('장애');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('장애');
+                            } else {
+                              setSelectedType('장애');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3216,7 +3096,11 @@ export default function AdminPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => {
-                            setSelectedType('기타');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('기타');
+                            } else {
+                              setSelectedType('기타');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3237,7 +3121,11 @@ export default function AdminPage() {
 
                         <button
                           onClick={() => {
-                            setSelectedType('연장근무');
+                            if (attendanceDetailModalOpen && isEditingAttendance) {
+                              setEditType('연장근무');
+                            } else {
+                              setSelectedType('연장근무');
+                            }
                             setStartTime('');
                             setEndTime('');
                             setShowTypeModal(false);
@@ -3263,7 +3151,11 @@ export default function AdminPage() {
                   {/* 현재 선택 표시 */}
                   <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-sm font-medium text-purple-700">
-                      선택된 유형: {selectedType || '없음'}
+                      선택된 유형: {
+                        attendanceDetailModalOpen && isEditingAttendance
+                          ? editType || '없음'
+                          : selectedType || '없음'
+                      }
                     </div>
                   </div>
                 </div>
@@ -3333,21 +3225,33 @@ export default function AdminPage() {
                           key={timeString}
                           onClick={() => {
                             if (!isDisabled) {
-                              setStartTime(timeString);
-                              // 반반차의 경우 시작시간 입력 시 종료시간 자동 계산 (+2시간)
-                              if (selectedType === '반반차') {
-                                const [hours, minutes] = timeString.split(':').map(Number);
-                                const endDateTime = new Date();
-                                endDateTime.setHours(hours + 2, minutes);
-                                const endTimeStr = endDateTime.toTimeString().slice(0, 5);
-                                setEndTime(endTimeStr);
+                              if (attendanceDetailModalOpen && isEditingAttendance) {
+                                setEditStartTime(timeString);
+                                // 반반차의 경우 시작시간 입력 시 종료시간 자동 계산 (+2시간)
+                                if (editType === '반반차') {
+                                  const [hours, minutes] = timeString.split(':').map(Number);
+                                  const endDateTime = new Date();
+                                  endDateTime.setHours(hours + 2, minutes);
+                                  const endTimeStr = endDateTime.toTimeString().slice(0, 5);
+                                  setEditEndTime(endTimeStr);
+                                }
+                              } else {
+                                setStartTime(timeString);
+                                // 반반차의 경우 시작시간 입력 시 종료시간 자동 계산 (+2시간)
+                                if (selectedType === '반반차') {
+                                  const [hours, minutes] = timeString.split(':').map(Number);
+                                  const endDateTime = new Date();
+                                  endDateTime.setHours(hours + 2, minutes);
+                                  const endTimeStr = endDateTime.toTimeString().slice(0, 5);
+                                  setEndTime(endTimeStr);
+                                }
                               }
                               setShowStartTimeModal(false);
                             }
                           }}
                           disabled={isDisabled}
                           className={`p-3 text-center rounded-lg transition text-sm font-medium ${
-                            startTime === timeString
+                            (attendanceDetailModalOpen && isEditingAttendance ? editStartTime : startTime) === timeString
                               ? 'bg-violet-500 text-white'
                               : isDisabled
                               ? isTimeOccupied
@@ -3428,13 +3332,17 @@ export default function AdminPage() {
                           key={timeString}
                           onClick={() => {
                             if (!isDisabled) {
-                              setEndTime(timeString);
+                              if (attendanceDetailModalOpen && isEditingAttendance) {
+                                setEditEndTime(timeString);
+                              } else {
+                                setEndTime(timeString);
+                              }
                               setShowEndTimeModal(false);
                             }
                           }}
                           disabled={isDisabled}
                           className={`p-3 text-center rounded-lg transition text-sm font-medium ${
-                            endTime === timeString
+                            (attendanceDetailModalOpen && isEditingAttendance ? editEndTime : endTime) === timeString
                               ? 'bg-violet-500 text-white'
                               : isDisabled
                               ? isTimeOccupied
@@ -3488,11 +3396,12 @@ export default function AdminPage() {
                   <div className="mb-4">
                     <button
                       onClick={() => {
+                        setTempSelectedUserFilter('all');
                         setSelectedUserFilter('all');
                         setShowUserFilter(false);
                       }}
                       className={`w-full p-3 text-left rounded-lg transition ${
-                        selectedUserFilter === 'all'
+                        tempSelectedUserFilter === 'all'
                           ? 'bg-orange-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -3521,11 +3430,12 @@ export default function AdminPage() {
                         <button
                           key={user.id}
                           onClick={() => {
-                            setSelectedUserFilter(user.name);
+                            setTempSelectedUserFilter(user.username);
+                            setSelectedUserFilter(user.username);
                             setShowUserFilter(false);
                           }}
                           className={`w-full p-3 text-left rounded-lg transition ${
-                            selectedUserFilter === user.name
+                            tempSelectedUserFilter === user.username
                               ? 'bg-orange-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
@@ -3541,7 +3451,7 @@ export default function AdminPage() {
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
                             <span className={`text-xs px-2 py-1 rounded-full ${
-                              selectedUserFilter === user.name
+                              tempSelectedUserFilter === user.username
                                 ? user.role === 'admin'
                                   ? 'bg-white/20 text-white'
                                   : user.role === 'manager'
@@ -3559,7 +3469,7 @@ export default function AdminPage() {
                             </span>
                             {user.isTempPassword && (
                               <span className={`text-xs px-2 py-1 rounded-full ${
-                                selectedUserFilter === user.name
+                                selectedUserFilter === user.username
                                   ? 'bg-white/20 text-white'
                                   : 'bg-orange-100 text-orange-700'
                               }`}>
@@ -3576,9 +3486,9 @@ export default function AdminPage() {
                   <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 필터: {
-                        selectedUserFilter === 'all'
+                        tempSelectedUserFilter === 'all'
                           ? '전체 사용자'
-                          : users.find(u => u.name === selectedUserFilter)?.name || '전체 사용자'
+                          : users.find(u => u.username === tempSelectedUserFilter)?.name || '전체 사용자'
                       }
                     </div>
                   </div>
@@ -3598,13 +3508,15 @@ function MonthlyAttendanceCalendar({
   attendances,
   users,
   onDeleteAttendance,
-  onViewAttendance
+  onViewAttendance,
+  viewMode = 'calendar'
 }: {
   selectedMonth: string;
   attendances: Attendance[];
   users: User[];
   onDeleteAttendance: (id: string) => void;
   onViewAttendance: (attendance: Attendance) => void;
+  viewMode?: 'calendar' | 'timeslot';
 }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs(selectedMonth));
 
@@ -3629,7 +3541,7 @@ function MonthlyAttendanceCalendar({
 
     // 근태 데이터 채우기
     attendances.forEach(attendance => {
-      const userId = users.find(u => u.name === attendance.userName)?.id;
+      const userId = users.find(u => u.username === attendance.userName)?.id;
       if (userId && map[userId]) {
         if (!map[userId][attendance.date]) {
           map[userId][attendance.date] = [];
@@ -3811,7 +3723,9 @@ function MonthlyAttendanceCalendar({
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {/* 캘린더 헤더 */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+      <div className={`flex items-center justify-between bg-gray-50 border-b border-gray-200 ${
+        viewMode === 'calendar' ? 'p-2' : 'p-4'
+      }`}>
         <motion.button
           onClick={handlePrevMonth}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -3836,17 +3750,21 @@ function MonthlyAttendanceCalendar({
       </div>
 
       {/* 사용자별 일별 근태 그리드 */}
-      <div className="relative overflow-x-auto">
+      <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'p-4'}`}>
         <div className="min-w-max">
           {/* 일자 헤더 */}
-          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, 80px)` }}>
-            <div className="sticky left-0 z-20 px-4 py-3 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50">
+          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `150px repeat(${daysInMonth}, 60px)` : `150px repeat(${daysInMonth}, 80px)` }}>
+            <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
+              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-1' : 'px-4 py-3'
+            }`}>
               사용자
             </div>
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
               <div
                 key={day}
-                className={`px-2 py-3 text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)}`}
+                className={`text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)} ${
+                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0.5' : 'px-2 py-3'
+                }`}
               >
                 <div className="font-bold">{day}</div>
                 <div className="text-xs opacity-75">{getDayOfWeek(day)}</div>
@@ -3859,10 +3777,12 @@ function MonthlyAttendanceCalendar({
             <div
               key={user.id}
               className="grid border-b border-gray-100 hover:bg-gray-50 transition"
-              style={{ gridTemplateColumns: `200px repeat(${daysInMonth}, 80px)` }}
+              style={{ gridTemplateColumns: viewMode === 'calendar' ? `150px repeat(${daysInMonth}, 60px)` : `150px repeat(${daysInMonth}, 80px)` }}
             >
               {/* 사용자 이름 - 고정 */}
-              <div className="sticky left-0 z-10 px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center">
+              <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center ${
+                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-1' : 'px-4 py-3'
+              }`}>
                 {user.username}
                 <span className="text-xs text-gray-500 ml-1">({user.name})</span>
               </div>
@@ -3878,7 +3798,9 @@ function MonthlyAttendanceCalendar({
                   <motion.button
                     key={day}
                     onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
-                    className={`px-1 py-3 text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 min-h-[7rem] ${
+                    className={`text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 ${
+                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[1rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[7rem]' : 'px-1 py-3 min-h-[7rem]'
+                    } ${
                       dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
                     } border-r border-gray-100 last:border-r-0`}
                     whileHover={dayAttendances.length > 0 ? { scale: 1.02 } : {}}
@@ -3886,8 +3808,8 @@ function MonthlyAttendanceCalendar({
                     title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
                   >
                     <div className="flex flex-col gap-0.5">
-                      {/* 30분 단위 시간 슬롯들 (9시~18시, 총 18개) */}
-                      {slotData.map((slot, index) => (
+                      {/* 30분 단위 시간 슬롯들 (타임슬롯 모드에서만 표시) */}
+                      {viewMode === 'timeslot' && slotData.map((slot, index) => (
                         <div
                           key={index}
                           onClick={(e) => {
@@ -3906,10 +3828,31 @@ function MonthlyAttendanceCalendar({
                         />
                       ))}
 
-                      {/* 근태 텍스트 (슬롯 아래에 표시) */}
-                      <div className="mt-1 min-h-[3rem] flex items-start justify-center">
+                      {/* 근태 텍스트 (항상 표시) */}
+                      <div className={`mt-1 ${viewMode === 'calendar' ? 'min-h-[2rem]' : viewMode === 'timeslot' ? 'min-h-[1.5rem]' : 'min-h-[3rem]'} flex items-center justify-center`}>
                     {text && (
-                          <div className="text-xs text-gray-700 leading-tight text-center break-words whitespace-pre-line">
+                          <div className={`text-xs leading-tight text-center break-words whitespace-pre-line px-1 py-0.5 rounded ${
+                            dayAttendances.length === 1 ? (() => {
+                              const attendanceType = dayAttendances[0].type;
+                              switch (attendanceType) {
+                                case '연차': return 'bg-red-100 text-red-800';
+                                case '결근': return 'bg-rose-100 text-rose-800';
+                                case '오전반차': return 'bg-orange-100 text-orange-800';
+                                case '연장근무': return 'bg-amber-100 text-amber-800';
+                                case '체휴': return 'bg-yellow-100 text-yellow-800';
+                                case '오후반차': return 'bg-lime-100 text-lime-800';
+                                case '출장': return 'bg-green-100 text-green-800';
+                                case '교육': return 'bg-emerald-100 text-emerald-800';
+                                case '휴식': return 'bg-teal-100 text-teal-800';
+                                case '팀장대행': return 'bg-cyan-100 text-cyan-800';
+                                case '동석(코칭)': return 'bg-blue-100 text-blue-800';
+                                case '반반차': return 'bg-indigo-100 text-indigo-800';
+                                case '장애': return 'bg-violet-100 text-violet-800';
+                                case '기타': return 'bg-purple-100 text-purple-800';
+                                default: return 'text-gray-700';
+                              }
+                            })() : 'text-gray-700'
+                          }`}>
                         {text}
                       </div>
                     )}
@@ -3924,9 +3867,10 @@ function MonthlyAttendanceCalendar({
       </div>
 
       {/* 범례 */}
-      <div className="p-4 bg-gray-50 border-t border-gray-200">
+      <div className={`${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'p-4'} bg-gray-50 border-t border-gray-200`}>
         <div className="flex flex-col gap-4">
-          {/* 시간 슬롯 색상 범례 */}
+          {/* 시간 슬롯 색상 범례 (타임슬롯 모드에서만 표시) */}
+          {viewMode === 'timeslot' && (
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
         <div className="flex flex-wrap gap-4 text-xs">
@@ -3992,10 +3936,13 @@ function MonthlyAttendanceCalendar({
               </div>
             </div>
           </div>
+          )}
+        </div>
 
         </div>
-        <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
-      </div>
+        {viewMode === 'timeslot' && (
+          <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
+        )}
     </div>
   );
 }

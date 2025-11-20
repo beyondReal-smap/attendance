@@ -18,10 +18,10 @@ export async function POST(request: Request) {
     // 새 비밀번호 해시
     const hashedPassword = await hashPassword(newPassword);
 
-    // 비밀번호 업데이트
+    // 비밀번호 업데이트 및 임시비밀번호 플래그 초기화
     await sql`
       UPDATE atnd_users
-      SET password = ${hashedPassword}
+      SET password = ${hashedPassword}, is_temp_password = 0
       WHERE id = ${session.userId}
     `;
 

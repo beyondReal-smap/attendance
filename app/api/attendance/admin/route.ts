@@ -149,3 +149,132 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || (!session.isAdmin && session.role !== 'manager')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, date, type, reason, startTime, endTime } = await request.json();
+
+    if (!id || !date || !type) {
+      return NextResponse.json(
+        { error: 'id, date, and type are required' },
+        { status: 400 }
+      );
+    }
+
+    // 기존 근태 정보 조회
+    const existingResult = await sql`
+      SELECT user_id, date, type, start_time, end_time
+      FROM atnd_attendance
+      WHERE id = ${id}
+    `;
+
+    if (existingResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: '근태 정보를 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    const existing = existingResult.rows[0];
+    const userId = existing.user_id;
+    const oldDate = existing.date;
+    const oldType = existing.type;
+
+    // 날짜가 변경되었고, 새로운 날짜에 이미 근태가 있는지 확인
+    if (date !== oldDate) {
+      const duplicateCheck = await sql`
+        SELECT id FROM atnd_attendance
+        WHERE user_id = ${userId} AND date = ${date} AND id != ${id}
+      `;
+
+      if (duplicateCheck.rows.length > 0) {
+        return NextResponse.json(
+          { error: `${date}에 이미 근태가 등록되어 있습니다.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 시간 정보 가져오기
+    const timeInfo = getAttendanceTimeInfo(type);
+    const finalStartTime = startTime || timeInfo.startTime;
+    const finalEndTime = endTime || timeInfo.endTime;
+
+    // 근태 정보 업데이트
+    await sql`
+      UPDATE atnd_attendance
+      SET date = ${date}, type = ${type}, reason = ${reason || null},
+          start_time = ${finalStartTime || null}, end_time = ${finalEndTime || null}
+      WHERE id = ${id}
+    `;
+
+    // 연차/체휴 사용량 업데이트 (날짜나 유형이 변경된 경우)
+    if ((date !== oldDate || type !== oldType) && (isLeaveType(oldType) || isLeaveType(type))) {
+      const currentYear = new Date().getFullYear();
+
+      // 기존 사용량 차감
+      if (isLeaveType(oldType) && isWorkingDay(dayjs(oldDate))) {
+        const oldLeaveUsage = getLeaveUsage(oldType);
+        if (isAnnualLeaveType(oldType)) {
+          await sql`
+            UPDATE leave_balances
+            SET used = used - ${oldLeaveUsage},
+                remaining = remaining + ${oldLeaveUsage}
+            WHERE user_id = ${userId}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
+          `;
+        } else if (oldType === '체휴') {
+          await sql`
+            UPDATE leave_balances
+            SET used = used - ${oldLeaveUsage},
+                remaining = remaining + ${oldLeaveUsage}
+            WHERE user_id = ${userId}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
+          `;
+        }
+      }
+
+      // 새로운 사용량 추가
+      if (isLeaveType(type) && isWorkingDay(dayjs(date))) {
+        const newLeaveUsage = getLeaveUsage(type);
+        if (isAnnualLeaveType(type)) {
+          await sql`
+            UPDATE leave_balances
+            SET used = used + ${newLeaveUsage},
+                remaining = remaining - ${newLeaveUsage}
+            WHERE user_id = ${userId}
+            AND year = ${currentYear}
+            AND leave_type = 'annual'
+          `;
+        } else if (type === '체휴') {
+          await sql`
+            UPDATE leave_balances
+            SET used = used + ${newLeaveUsage},
+                remaining = remaining + ${newLeaveUsage}
+            WHERE user_id = ${userId}
+            AND year = ${currentYear}
+            AND leave_type = 'compensatory'
+          `;
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '근태가 성공적으로 수정되었습니다.'
+    });
+  } catch (error: any) {
+    console.error('Error updating attendance:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to update attendance' },
+      { status: 500 }
+    );
+  }
+}
+

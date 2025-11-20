@@ -15,7 +15,7 @@ export async function GET() {
       SELECT
         a.id,
         a.user_id as "userId",
-        u.name as "userName",
+        u.username as "userName",
         a.date,
         a.type,
         a.reason,
