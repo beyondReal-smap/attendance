@@ -1105,7 +1105,7 @@ export default function CalendarPage() {
                 chatMessages.map((message, index) => (
                   <div
                     key={index}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 ${
