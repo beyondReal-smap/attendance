@@ -3818,7 +3818,7 @@ function MonthlyAttendanceCalendar({
                       ))}
 
                       {/* 근태 텍스트 (항상 표시) */}
-                      <div className={`mt-1 ${viewMode === 'calendar' ? 'min-h-[2rem]' : viewMode === 'timeslot' ? 'min-h-[1.5rem]' : 'min-h-[3rem]'} flex items-center justify-center`}>
+                      <div className={`${viewMode === 'calendar' ? 'min-h-[2rem]' : viewMode === 'timeslot' ? 'min-h-[1.5rem]' : 'min-h-[3rem]'} flex items-center justify-center`}>
                     {text && (
                           <div className={`text-xs leading-tight text-center break-words whitespace-pre-line px-1 py-0.5 rounded ${
                             dayAttendances.length === 1 ? (() => {
