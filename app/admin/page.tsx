@@ -897,13 +897,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => router.push('/calendar')}
-                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
                 >
                   캘린더
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
                 >
                   로그아웃
                 </button>
@@ -912,14 +912,14 @@ export default function AdminPage() {
           </div>
 
           {/* 세그먼티드 컨트롤 */}
-          <div className="px-6 md:px-8 lg:px-12">
-            <div className="flex bg-gray-100 rounded-lg p-1 max-w-full overflow-x-auto">
+          <div className="px-6 md:px-8 lg:px-12 pb-3">
+            <div className="flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-2 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'dashboard'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <span>📊</span>
@@ -928,10 +928,10 @@ export default function AdminPage() {
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-2 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                     activeTab === 'users'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <span>👥</span>
@@ -940,10 +940,10 @@ export default function AdminPage() {
               )}
               <button
                 onClick={() => setActiveTab('leave')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-2 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'leave'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <span>📅</span>
@@ -951,10 +951,10 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={() => setActiveTab('list')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-2 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <span>📋</span>
@@ -1261,7 +1261,7 @@ export default function AdminPage() {
                     value={newUserUsername}
                     onChange={(e) => setNewUserUsername(e.target.value)}
                     placeholder="사번을 입력하세요"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1273,7 +1273,7 @@ export default function AdminPage() {
                     value={newUserName}
                     onChange={(e) => setNewUserName(e.target.value)}
                     placeholder="이름을 입력하세요"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1285,7 +1285,7 @@ export default function AdminPage() {
                     value={newUserDepartment}
                     onChange={(e) => setNewUserDepartment(e.target.value)}
                     placeholder="소속을 입력하세요 (선택사항)"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1295,7 +1295,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowRoleModal(true)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
                   >
                     <span>
                       {newUserRole === 'user' ? '사용자' :
@@ -1376,13 +1376,13 @@ export default function AdminPage() {
                         <div className="flex flex-col gap-2">
                           <button
                             onClick={() => handleChangePassword(user.id)}
-                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition whitespace-nowrap"
+                            className="px-2 py-1 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition whitespace-nowrap"
                           >
                             비밀번호 변경
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition whitespace-nowrap"
+                            className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition whitespace-nowrap"
                           >
                             사용자 삭제
                           </button>
@@ -1411,7 +1411,7 @@ export default function AdminPage() {
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setShowBulkCreateModal(true)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
+                  className="px-2 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1435,7 +1435,7 @@ export default function AdminPage() {
                           setAnnualLeaveTotal(user.annualLeaveTotal.toString());
                           setCompLeaveTotal(user.compLeaveTotal.toString());
                         }}
-                        className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
+                        className="px-2 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition"
                       >
                         수정
                       </button>
@@ -1572,13 +1572,13 @@ export default function AdminPage() {
                             setAnnualLeaveTotal('');
                             setCompLeaveTotal('');
                           }}
-                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                          className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                         >
                           취소
                         </button>
                         <button
                           onClick={() => handleUpdateUserLeave(editingUser.id)}
-                          className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                          className="flex-1 px-2 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1678,14 +1678,14 @@ export default function AdminPage() {
                             setBulkCreateYear(new Date().getFullYear().toString());
                           }}
                           disabled={bulkCreateLoading}
-                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                          className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
                         >
                           취소
                         </button>
                         <button
                           onClick={handleBulkCreateLeave}
                           disabled={bulkCreateLoading}
-                          className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          className="flex-1 px-2 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {bulkCreateLoading ? (
                             <>
@@ -1856,7 +1856,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setShowMonthPicker(true)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                     >
                       <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
                       <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1872,7 +1872,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowStartDatePicker(true)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
                         <span>{startDateFilter || '선택하세요'}</span>
                         <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1885,7 +1885,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowEndDatePicker(true)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
                         <span>{endDateFilter || '선택하세요'}</span>
                         <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1904,7 +1904,7 @@ export default function AdminPage() {
                       setTempSelectedUserFilter(selectedUserFilter);
                       setShowUserFilter(true);
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                   <span>
                     {selectedUserFilter === 'all'
@@ -1927,7 +1927,7 @@ export default function AdminPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setViewMode('calendar')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                        className={`px-2 py-1 rounded-lg text-sm font-medium transition ${
                           viewMode === 'calendar'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1937,7 +1937,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => setViewMode('table')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                        className={`px-2 py-1 rounded-lg text-sm font-medium transition ${
                           viewMode === 'table'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1947,7 +1947,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => setViewMode('timeslot')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                        className={`px-2 py-1 rounded-lg text-sm font-medium transition ${
                           viewMode === 'timeslot'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -2160,13 +2160,13 @@ export default function AdminPage() {
                         setAttendanceToDelete(null);
                         setAttendanceToView(null);
                       }}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                      className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                     >
                       취소
                     </button>
                     <button
                       onClick={confirmDelete}
-                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                      className="flex-1 px-2 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2272,13 +2272,13 @@ export default function AdminPage() {
                         setUserDeleteModalOpen(false);
                         setUserToDelete(null);
                       }}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                      className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                     >
                       취소
                     </button>
                     <button
                       onClick={confirmDeleteUser}
-                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                      className="flex-1 px-2 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
