@@ -3754,7 +3754,7 @@ function MonthlyAttendanceCalendar({
       <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'p-4'}`}>
         <div className="min-w-max">
           {/* 일자 헤더 */}
-          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `150px repeat(${daysInMonth}, 60px)` : `150px repeat(${daysInMonth}, 80px)` }}>
+          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `120px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `120px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}>
             <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
               viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-1' : 'px-4 py-3'
             }`}>
@@ -3778,7 +3778,7 @@ function MonthlyAttendanceCalendar({
             <div
               key={user.id}
               className="grid border-b border-gray-100 hover:bg-gray-50 transition"
-              style={{ gridTemplateColumns: viewMode === 'calendar' ? `150px repeat(${daysInMonth}, 60px)` : `150px repeat(${daysInMonth}, 80px)` }}
+              style={{ gridTemplateColumns: viewMode === 'calendar' ? `120px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `120px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}
             >
               {/* 사용자 이름 - 고정 */}
               <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center ${
