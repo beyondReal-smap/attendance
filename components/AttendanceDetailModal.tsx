@@ -313,7 +313,7 @@ export default function AttendanceDetailModal({
             }}
           >
             {/* 헤더 */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,7 +357,7 @@ export default function AttendanceDetailModal({
                   <span className="text-sm font-medium text-gray-700">근태 정보</span>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors flex items-center gap-1"
                   >
                     <FiEdit3 className="w-3 h-3" />
                     수정
@@ -575,7 +575,7 @@ export default function AttendanceDetailModal({
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
                 style={{ zIndex: 2101 }}
               >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -635,7 +635,7 @@ export default function AttendanceDetailModal({
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -983,7 +983,7 @@ export default function AttendanceDetailModal({
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1062,7 +1062,7 @@ export default function AttendanceDetailModal({
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

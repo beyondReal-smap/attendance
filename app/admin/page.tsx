@@ -900,7 +900,13 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl lg:max-w-7xl xl:max-w-full mx-auto bg-white min-h-screen">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-white border-b-2 border-blue-200">
+        <div className={`sticky top-0 z-50 bg-white border-b-2 ${
+          activeTab === 'dashboard' ? 'border-purple-200' :
+          activeTab === 'users' ? 'border-blue-200' :
+          activeTab === 'leave' ? 'border-red-200' :
+          activeTab === 'list' ? 'border-orange-200' :
+          'border-blue-200'
+        }`}>
           <div className="px-6 md:px-8 lg:px-12 py-4">
             <div className="flex justify-between items-center">
               <div>
@@ -910,13 +916,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => router.push('/calendar')}
-                  className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
+                  className="px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition"
                 >
                   캘린더
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
+                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition"
                 >
                   로그아웃
                 </button>
@@ -929,9 +935,9 @@ export default function AdminPage() {
             <div className="flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'dashboard'
-                    ? 'bg-blue-500 text-white shadow-sm'
+                    ? 'bg-purple-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
@@ -940,7 +946,7 @@ export default function AdminPage() {
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
                     activeTab === 'users'
                       ? 'bg-blue-500 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -951,9 +957,9 @@ export default function AdminPage() {
               )}
               <button
                 onClick={() => setActiveTab('leave')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'leave'
-                    ? 'bg-blue-500 text-white shadow-sm'
+                    ? 'bg-red-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
@@ -961,9 +967,9 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={() => setActiveTab('list')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
                   activeTab === 'list'
-                    ? 'bg-blue-500 text-white shadow-sm'
+                    ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
@@ -977,14 +983,14 @@ export default function AdminPage() {
           {/* 대시보드 */}
           {activeTab === 'dashboard' && (
           <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center gap-2 py-3 mb-2">
+            <div className="flex items-center gap-2 py-2 mb-2">
               <span className="text-3xl">📊</span>
               <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-2 mb-8">
               {/* 총 사용자 수 */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-4 py-3 border border-blue-200">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-4 py-2 border border-blue-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-xs font-medium text-blue-600">총 사용자</p>
@@ -999,7 +1005,7 @@ export default function AdminPage() {
               </div>
 
               {/* 오늘 근태 현황 */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg px-4 py-3 border border-purple-200">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg px-4 py-2 border border-purple-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-xs font-medium text-purple-600">오늘 근태</p>
@@ -1026,7 +1032,7 @@ export default function AdminPage() {
               </div>
 
               {/* 이번 달 근태 기록 수 */}
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg px-4 py-3 border border-yellow-200">
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg px-4 py-2 border border-yellow-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-xs font-medium text-yellow-600">이번 달 기록</p>
@@ -1051,7 +1057,7 @@ export default function AdminPage() {
               </div>
 
               {/* 연차 사용 현황 */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg px-4 py-3 border border-orange-200">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg px-4 py-2 border border-orange-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-xs font-medium text-orange-600">연차 잔여</p>
@@ -1084,8 +1090,8 @@ export default function AdminPage() {
                   return recentAttendances.map((attendance) => {
                     const user = users.find(u => u.id === attendance.userId);
                     return (
-                      <div key={`${attendance.userId}-${attendance.date}-${attendance.type}`} className="flex items-center justify-between py-3 px-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3 py-3">
+                      <div key={`${attendance.userId}-${attendance.date}-${attendance.type}`} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3 py-2">
                           <div className={`w-3 h-3 rounded-full ${
                             attendance.type === '연차' ? 'bg-red-500' :
                             attendance.type === '결근' ? 'bg-rose-500' :
@@ -1123,7 +1129,7 @@ export default function AdminPage() {
           {/* 사용자 추가 - 관리자만 표시 */}
           {activeTab === 'users' && currentUserRole === 'admin' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
-            <div className="flex items-center gap-2 py-3 mb-2">
+            <div className="flex items-center gap-2 py-2 mb-2">
               <span className="text-3xl">👥</span>
               <h2 className="text-xl font-bold text-gray-900">사용자</h2>
             </div>
@@ -1131,7 +1137,7 @@ export default function AdminPage() {
               <h3 className="text-lg font-semibold text-gray-900">
                 사용자 등록
               </h3>
-              <div className="grid grid-cols-2 gap-2 py-3">
+              <div className="grid grid-cols-2 gap-2 py-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사번
@@ -1141,7 +1147,7 @@ export default function AdminPage() {
                     value={newUserUsername}
                     onChange={(e) => setNewUserUsername(e.target.value)}
                     placeholder="사번을 입력하세요"
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1153,7 +1159,7 @@ export default function AdminPage() {
                     value={newUserName}
                     onChange={(e) => setNewUserName(e.target.value)}
                     placeholder="이름을 입력하세요"
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1165,7 +1171,7 @@ export default function AdminPage() {
                     value={newUserDepartment}
                     onChange={(e) => setNewUserDepartment(e.target.value)}
                     placeholder="소속을 입력하세요"
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   />
                 </div>
                 <div>
@@ -1175,7 +1181,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowRoleModal(true)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
                   >
                     <span>
                       {newUserRole === 'user' ? '사용자' :
@@ -1188,7 +1194,7 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
+              {/* <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
                 <div className="text-sm text-blue-700">
                   <div className="font-medium mb-1">자동 생성 비밀번호:</div>
                   <div className="text-lg font-mono font-bold">
@@ -1198,10 +1204,10 @@ export default function AdminPage() {
                     4자리 숫자로 자동 생성되며, 첫 로그인 시 비밀번호 변경이 필요합니다.
                   </div>
                 </div>
-              </div>
+              </div> */}
               <button
                 onClick={handleAddUser}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
               >
                 사용자 추가
               </button>
@@ -1221,7 +1227,7 @@ export default function AdminPage() {
                   users.map((user) => (
                     <div
                       key={user.id}
-                      className="bg-white rounded-lg px-4 py-3 border border-blue-100 hover:border-blue-200 transition cursor-pointer"
+                      className="bg-white rounded-lg px-4 py-2 border border-blue-100 hover:border-blue-200 transition cursor-pointer"
                       onClick={() => {
                         setSelectedUserForAction(user);
                         setShowUserActionModal(true);
@@ -1240,7 +1246,7 @@ export default function AdminPage() {
                             <p className="text-sm text-gray-600">{user.department}</p>
                           )}
                           <div className="flex gap-2 mt-1">
-                            <span className={`inline-flex px-3 py-1 rounded-md text-xs font-medium ${
+                            <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${
                               user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
                               user.role === 'manager' ? 'bg-green-100 text-green-700' :
                               'bg-gray-100 text-gray-700'
@@ -1250,7 +1256,7 @@ export default function AdminPage() {
                                '사용자'}
                             </span>
                             {user.isTempPassword && (
-                              <span className="inline-flex px-3 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
+                              <span className="inline-flex px-3 py-2 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
                                 임시비밀번호
                               </span>
                             )}
@@ -1267,7 +1273,7 @@ export default function AdminPage() {
 
           {/* 사용자 액션 모달 */}
           {showUserActionModal && selectedUserForAction && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1275,7 +1281,7 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3">
                   <div className="flex items-center gap-2">
                     <img
                       src={getAvatarImage(selectedUserForAction.id)}
@@ -1301,7 +1307,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 내용 */}
-                <div className="px-6 py-4">
+                <div className="px-6 py-3">
                   <div className="space-y-3">
                     <button
                       onClick={() => {
@@ -1309,7 +1315,7 @@ export default function AdminPage() {
                         setShowUserActionModal(false);
                         setSelectedUserForAction(null);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 hover:bg-yellow-100 transition"
+                      className="w-full flex items-center gap-3 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 hover:bg-yellow-100 transition"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H7l1 4H3l2-6H1l2.25-3A6 6 0 0115 7z" />
@@ -1323,7 +1329,7 @@ export default function AdminPage() {
                         setShowUserActionModal(false);
                         setSelectedUserForAction(null);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition"
+                      className="w-full flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1340,14 +1346,14 @@ export default function AdminPage() {
           {activeTab === 'leave' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-red-200 shadow-lg">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 py-3">
+              <div className="flex items-center gap-2 py-2">
                 <span className="text-3xl">📅</span>
                 <h2 className="text-xl font-bold text-gray-900">연차/체휴</h2>
               </div>
               {currentUserRole === 'admin' && (
                 <button
                   onClick={() => setShowBulkCreateModal(true)}
-                  className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
+                  className="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1407,11 +1413,11 @@ export default function AdminPage() {
 
             {/* 수정 모달 */}
             {editingUser && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
                 <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                   {/* 헤더 */}
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                    <div className="flex items-center gap-2 py-3">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3">
+                    <div className="flex items-center gap-2 py-2">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1428,8 +1434,8 @@ export default function AdminPage() {
                   <div className="p-6">
                     <div className="space-y-4">
                       {/* 사용자 정보 */}
-                      <div className="px-4 py-3 bg-green-50 rounded-lg border border-green-100">
-                        <div className="flex items-center gap-2 py-3">
+                      <div className="px-4 py-2 bg-green-50 rounded-lg border border-green-100">
+                        <div className="flex items-center gap-2 py-2">
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1443,7 +1449,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 입력 필드들 */}
-                      <div className="grid grid-cols-2 gap-2 py-3">
+                      <div className="grid grid-cols-2 gap-2 py-2">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             연차 총 수
@@ -1453,7 +1459,7 @@ export default function AdminPage() {
                               type="number"
                               value={annualLeaveTotal}
                               onChange={(e) => setAnnualLeaveTotal(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
                               placeholder="0"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -1470,7 +1476,7 @@ export default function AdminPage() {
                               type="number"
                               value={compLeaveTotal}
                               onChange={(e) => setCompLeaveTotal(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
                               placeholder="0"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -1481,14 +1487,14 @@ export default function AdminPage() {
                       </div>
 
                       {/* 현재 정보 표시 */}
-                      <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2 mb-2">
                           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <p className="text-xs text-gray-500 font-medium">현재 정보</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 py-3 text-sm">
+                        <div className="grid grid-cols-2 gap-2 py-2 text-sm">
                           <div>
                             <p className="text-gray-500">연차</p>
                             <p className="font-semibold text-gray-900">{editingUser.annualLeaveTotal}일 (사용: {editingUser.annualLeaveUsed}일)</p>
@@ -1501,20 +1507,20 @@ export default function AdminPage() {
                       </div>
 
                       {/* 버튼들 */}
-                      <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
                         <button
                           onClick={() => {
                             setEditingUser(null);
                             setAnnualLeaveTotal('');
                             setCompLeaveTotal('');
                           }}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                         >
                           취소
                         </button>
                         <button
                           onClick={() => handleUpdateUserLeave(editingUser.id)}
-                          className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                          className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1530,11 +1536,11 @@ export default function AdminPage() {
 
             {/* 일괄 생성 모달 */}
             {showBulkCreateModal && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
                 <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                   {/* 헤더 */}
-                  <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                    <div className="flex items-center gap-2 py-3">
+                  <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-3">
+                    <div className="flex items-center gap-2 py-2">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -1551,8 +1557,8 @@ export default function AdminPage() {
                   <div className="p-6">
                     <div className="space-y-4">
                       {/* 생성 정보 */}
-                      <div className="px-4 py-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-2 py-3">
+                      <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-start gap-2 py-2">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                             <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1560,7 +1566,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex-1">
                             <p className="text-sm text-blue-900 font-medium mb-2">생성될 휴가 정보</p>
-                            <div className="grid grid-cols-3 gap-2 py-3 text-sm">
+                            <div className="grid grid-cols-3 gap-2 py-2 text-sm">
                               <div className="text-center">
                                 <p className="text-blue-600 font-semibold">연차</p>
                                 <p className="text-blue-800">15일</p>
@@ -1579,7 +1585,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* 경고 메시지 */}
-                      <div className="px-4 py-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <div className="px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
                         <div className="flex items-start gap-2">
                           <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -1601,27 +1607,27 @@ export default function AdminPage() {
                           onChange={(e) => setBulkCreateYear(e.target.value)}
                           min="2020"
                           max="2030"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-gray-900 transition-colors duration-200"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-gray-900 transition-colors duration-200"
                           placeholder={new Date().getFullYear().toString()}
                         />
                       </div>
 
                       {/* 버튼들 */}
-                      <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
                         <button
                           onClick={() => {
                             setShowBulkCreateModal(false);
                             setBulkCreateYear(new Date().getFullYear().toString());
                           }}
                           disabled={bulkCreateLoading}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
                         >
                           취소
                         </button>
                         <button
                           onClick={handleBulkCreateLeave}
                           disabled={bulkCreateLoading}
-                          className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          className="flex-1 px-3 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {bulkCreateLoading ? (
                             <>
@@ -1650,7 +1656,7 @@ export default function AdminPage() {
 
           {/* 캘린더 모달 */}
           {(showStartCalendar || showEndCalendar) && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1659,8 +1665,8 @@ export default function AdminPage() {
               >
                 {/* 헤더 */}
                 {showStartCalendar && (
-                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                    <div className="flex items-center gap-2 py-3">
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                    <div className="flex items-center gap-2 py-2">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1681,8 +1687,8 @@ export default function AdminPage() {
                 )}
 
                 {showEndCalendar && (
-                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                    <div className="flex items-center gap-2 py-3">
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                    <div className="flex items-center gap-2 py-2">
                       <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1702,7 +1708,7 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <DatePickerCalendar
                     startDate={startDate ? dayjs(startDate) : null}
                     endDate={endDate ? dayjs(endDate) : null}
@@ -1735,14 +1741,14 @@ export default function AdminPage() {
           {activeTab === 'list' && (
           <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 py-3">
+              <div className="flex items-center gap-2 py-2">
               <span className="text-3xl">📋</span>
               <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={downloadXLSX}
-                  className="flex items-center gap-2 px-3 py-3 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
+                  className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
                 >
                   <FiDownload className="w-4 h-4" />
                   Excel
@@ -1751,10 +1757,10 @@ export default function AdminPage() {
             </div>
 
             {/* 필터링 컨트롤 */}
-            <div className="mb-8 px-4 py-3 bg-gray-50 rounded-lg">
+            <div className="mb-8 px-4 py-2 bg-gray-50 rounded-lg">
               {/* 필터 타입 토글 */}
               <div className="mb-4">
-                <div className="flex items-center gap-2 py-3">
+                <div className="flex items-center gap-2 py-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
@@ -1778,7 +1784,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 py-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2">
                 {!useDateRange ? (
                   // 월 선택
                   <div>
@@ -1788,7 +1794,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setShowMonthPicker(true)}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                     >
                       <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
                       <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1804,7 +1810,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowStartDatePicker(true)}
-                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
                         <span>{startDateFilter || '선택하세요'}</span>
                         <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1817,7 +1823,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setShowEndDatePicker(true)}
-                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
                         <span>{endDateFilter || '선택하세요'}</span>
                         <FiCalendar className="w-4 h-4 text-gray-400" />
@@ -1836,7 +1842,7 @@ export default function AdminPage() {
                       setTempSelectedUserFilter(selectedUserFilter);
                       setShowUserFilter(true);
                     }}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                   >
                   <span>
                     {selectedUserFilter === 'all'
@@ -1854,12 +1860,12 @@ export default function AdminPage() {
               {/* 뷰 모드 토글 (월별 조회일 때만) */}
               {!useDateRange && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-2 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     
                     <div className="flex gap-2">
                       <button
                         onClick={() => setViewMode('calendar')}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
                           viewMode === 'calendar'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1869,7 +1875,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => setViewMode('table')}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
                           viewMode === 'table'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1879,7 +1885,7 @@ export default function AdminPage() {
                       </button>
                       <button
                         onClick={() => setViewMode('timeslot')}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
                           viewMode === 'timeslot'
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1903,16 +1909,16 @@ export default function AdminPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사용자</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">날짜</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">유형</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">사유</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사용자</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">날짜</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">유형</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사유</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAttendances.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-400">
+                          <td colSpan={4} className="px-4 py-22 text-center text-sm text-gray-400">
                             필터링된 근태 기록이 없습니다
                           </td>
                         </tr>
@@ -1921,15 +1927,15 @@ export default function AdminPage() {
                         const user = users.find(u => u.username === attendance.userName);
                         return (
                           <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onClick={() => handleViewAttendance(attendance)}>
-                            <td className="px-4 py-3 text-sm text-gray-900">
+                            <td className="px-4 py-2 text-sm text-gray-900">
                               {user?.username || attendance.userName}
                               {user && (
                                 <span className="text-xs text-gray-500 ml-1">({user.name})</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">{attendance.date}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex px-3 py-1 rounded-md text-xs font-medium ${
+                            <td className="px-4 py-2 text-sm text-gray-600">{attendance.date}</td>
+                            <td className="px-4 py-2">
+                              <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${
                                 attendance.type === '연차' ? 'bg-red-100 text-red-700' :
                                 (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
                                 attendance.type === '반반차' ? 'bg-gray-100 text-gray-700' :
@@ -1944,7 +1950,7 @@ export default function AdminPage() {
                                 )}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
+                            <td className="px-4 py-2 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
                               {attendance.reason || '-'}
                             </td>
                         </tr>
@@ -1965,6 +1971,12 @@ export default function AdminPage() {
                 users={filteredUsers}
                 onDeleteAttendance={handleDeleteAttendance}
                 onViewAttendance={handleViewAttendance}
+                onMultipleAttendances={() => {
+                  setAlertTitle('다중 근태 확인');
+                  setAlertMessage('선택한 날짜에 근태가 여러 개 입력되어 있습니다.\n테이블 뷰에서 상세하게 확인할 수 있습니다.');
+                  setAlertType('info');
+                  setAlertModalOpen(true);
+                }}
                 viewMode="calendar"
               />
             )}
@@ -1978,6 +1990,12 @@ export default function AdminPage() {
                   users={filteredUsers}
                   onDeleteAttendance={handleDeleteAttendance}
                   onViewAttendance={handleViewAttendance}
+                  onMultipleAttendances={() => {
+                    setAlertTitle('다중 근태 확인');
+                    setAlertMessage('선택한 날짜에 근태가 여러 개 입력되어 있습니다.\n테이블 뷰에서 상세하게 확인할 수 있습니다.');
+                    setAlertType('info');
+                    setAlertModalOpen(true);
+                  }}
                   viewMode="timeslot"
                 />
                 <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
@@ -2013,11 +2031,11 @@ export default function AdminPage() {
 
           {/* 삭제 확인 모달 */}
           {deleteModalOpen && attendanceToDelete && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2033,7 +2051,7 @@ export default function AdminPage() {
                 {/* 내용 */}
                 <div className="p-6">
                   <div className="mb-8">
-                    <div className="flex items-start gap-2 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-start gap-2 py-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -2050,14 +2068,14 @@ export default function AdminPage() {
 
                   {/* 근태 정보 */}
                   <div className="space-y-3 mb-8">
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center gap-2 mb-2">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <p className="text-xs text-gray-500 font-medium">삭제할 근태 정보</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 py-3 text-sm">
+                      <div className="grid grid-cols-2 gap-2 py-2 text-sm">
                         <div>
                           <p className="text-xs text-gray-500">날짜</p>
                           <p className="font-semibold text-gray-900">{attendanceToDelete.date}</p>
@@ -2085,20 +2103,20 @@ export default function AdminPage() {
                   </div>
 
                   {/* 버튼들 */}
-                  <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
+                  <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
                         setDeleteModalOpen(false);
                         setAttendanceToDelete(null);
                         setAttendanceToView(null);
                       }}
-                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                     >
                       취소
                     </button>
                     <button
                       onClick={confirmDelete}
-                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                      className="flex-1 px-3 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2113,11 +2131,11 @@ export default function AdminPage() {
 
           {/* 사용자 삭제 확인 모달 */}
           {userDeleteModalOpen && userToDelete && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
@@ -2133,7 +2151,7 @@ export default function AdminPage() {
                 {/* 내용 */}
                 <div className="p-6">
                   <div className="mb-8">
-                    <div className="flex items-start gap-2 py-3 px-4 py-3 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-start gap-2 py-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -2163,14 +2181,14 @@ export default function AdminPage() {
 
                   {/* 사용자 정보 */}
                   <div className="space-y-3 mb-8">
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center gap-2 mb-2">
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <p className="text-xs text-gray-500 font-medium">삭제할 사용자 정보</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 py-3 text-sm">
+                      <div className="grid grid-cols-2 gap-2 py-2 text-sm">
                         <div>
                           <p className="text-xs text-gray-500">사번</p>
                           <p className="font-semibold text-gray-900">{userToDelete.username}</p>
@@ -2198,19 +2216,19 @@ export default function AdminPage() {
                   </div>
 
                   {/* 버튼들 */}
-                  <div className="flex gap-2 py-3 pt-4 border-t border-gray-200">
+                  <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
                         setUserDeleteModalOpen(false);
                         setUserToDelete(null);
                       }}
-                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
                     >
                       취소
                     </button>
                     <button
                       onClick={confirmDeleteUser}
-                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                      className="flex-1 px-3 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
@@ -2230,11 +2248,13 @@ export default function AdminPage() {
             title={alertTitle}
             message={alertMessage}
             type={alertType}
+            confirmText="테이블 뷰로 이동"
+            onConfirm={() => setViewMode('table')}
           />
 
           {/* 시작일자 선택 모달 */}
           {showStartDatePicker && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2242,8 +2262,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2262,7 +2282,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <DatePickerCalendar
                     startDate={startDateFilter ? dayjs(startDateFilter) : null}
                     endDate={endDateFilter ? dayjs(endDateFilter) : null}
@@ -2283,7 +2303,7 @@ export default function AdminPage() {
 
           {/* 종료일자 선택 모달 */}
           {showEndDatePicker && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2291,8 +2311,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2311,7 +2331,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <DatePickerCalendar
                     startDate={startDateFilter ? dayjs(startDateFilter) : null}
                     endDate={endDateFilter ? dayjs(endDateFilter) : null}
@@ -2332,7 +2352,7 @@ export default function AdminPage() {
 
           {/* 월 선택 모달 */}
           {showMonthPicker && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2340,8 +2360,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2360,7 +2380,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   {/* 연도 선택 */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2368,7 +2388,7 @@ export default function AdminPage() {
                     </label>
                     <button
                       onClick={() => setShowYearPicker(true)}
-                      className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900 bg-white hover:bg-gray-50 transition-colors text-left"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900 bg-white hover:bg-gray-50 transition-colors text-left"
                     >
                       {dayjs(selectedMonth).year()}년
                     </button>
@@ -2392,7 +2412,7 @@ export default function AdminPage() {
                               setSelectedMonth(`${currentYear}-${month.toString().padStart(2, '0')}`);
                               setShowMonthPicker(false);
                             }}
-                            className={`px-4 py-3 text-sm font-medium rounded-lg transition ${
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                               isSelected
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -2406,7 +2426,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 현재 선택된 월 표시 */}
-                  <div className="text-center px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="text-center px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 월: {dayjs(selectedMonth).format('YYYY년 M월')}
                     </div>
@@ -2418,7 +2438,7 @@ export default function AdminPage() {
 
           {/* 연도 선택 모달 */}
           {showYearPicker && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2426,8 +2446,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2446,7 +2466,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   {/* 연도 선택 */}
                   <div className="mb-8">
                     <div className="grid grid-cols-3 gap-2">
@@ -2461,7 +2481,7 @@ export default function AdminPage() {
                               setSelectedMonth(`${year}-${currentMonth.toString().padStart(2, '0')}`);
                               setShowYearPicker(false);
                             }}
-                            className={`px-4 py-3 text-sm font-medium rounded-lg transition ${
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                               isSelected
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -2475,7 +2495,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 현재 선택된 연도 표시 */}
-                  <div className="text-center px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="text-center px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 연도: {dayjs(selectedMonth).year()}년
                     </div>
@@ -2487,7 +2507,7 @@ export default function AdminPage() {
 
           {/* 근태 추가 - 사용자 선택 모달 */}
           {showUserModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2495,8 +2515,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -2515,7 +2535,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <div className="mb-8">
                     <div className="max-h-64 overflow-y-auto space-y-2">
                       {users.map((user) => (
@@ -2525,13 +2545,13 @@ export default function AdminPage() {
                             setSelectedUserId(user.id);
                             setShowUserModal(false);
                           }}
-                          className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                          className={`w-full px-4 py-2 text-left rounded-lg transition ${
                             selectedUserId === user.id
                               ? 'bg-purple-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          <div className="flex items-center gap-2 py-3">
+                          <div className="flex items-center gap-2 py-2">
                             <img
                               src={getAvatarImage(user.id)}
                               alt={user.name}
@@ -2541,7 +2561,7 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            <span className={`text-xs px-3 py-1 rounded-full ${
+                            <span className={`text-xs px-3 py-2 rounded-full ${
                               selectedUserId === user.id
                                 ? user.role === 'admin'
                                   ? 'bg-white/20 text-white'
@@ -2565,7 +2585,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 현재 선택 표시 */}
-                  <div className="text-center px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="text-sm font-medium text-blue-700">
                       선택된 사용자: {
                         selectedUserId
@@ -2581,7 +2601,7 @@ export default function AdminPage() {
 
           {/* 권한 선택 모달 */}
           {showRoleModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2589,8 +2609,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -2609,20 +2629,20 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <div className="space-y-2">
                     <button
                       onClick={() => {
                         setNewUserRole('user');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
                         newUserRole === 'user'
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2 py-3">
+                      <div className="flex items-center gap-2 py-2">
                         <img
                           src="/image/avatar1.png"
                           alt="사용자"
@@ -2640,13 +2660,13 @@ export default function AdminPage() {
                         setNewUserRole('manager');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
                         newUserRole === 'manager'
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2 py-3">
+                      <div className="flex items-center gap-2 py-2">
                         <img
                           src="/image/avatar2.png"
                           alt="중간관리자"
@@ -2664,13 +2684,13 @@ export default function AdminPage() {
                         setNewUserRole('admin');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
                         newUserRole === 'admin'
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2 py-3">
+                      <div className="flex items-center gap-2 py-2">
                         <img
                           src="/image/avatar3.png"
                           alt="관리자"
@@ -2690,7 +2710,7 @@ export default function AdminPage() {
 
           {/* 근태 추가 - 유형 선택 모달 */}
           {showTypeModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -2698,8 +2718,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -2718,7 +2738,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   <div className="mb-8">
                     <div className="space-y-2">
                       {/* 첫 번째 행 - 연차, 체휴, 근무 */}
@@ -3082,7 +3102,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 현재 선택 표시 */}
-                  <div className="text-center px-4 py-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="text-center px-4 py-2 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-sm font-medium text-purple-700">
                       선택된 유형: {
                         attendanceDetailModalOpen && isEditingAttendance
@@ -3098,7 +3118,7 @@ export default function AdminPage() {
 
           {/* 시작시간 선택 모달 */}
           {showStartTimeModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -3106,8 +3126,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -3126,7 +3146,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3 max-h-96 overflow-y-auto">
+                <div className="px-4 py-2 max-h-96 overflow-y-auto">
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
@@ -3183,7 +3203,7 @@ export default function AdminPage() {
                             }
                           }}
                           disabled={isDisabled}
-                          className={`px-4 py-3 text-center rounded-lg transition text-sm font-medium ${
+                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${
                             (attendanceDetailModalOpen && isEditingAttendance ? editStartTime : startTime) === timeString
                               ? 'bg-violet-500 text-white'
                               : isDisabled
@@ -3205,7 +3225,7 @@ export default function AdminPage() {
 
           {/* 종료시간 선택 모달 */}
           {showEndTimeModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -3213,8 +3233,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -3233,7 +3253,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3 max-h-96 overflow-y-auto">
+                <div className="px-4 py-2 max-h-96 overflow-y-auto">
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 19 }, (_, i) => {
                       const hour = Math.floor(i / 2) + 9;
@@ -3274,7 +3294,7 @@ export default function AdminPage() {
                             }
                           }}
                           disabled={isDisabled}
-                          className={`px-4 py-3 text-center rounded-lg transition text-sm font-medium ${
+                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${
                             (attendanceDetailModalOpen && isEditingAttendance ? editEndTime : endTime) === timeString
                               ? 'bg-violet-500 text-white'
                               : isDisabled
@@ -3296,7 +3316,7 @@ export default function AdminPage() {
 
           {/* 사용자 필터 모달 */}
           {showUserFilter && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-3">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -3304,8 +3324,8 @@ export default function AdminPage() {
                 className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
               >
                 {/* 헤더 */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
-                  <div className="flex items-center gap-2 py-3">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -3324,7 +3344,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="px-4 py-3">
+                <div className="px-4 py-2">
                   {/* 전체 사용자 옵션 */}
                   <div className="mb-4">
                     <button
@@ -3333,13 +3353,13 @@ export default function AdminPage() {
                         setSelectedUserFilter('all');
                         setShowUserFilter(false);
                       }}
-                      className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
                         tempSelectedUserFilter === 'all'
                           ? 'bg-orange-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2 py-3">
+                      <div className="flex items-center gap-2 py-2">
                         <img
                           src="/image/avatar4.png"
                           alt="전체 사용자"
@@ -3367,13 +3387,13 @@ export default function AdminPage() {
                             setSelectedUserFilter(user.username);
                             setShowUserFilter(false);
                           }}
-                          className={`w-full px-4 py-3 text-left rounded-lg transition ${
+                          className={`w-full px-4 py-2 text-left rounded-lg transition ${
                             tempSelectedUserFilter === user.username
                               ? 'bg-orange-500 text-white'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          <div className="flex items-center gap-2 py-3">
+                          <div className="flex items-center gap-2 py-2">
                             <img
                               src={getAvatarImage(user.id)}
                               alt={user.name}
@@ -3383,7 +3403,7 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            <span className={`text-xs px-3 py-1 rounded-full ${
+                            <span className={`text-xs px-3 py-2 rounded-full ${
                               tempSelectedUserFilter === user.username
                                 ? user.role === 'admin'
                                   ? 'bg-white/20 text-white'
@@ -3401,7 +3421,7 @@ export default function AdminPage() {
                                '사용자'}
                             </span>
                             {user.isTempPassword && (
-                              <span className={`text-xs px-3 py-1 rounded-full ${
+                              <span className={`text-xs px-3 py-2 rounded-full ${
                                 selectedUserFilter === user.username
                                   ? 'bg-white/20 text-white'
                                   : 'bg-orange-100 text-orange-700'
@@ -3416,7 +3436,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* 현재 선택 표시 */}
-                  <div className="text-center px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="text-center px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
                     <div className="text-sm font-medium text-orange-700">
                       선택된 필터: {
                         tempSelectedUserFilter === 'all'
@@ -3442,6 +3462,7 @@ function MonthlyAttendanceCalendar({
   users,
   onDeleteAttendance,
   onViewAttendance,
+  onMultipleAttendances,
   viewMode = 'calendar'
 }: {
   selectedMonth: string;
@@ -3449,6 +3470,7 @@ function MonthlyAttendanceCalendar({
   users: User[];
   onDeleteAttendance: (id: string) => void;
   onViewAttendance: (attendance: Attendance) => void;
+  onMultipleAttendances?: () => void;
   viewMode?: 'calendar' | 'timeslot';
 }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs(selectedMonth));
@@ -3649,15 +3671,23 @@ function MonthlyAttendanceCalendar({
   };
 
   const handleDayClick = (userId: string, dateStr: string, attendances: Attendance[]) => {
-    // 날짜 클릭은 이제 개별 슬롯 클릭으로 대체되었으므로 아무 동작도 하지 않음
-    // 필요시 날짜별 근태 목록 모달을 띄우는 기능으로 변경 가능
+    // 근태가 1개일 때만 상세정보 모달 열기
+    if (attendances.length === 1) {
+      onViewAttendance(attendances[0]);
+    } else if (attendances.length > 1) {
+      // 여러 개일 때는 부모 컴포넌트의 콜백 호출
+      if (onMultipleAttendances) {
+        onMultipleAttendances();
+      }
+    }
+    // 0개일 때는 아무 동작도 하지 않음
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {/* 캘린더 헤더 */}
       <div className={`flex items-center justify-between bg-gray-50 border-b border-gray-200 ${
-        viewMode === 'calendar' ? 'p-2' : 'px-4 py-3'
+        viewMode === 'calendar' ? 'p-2' : 'px-4 py-2'
       }`}>
         <motion.button
           onClick={handlePrevMonth}
@@ -3683,12 +3713,12 @@ function MonthlyAttendanceCalendar({
       </div>
 
       {/* 사용자별 일별 근태 그리드 */}
-      <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-3'}`}>
+      <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-2'}`}>
         <div className="min-w-max">
           {/* 일자 헤더 */}
           <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `120px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `120px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}>
             <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
-              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-1' : 'px-4 py-3'
+              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
             }`}>
               사용자
             </div>
@@ -3696,7 +3726,7 @@ function MonthlyAttendanceCalendar({
               <div
                 key={day}
                 className={`text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)} ${
-                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0.5' : 'px-3 py-3'
+                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0.5' : 'px-3 py-2'
                 }`}
               >
                 <div className="font-bold">{day}</div>
@@ -3714,7 +3744,7 @@ function MonthlyAttendanceCalendar({
             >
               {/* 사용자 이름 - 고정 */}
               <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 flex items-center ${
-                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-1' : 'px-4 py-3'
+                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
               }`}>
                 {user.username}
                 <span className="text-xs text-gray-500 ml-1">({user.name})</span>
@@ -3732,7 +3762,7 @@ function MonthlyAttendanceCalendar({
                     key={day}
                     onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
                     className={`text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 ${
-                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[1rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[7rem]' : 'px-1 py-3 min-h-[7rem]'
+                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[1rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[7rem]' : 'px-1 py-2 min-h-[7rem]'
                     } ${
                       dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
                     } border-r border-gray-100 last:border-r-0`}
@@ -3800,13 +3830,13 @@ function MonthlyAttendanceCalendar({
       </div>
 
       {/* 범례 */}
-      <div className={`${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-3'} bg-gray-50 border-t border-gray-200`}>
-        <div className="flex flex-col gap-2 py-3">
+      <div className={`${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-2'} bg-gray-50 border-t border-gray-200`}>
+        <div className="flex flex-col gap-2 py-2">
           {/* 시간 슬롯 색상 범례 (타임슬롯 모드에서만 표시) */}
           {viewMode === 'timeslot' && (
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
-        <div className="flex flex-wrap gap-2 py-3 text-xs">
+        <div className="flex flex-wrap gap-2 py-2 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-500 border border-gray-300 rounded"></div>
                 <span>연차</span>
