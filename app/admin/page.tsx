@@ -154,6 +154,7 @@ export default function AdminPage() {
   // 현재 사용자 권한 상태
   const [currentUserRole, setCurrentUserRole] = useState<'user' | 'manager' | 'admin'>('user');
   const [currentUserDepartment, setCurrentUserDepartment] = useState<string>('');
+  const [currentUsername, setCurrentUsername] = useState<string>('');
 
   // 일자 범위 필터링 상태
   const [useDateRange, setUseDateRange] = useState(false);
@@ -240,8 +241,9 @@ export default function AdminPage() {
       const userDepartment = session.department || '';
       setCurrentUserRole(userRole);
       setCurrentUserDepartment(userDepartment);
+      setCurrentUsername(session.username);
 
-      await Promise.all([loadUsers(userRole, userDepartment), loadAttendances(userRole, userDepartment)]);
+      await Promise.all([loadUsers(userRole, userDepartment, activeTab, session.username), loadAttendances(userRole, userDepartment)]);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -249,23 +251,32 @@ export default function AdminPage() {
     }
   };
 
-  const loadUsers = async (userRole?: string, userDepartment?: string) => {
+  const loadUsers = async (userRole?: string, userDepartment?: string, activeTab?: string, currentUsername?: string) => {
     const res = await fetch('/api/users');
     if (res.ok) {
       let data = await res.json();
 
-      // 중간관리자의 경우 자신이 속한 부서의 일반 사용자만 표시 (관리자는 제외)
+      // 중간관리자의 경우 자신이 속한 부서의 자신을 포함한 일반 사용자만 표시 (관리자는 제외)
       const role = userRole || currentUserRole;
       const department = userDepartment || currentUserDepartment;
+
+      console.log('loadUsers - role:', role, 'department:', department, 'currentUsername:', currentUsername);
+      console.log('loadUsers - original data length:', data.length);
 
       if (role === 'manager' && department) {
         data = data.filter((user: User) =>
           user.department === department &&
-          user.role === 'user'  // 일반 사용자만 표시
+          (user.role === 'user' || user.username === currentUsername)  // 일반 사용자 또는 현재 중간관리자
         );
+        console.log('loadUsers - filtered data (with department) length:', data.length);
       } else if (role === 'manager' && !department) {
-        // department 정보가 없으면 빈 배열
-        data = [];
+        // department 정보가 없으면 현재 사용자만 표시
+        if (currentUsername) {
+          data = data.filter((user: User) => user.username === currentUsername);
+          console.log('loadUsers - filtered data (no department, current user only) length:', data.length);
+        } else {
+          data = [];
+        }
       }
 
       // username 기준으로 정렬
@@ -534,7 +545,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        await Promise.all([loadUsers(), loadAttendances()]);
+        await Promise.all([loadUsers(undefined, undefined, activeTab, currentUsername), loadAttendances()]);
         setAlertTitle('성공');
         setAlertMessage('근태가 추가되었습니다.');
         setAlertType('success');
@@ -572,7 +583,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        await loadUsers();
+        await loadUsers(undefined, undefined, activeTab, currentUsername);
         setEditingUser(null);
         setAnnualLeaveTotal('');
         setCompLeaveTotal('');
@@ -608,7 +619,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        await loadUsers();
+        await loadUsers(undefined, undefined, activeTab, currentUsername);
         setShowBulkCreateModal(false);
         setBulkCreateYear(new Date().getFullYear().toString());
         setAlertTitle('성공');
@@ -708,7 +719,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        await Promise.all([loadUsers(), loadAttendances()]);
+        await Promise.all([loadUsers(undefined, undefined, activeTab, currentUsername), loadAttendances()]);
         setDeleteModalOpen(false);
         setAttendanceToDelete(null);
         setAttendanceToView(null);
@@ -763,7 +774,7 @@ export default function AdminPage() {
 
       if (res.ok) {
         const data = await res.json();
-        await loadUsers();
+        await loadUsers(undefined, undefined, activeTab, currentUsername);
         setAlertTitle('성공');
         setAlertMessage(`사용자가 추가되었습니다!\n사번: ${newUserUsername}\n이름: ${newUserName}\n초기 비밀번호: ${password}\n\n보안을 위해 초기 비밀번호로 로그인 후 바로 비밀번호를 변경해주세요.`);
         setAlertType('success');
@@ -812,7 +823,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        await Promise.all([loadUsers(), loadAttendances()]);
+        await Promise.all([loadUsers(undefined, undefined, activeTab, currentUsername), loadAttendances()]);
         setUserDeleteModalOpen(false);
         setUserToDelete(null);
         setAlertTitle('성공');
@@ -949,7 +960,7 @@ export default function AdminPage() {
               >
                 <span>대시보드</span>
               </button>
-              {currentUserRole === 'admin' && (
+              {(currentUserRole === 'admin' || currentUserRole === 'manager') && (
                 <button
                   onClick={() => setActiveTab('users')}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
@@ -1132,17 +1143,20 @@ export default function AdminPage() {
           </div>
           )}
 
-          {/* 사용자 추가 - 관리자만 표시 */}
-          {activeTab === 'users' && currentUserRole === 'admin' && (
+          {/* 사용자 관리 섹션 */}
+          {activeTab === 'users' && (currentUserRole === 'admin' || currentUserRole === 'manager') && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
             <div className="flex items-center gap-2 py-2 mb-2">
               <span className="text-3xl">👥</span>
-              <h2 className="text-xl font-bold text-gray-900">사용자</h2>
+              <h2 className="text-xl font-bold text-gray-900">사용자 관리</h2>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-gray-900">
-                사용자 등록
-              </h3>
+
+            {/* 사용자 등록 - 관리자만 표시 */}
+            {currentUserRole === 'admin' && (
+              <div className="space-y-1 mb-8">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  사용자 등록
+                </h3>
               <div className="grid grid-cols-2 gap-2 py-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1211,16 +1225,17 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div> */}
-              <button
-                onClick={handleAddUser}
-                className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
-              >
-                사용자 추가
-              </button>
-            </div>
+                <button
+                  onClick={handleAddUser}
+                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                >
+                  사용자 추가
+                </button>
+              </div>
+            )}
 
-            {/* 사용자 리스트 */}
-            <div className="mt-8 border-t border-blue-200 pt-6">
+            {/* 사용자 리스트 - 중간관리자도 표시 */}
+            <div className={`${currentUserRole === 'admin' ? 'mt-8 border-t border-blue-200 pt-6' : 'mt-0'}`}>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 등록된 사용자
               </h3>
@@ -1329,19 +1344,21 @@ export default function AdminPage() {
                       <span className="font-medium">임시비밀번호 발급</span>
                     </button>
 
-                    <button
-                      onClick={() => {
-                        handleDeleteUser(selectedUserForAction.id);
-                        setShowUserActionModal(false);
-                        setSelectedUserForAction(null);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      <span className="font-medium">사용자 삭제</span>
-                    </button>
+                    {selectedUserForAction.role !== 'user' && (
+                      <button
+                        onClick={() => {
+                          handleDeleteUser(selectedUserForAction.id);
+                          setShowUserActionModal(false);
+                          setSelectedUserForAction(null);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span className="font-medium">사용자 삭제</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
