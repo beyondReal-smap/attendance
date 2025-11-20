@@ -41,5 +41,6 @@ export interface Session {
   department?: string;
   isAdmin: boolean;
   role: 'user' | 'manager' | 'admin';
+  isTempPassword?: boolean;
 }
 

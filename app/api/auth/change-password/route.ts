@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession, hashPassword } from '@/lib/auth';
+import { getSession, hashPassword, createSession } from '@/lib/auth';
 import { sql } from '@/lib/db';
 
 export async function POST(request: Request) {
@@ -24,6 +24,9 @@ export async function POST(request: Request) {
       SET password = ${hashedPassword}, is_temp_password = 0
       WHERE id = ${session.userId}
     `;
+
+    // 세션 업데이트 (임시비밀번호 플래그 제거)
+    await createSession(session.userId, session.username, session.name, session.department, session.isAdmin, session.role, false);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
@@ -17,6 +17,17 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTempPasswordUser, setIsTempPasswordUser] = useState(false);
+
+  // URL 파라미터 확인
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tempPassword = urlParams.get('tempPassword');
+      if (tempPassword === 'true') {
+        setError('보안을 위해 반드시 새로운 비밀번호로 변경해주세요.');
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

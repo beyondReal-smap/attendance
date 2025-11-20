@@ -435,11 +435,14 @@ export default function CalendarPage() {
         return;
       }
       const userData = await userRes.json();
-      setUser(userData);
 
-      // 임시 비밀번호(4자리 숫자)로 로그인한 경우 비밀번호 변경 모달 표시
-      const isTempPassword = /^\d{4}$/.test(''); // 실제로는 세션에서 비밀번호 정보를 받아와야 함
-      // TODO: 세션에 임시 비밀번호 정보 추가 필요
+      // 임시비밀번호 사용자는 비밀번호 변경을 완료할 때까지 접근 불가
+      if (userData.isTempPassword) {
+        router.push('/login?tempPassword=true');
+        return;
+      }
+
+      setUser(userData);
 
       const year = currentMonth.year();
       const month = currentMonth.month() + 1;

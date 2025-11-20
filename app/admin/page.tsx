@@ -223,6 +223,12 @@ export default function AdminPage() {
       }
       const session = await sessionRes.json();
 
+      // 임시비밀번호 사용자는 비밀번호 변경을 완료할 때까지 접근 불가
+      if (session.isTempPassword) {
+        router.push('/login?tempPassword=true');
+        return;
+      }
+
       // 권한에 따른 접근 제어 - 관리자만 접근 가능
       if (session.role !== 'admin' && session.role !== 'manager') {
         router.push('/calendar');
