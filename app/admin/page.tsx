@@ -3636,12 +3636,15 @@ function MonthlyAttendanceCalendar({
 
     if (attendances.length === 1) {
       const attendance = attendances[0];
+      // 동석(코칭)을 코칭으로 표시
+      const displayType = attendance.type === '동석(코칭)' ? '코칭' : attendance.type;
+
       if (attendance.type === '반반차' && attendance.startTime && attendance.endTime) {
         const startTime = formatTimeDisplay(attendance.startTime);
         const endTime = formatTimeDisplay(attendance.endTime);
-        return `${attendance.type}\n${startTime}~${endTime}`;
+        return `${displayType}\n${startTime}~${endTime}`;
       }
-      return attendance.type;
+      return displayType;
     }
 
     return `${attendances.length}개`;
@@ -3716,7 +3719,7 @@ function MonthlyAttendanceCalendar({
       <div className={`relative overflow-x-auto ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'p-0' : 'px-4 py-2'}`}>
         <div className="min-w-max">
           {/* 일자 헤더 */}
-          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}>
+          <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 40px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 40px)` : `150px repeat(${daysInMonth}, 80px)` }}>
             <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
               viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-2' : 'px-4 py-2'
             }`}>
@@ -3740,7 +3743,7 @@ function MonthlyAttendanceCalendar({
             <div
               key={user.id}
               className="grid border-b border-gray-100 hover:bg-gray-50 transition"
-              style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 60px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 80px)` : `150px repeat(${daysInMonth}, 80px)` }}
+              style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 40px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 40px)` : `150px repeat(${daysInMonth}, 80px)` }}
             >
               {/* 사용자 이름 - 고정 */}
               <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 ${
@@ -3903,9 +3906,6 @@ function MonthlyAttendanceCalendar({
         </div>
 
         </div>
-        {viewMode === 'timeslot' && (
-          <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
-        )}
     </div>
   );
 }
