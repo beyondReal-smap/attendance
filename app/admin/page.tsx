@@ -1059,130 +1059,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* 그래프 섹션 */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">근태 통계</h3>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                {/* 근태 유형별 분포 - 도넛 차트 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-8">
-                  <h4 className="text-base font-semibold text-gray-900 mb-4">근태 유형별 분포</h4>
-                  <div className="h-96">
-                    {(() => {
-                      const typeStats = filteredAttendances.reduce((acc, attendance) => {
-                        acc[attendance.type] = (acc[attendance.type] || 0) + 1;
-                        return acc;
-                      }, {} as Record<string, number>);
-
-                      const total = Object.values(typeStats).reduce((sum, count) => sum + count, 0);
-                      const colors = {
-                        '연차': '#ef4444',        // bg-red-500
-                        '결근': '#f43f5e',       // bg-rose-500
-                        '오전반차': '#f97316',     // bg-orange-500
-                        '연장근무': '#f59e0b',      // bg-amber-500
-                        '체휴': '#eab308',        // bg-yellow-500
-                        '오후반차': '#84cc16',      // bg-lime-500
-                        '출장': '#22c55e',        // bg-green-500
-                        '교육': '#10b981',        // bg-emerald-500
-                        '휴식': '#14b8a6',        // bg-teal-500
-                        '팀장대행': '#06b6d4',      // bg-cyan-500
-                        '동석(코칭)': '#3b82f6',        // bg-blue-500
-                        '반반차': '#6366f1',      // bg-indigo-500
-                        '장애': '#8b5cf6',        // bg-violet-500
-                        '기타': '#a855f7'        // bg-purple-500
-                      };
-
-                      const data = Object.entries(typeStats).map(([type, count]) => ({
-                        name: type,
-                        value: count,
-                        percentage: Math.round((count / total) * 100)
-                      }));
-
-                      const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
-                        if (percentage <= 5) return null;
-
-                        const RADIAN = Math.PI / 180;
-                        const radius = outerRadius + 15; // 도넛 바깥쪽에 더 넉넉하게 배치
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                        // 각도에 따라 textAnchor 결정
-                        let textAnchor: 'start' | 'middle' | 'end' = 'middle';
-                        const angle = midAngle % 360;
-                        if (angle >= 90 && angle <= 270) {
-                          textAnchor = 'end';
-                        } else {
-                          textAnchor = 'start';
-                        }
-
-                        return (
-                          <text
-                            x={x}
-                            y={y}
-                            fill="#374151"
-                            textAnchor={textAnchor}
-                            dominantBaseline="central"
-                            className="text-xs font-medium"
-                          >
-                            {`${percentage}%`}
-                          </text>
-                        );
-                      };
-
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={data}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={renderCustomizedLabel}
-                              outerRadius={80}
-                              innerRadius={40}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={colors[entry.name as keyof typeof colors] || '#6b7280'} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value: any, name: any) => [`${value}건 (${data.find(d => d.name === name)?.percentage}%)`, name]}
-                              contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                              }}
-                            />
-                            <Legend
-                              verticalAlign="bottom"
-                              height={60}
-                              formatter={(value, entry: any) => (
-                                <span style={{ color: entry.color, fontSize: '11px' }}>
-                                  {value}: {data.find(d => d.name === value)?.value}건
-                                </span>
-                              )}
-                            />
-                            {/* 중앙 텍스트 */}
-                            <text x="50%" y="40%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold fill-gray-900">
-                              {total}
-                            </text>
-                            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-sm fill-gray-500">
-                              총 기록
-                            </text>
-                          </PieChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-
-              </div>
-            </div>
-
             {/* 최근 근태 기록 */}
             <div className="border-t border-gray-200 mt-8 pt-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
@@ -1239,7 +1115,7 @@ export default function AdminPage() {
               <h2 className="text-xl font-bold text-gray-900">사용자</h2>
             </div>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gapx-2 py-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     사번
@@ -1330,7 +1206,7 @@ export default function AdminPage() {
                     <div key={user.id} className="bg-white rounded-lg px-2 py-2 border border-blue-100 hover:border-blue-200 transition">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gapx-2 py-2">
+                          <div className="flex items-center gap-3 py-2">
                             <img
                               src={getAvatarImage(user.id)}
                               alt={user.name}
@@ -1407,7 +1283,7 @@ export default function AdminPage() {
             <div className="space-y-3 max-h-[800px] overflow-y-auto scrollbar-hide">
               {users.map((user) => (
                 <div key={user.id} className="bg-white rounded-xl px-2 py-2 border border-gray-200 hover:border-gray-300 transition">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-900">{user.username}</h3>
                       <p className="text-xs text-gray-500">{user.name}</p>
@@ -1802,7 +1678,7 @@ export default function AdminPage() {
             <div className="mb-6 px-2 py-2 bg-gray-50 rounded-lg">
               {/* 필터 타입 토글 */}
               <div className="mb-4">
-                <div className="flex items-center gapx-2 py-2">
+                <div className="flex items-center gap-4 py-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
@@ -1813,7 +1689,7 @@ export default function AdminPage() {
                     />
                     <span className="text-sm font-medium text-gray-700">월별 조회</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer ml-4">
                     <input
                       type="radio"
                       name="filterType"
@@ -1826,7 +1702,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gapx-2 py-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2">
                 {!useDateRange ? (
                   // 월 선택
                   <div>
@@ -1903,7 +1779,7 @@ export default function AdminPage() {
               {!useDateRange && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center gapx-2 py-2">
-                    <span className="text-sm font-medium text-gray-700">보기 방식:</span>
+                    
                     <div className="flex gap-2">
                       <button
                         onClick={() => setViewMode('calendar')}
