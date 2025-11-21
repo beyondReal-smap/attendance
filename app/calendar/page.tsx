@@ -289,9 +289,17 @@ const MobileCalendar = memo(({
             transition-all duration-200 relative
             ${colors}
             ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
-            ${isToday && !isSelected ? 'ring-2 ring-gray-300' : ''}
             ${!hasAttendance ? 'border border-gray-200' : ''}
           `}
+          style={isToday && !isSelected ? {
+            backgroundImage: `repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 6px,
+              rgba(239, 68, 68, 0.25) 6px,
+              rgba(239, 68, 68, 0.25) 12px
+            )`
+          } : undefined}
         >
           <span className={`${attendanceType ? textColor : 'text-black'} text-base font-bold`}>
             {dayIndex + 1}
