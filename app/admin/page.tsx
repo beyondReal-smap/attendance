@@ -1197,7 +1197,7 @@ export default function AdminPage() {
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
                   >
                     <span>
-                      {newUserDepartment || '소속을 선택하세요'}
+                      {newUserDepartment || '소속'}
                     </span>
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
