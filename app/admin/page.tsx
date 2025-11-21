@@ -1900,16 +1900,6 @@ export default function AdminPage() {
                         캘린더
                       </button>
                       <button
-                        onClick={() => setViewMode('table')}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          viewMode === 'table'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        테이블
-                      </button>
-                      <button
                         onClick={() => setViewMode('timeslot')}
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
                           viewMode === 'timeslot'
@@ -1918,6 +1908,16 @@ export default function AdminPage() {
                         }`}
                       >
                         타임슬롯
+                      </button>
+                      <button
+                        onClick={() => setViewMode('table')}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                          viewMode === 'table'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        테이블
                       </button>
                     </div>
                   </div>
@@ -3799,7 +3799,7 @@ function MonthlyAttendanceCalendar({
                     } border-r border-gray-100 last:border-r-0`}
                     whileHover={dayAttendances.length > 0 ? { scale: 1.02 } : {}}
                     whileTap={dayAttendances.length > 0 ? { scale: 0.98 } : {}}
-                    title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
+                    title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.startTime && a.endTime ? ` [${formatTimeDisplay(a.startTime)}~${formatTimeDisplay(a.endTime)}]` : ''}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
                   >
                     <div className="flex flex-col gap-0.5">
                       {/* 30분 단위 시간 슬롯들 (타임슬롯 모드에서만 표시) */}
