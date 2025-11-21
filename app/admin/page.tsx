@@ -2274,7 +2274,7 @@ export default function AdminPage() {
             title={alertTitle}
             message={alertMessage}
             type={alertType}
-            confirmText="테이블 뷰로 이동"
+            confirmText="확인"
             onConfirm={() => setViewMode('table')}
           />
 
