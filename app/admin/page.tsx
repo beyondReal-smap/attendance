@@ -190,13 +190,15 @@ export default function AdminPage() {
 
   // 권한 선택 모달 상태
   const [showRoleModal, setShowRoleModal] = useState(false);
+  // 소속 선택 모달 상태
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoadData();
   }, []);
 
   // 모달이 열려있을 때 body 스크롤 방지
-  const hasModalOpen = useMemo(() => showUserModal || showRoleModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen || showUserActionModal, [showUserModal, showRoleModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showYearPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen, attendanceDetailModalOpen, showUserActionModal]);
+  const hasModalOpen = useMemo(() => showUserModal || showRoleModal || showDepartmentModal || showBulkCreateModal || showUserFilter || editingUser || showStartCalendar || showEndCalendar || showMonthPicker || showYearPicker || showStartDatePicker || showEndDatePicker || showTypeModal || userToDelete || alertModalOpen || attendanceDetailModalOpen || showUserActionModal, [showUserModal, showRoleModal, showDepartmentModal, showBulkCreateModal, showUserFilter, editingUser, showStartCalendar, showEndCalendar, showMonthPicker, showYearPicker, showStartDatePicker, showEndDatePicker, showTypeModal, userToDelete, alertModalOpen, attendanceDetailModalOpen, showUserActionModal]);
 
   useEffect(() => {
 
@@ -1189,13 +1191,18 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     소속
                   </label>
-                  <input
-                    type="text"
-                    value={newUserDepartment}
-                    onChange={(e) => setNewUserDepartment(e.target.value)}
-                    placeholder="소속을 입력하세요"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDepartmentModal(true)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
+                  >
+                    <span>
+                      {newUserDepartment || '소속을 선택하세요'}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -2725,6 +2732,115 @@ export default function AdminPage() {
                         <div>
                           <div className="font-medium">관리자</div>
                           <div className="text-xs opacity-75">전체 시스템 관리</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* 소속 선택 모달 */}
+          {showDepartmentModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              >
+                {/* 헤더 */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-3">
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">소속 선택</h3>
+                      <p className="text-blue-100 text-sm">사용자의 소속을 선택하세요</p>
+                    </div>
+                    <button
+                      onClick={() => setShowDepartmentModal(false)}
+                      className="ml-auto p-1 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                    >
+                      <FiX className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="px-4 py-2">
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setNewUserDepartment('모바일화상상담(청주)');
+                        setShowDepartmentModal(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
+                        newUserDepartment === '모바일화상상담(청주)'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-medium">모바일화상상담(청주)</div>
+                          <div className="text-xs opacity-75">청주 지역 모바일 화상 상담</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setNewUserDepartment('모바일화상상담(서울)');
+                        setShowDepartmentModal(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
+                        newUserDepartment === '모바일화상상담(서울)'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-medium">모바일화상상담(서울)</div>
+                          <div className="text-xs opacity-75">서울 지역 모바일 화상 상담</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setNewUserDepartment('디지털데스크화상상담');
+                        setShowDepartmentModal(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
+                        newUserDepartment === '디지털데스크화상상담'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-medium">디지털데스크화상상담</div>
+                          <div className="text-xs opacity-75">디지털 데스크 화상 상담</div>
                         </div>
                       </div>
                     </button>
