@@ -289,6 +289,7 @@ const MobileCalendar = memo(({
             transition-all duration-200 relative
             ${colors}
             ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+            ${isToday && !isSelected ? 'ring-2 ring-red-400 ring-offset-1' : ''}
             ${!hasAttendance ? 'border border-gray-200' : ''}
           `}
           style={isToday && !isSelected ? {
