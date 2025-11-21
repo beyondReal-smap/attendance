@@ -21,16 +21,22 @@ interface Attendance {
   endTime?: string;
 }
 
-const MobileCalendar = memo(({ 
-  selectedDay, 
-  onDayClick, 
+const MobileCalendar = memo(({
+  selectedDay,
+  onDayClick,
   attendances,
-  onMonthChange
-}: { 
-  selectedDay: Dayjs | null; 
+  onMonthChange,
+  onTodayClick,
+  onRefreshData,
+  onSetAttendances
+}: {
+  selectedDay: Dayjs | null;
   onDayClick: (day: Dayjs) => void;
   attendances: Attendance[];
   onMonthChange?: (year: number, month: number) => void;
+  onTodayClick?: () => void;
+  onRefreshData?: () => void;
+  onSetAttendances?: (data: Attendance[]) => void;
 }) => {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [isAnimating, setIsAnimating] = useState(false);
@@ -202,12 +208,40 @@ const MobileCalendar = memo(({
     }, 150);
   };
 
-  const handleToday = () => {
+  const handleToday = async () => {
+    console.log('handleToday called');
     setAnimationDirection('right');
     setIsAnimating(true);
-    setTimeout(() => {
-      setCurrentMonth(today);
-      onDayClick(today);
+    setTimeout(async () => {
+      const now = dayjs();
+      console.log('Setting currentMonth to:', now.format('YYYY-MM'));
+      setCurrentMonth(now);
+      if (onTodayClick) {
+        onTodayClick();
+      }
+
+      // 현재 월의 데이터를 직접 가져와서 설정
+      try {
+        const year = now.year();
+        const month = now.month() + 1;
+        console.log('Directly fetching attendance for today, year:', year, 'month:', month);
+
+        const res = await fetch(`/api/attendance?year=${year}&month=${month}`);
+        if (res.ok) {
+          const data = await res.json();
+          console.log('Directly fetched attendance data for today:', data);
+
+          // attendances 상태 직접 설정
+          if (onSetAttendances) {
+            onSetAttendances(data);
+          }
+        } else {
+          console.error('Failed to fetch attendance data, status:', res.status);
+        }
+      } catch (error) {
+        console.error('Error fetching attendance data in handleToday:', error);
+      }
+
       setIsAnimating(false);
     }, 150);
   };
@@ -412,7 +446,7 @@ export default function CalendarPage() {
     if (isTempPasswordLogin) {
       setShowPasswordChangeModal(true);
     }
-  }, [currentMonth]);
+  }, [currentMonth?.format('YYYY-MM')]);
 
   // 모달이 열려있을 때 body 스크롤 방지
   useEffect(() => {
@@ -437,6 +471,7 @@ export default function CalendarPage() {
 
   const fetchUserAndAttendances = async () => {
     try {
+      console.log('fetchUserAndAttendances called, currentMonth:', currentMonth?.format('YYYY-MM'));
       const userRes = await fetch('/api/auth/session');
       if (!userRes.ok) {
         router.push('/login');
@@ -454,10 +489,14 @@ export default function CalendarPage() {
 
       const year = currentMonth.year();
       const month = currentMonth.month() + 1;
+      console.log('Fetching attendance for year:', year, 'month:', month);
       const res = await fetch(`/api/attendance?year=${year}&month=${month}`);
       if (res.ok) {
         const data = await res.json();
+        console.log('Fetched attendance data:', data);
         setAttendances(data);
+      } else {
+        console.error('Failed to fetch attendance data, status:', res.status);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -820,6 +859,9 @@ export default function CalendarPage() {
             onDayClick={handleDayClick}
             attendances={attendances}
             onMonthChange={handleMonthChange}
+            onTodayClick={() => setSelectedDate(null)}
+            onRefreshData={fetchUserAndAttendances}
+            onSetAttendances={setAttendances}
           />
         </div>
 
