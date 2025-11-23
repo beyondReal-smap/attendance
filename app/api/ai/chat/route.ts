@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     const users = await sql`
       SELECT id, name, department, username, role
       FROM atnd_users
+      LIMIT 20
     `;
 
     const leaveBalances = await sql`
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       SELECT user_id, date, type, reason, start_time, end_time
       FROM atnd_attendance
       ORDER BY date DESC
-      LIMIT 100
+      LIMIT 50
     `;
 
     // 데이터 조합 (user_id 기준)
@@ -62,13 +63,16 @@ export async function POST(request: NextRequest) {
       이 데이터를 바탕으로 사용자의 질문에 답변해주세요.
       
       데이터:
-      ${JSON.stringify(aggregatedData, null, 2)}
+      ${JSON.stringify(aggregatedData, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+      , 2)}
     `;
 
     try {
       const result = await streamText({
         // model: 'meituan/longcat-flash-chat',
         model: 'google/gemini-2.5-flash-lite',
+        // model: 'google/gemini-1.5-flash',
         system: systemPrompt,
         prompt: message,
       });
@@ -109,11 +113,12 @@ export async function POST(request: NextRequest) {
               console.error('DB 저장 오류:', dbError);
             }
 
-          } catch (streamError) {
+          } catch (streamError: any) {
             console.error('스트리밍 오류:', streamError);
+            const errorMessage = streamError.message || '스트리밍 중 알 수 없는 오류가 발생했습니다.';
             const errorData = JSON.stringify({
               type: 'error',
-              error: '스트리밍 중 오류가 발생했습니다.'
+              error: `스트리밍 오류: ${errorMessage}`
             }) + '\n';
             controller.enqueue(new TextEncoder().encode(errorData));
           } finally {
