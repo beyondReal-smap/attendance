@@ -26,6 +26,7 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import HamburgerMenu from '@/components/HamburgerMenu';
 
 // 아바타 이미지 선택 헬퍼 함수
 const getAvatarImage = (userId: string): string => {
@@ -328,7 +329,7 @@ export default function AdminPage() {
 
   // 필터링된 근태 데이터
   const [filteredAttendances, setFilteredAttendances] = useState<Attendance[]>([]);
-  
+
   // 필터링된 사용자 목록 (캘린더 뷰용)
   const filteredUsers = useMemo(() => {
     if (selectedUserFilter === 'all') {
@@ -503,13 +504,13 @@ export default function AdminPage() {
 
     // 시간 겹침 체크를 위한 새로운 근태 시간 계산
     const newStartTime = selectedType === '반반차' ? startTime :
-                        (selectedType === '오전반차' ? '09:00' :
-                       selectedType === '오후반차' ? '14:00' :
-                       ['연차', '체휴', '결근'].includes(selectedType) ? '09:00' : undefined);
+      (selectedType === '오전반차' ? '09:00' :
+        selectedType === '오후반차' ? '14:00' :
+          ['연차', '체휴', '결근'].includes(selectedType) ? '09:00' : undefined);
     const newEndTime = selectedType === '반반차' ? endTime :
-                      (selectedType === '오전반차' ? '14:00' :
-                       selectedType === '오후반차' ? '18:00' :
-                       ['연차', '체휴', '결근'].includes(selectedType) ? '18:00' : undefined);
+      (selectedType === '오전반차' ? '14:00' :
+        selectedType === '오후반차' ? '18:00' :
+          ['연차', '체휴', '결근'].includes(selectedType) ? '18:00' : undefined);
 
     // 같은 날짜의 같은 사용자의 기존 근태들을 확인
     const existingAttendancesOnDate = attendances.filter(a =>
@@ -540,11 +541,11 @@ export default function AdminPage() {
           type: selectedType,
           reason: reason.trim(),
           startTime: selectedType === '반반차' ? startTime :
-                     (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' :
-                      ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? startTime : undefined),
+            (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '09:00' :
+              ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? startTime : undefined),
           endTime: selectedType === '반반차' ? endTime :
-                   (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' :
-                    ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? endTime : undefined),
+            (['연차', '오전반차', '오후반차', '체휴', '결근'].includes(selectedType) ? '18:00' :
+              ['팀장대행', '동석(코칭)', '교육', '휴식', '출장', '장애', '기타', '연장근무'].includes(selectedType) ? endTime : undefined),
         }),
       });
 
@@ -922,33 +923,32 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl lg:max-w-7xl xl:max-w-full mx-auto bg-white min-h-screen">
         {/* Header */}
-        <div className={`sticky top-0 z-50 bg-white border-b-2 ${
-          activeTab === 'dashboard' ? 'border-purple-200' :
+        <div className={`sticky top-0 z-50 bg-white border-b-2 ${activeTab === 'dashboard' ? 'border-purple-200' :
           activeTab === 'users' ? 'border-blue-200' :
-          activeTab === 'leave' ? 'border-red-200' :
-          activeTab === 'list' ? 'border-orange-200' :
-          'border-blue-200'
-        }`}>
+            activeTab === 'leave' ? 'border-red-200' :
+              activeTab === 'list' ? 'border-orange-200' :
+                'border-blue-200'
+          }`}>
           <div className="px-6 md:px-8 lg:px-12 py-4">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-xl font-bold text-gray-900">관리자</h1>
                 <p className="text-xs text-gray-500 mt-0.5">사용자 및 근태 관리</p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => router.push('/calendar')}
-                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all"
-                >
-                  캘린더
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all"
-                >
-                  로그아웃
-                </button>
-              </div>
+              <HamburgerMenu
+                items={[
+                  {
+                    label: '캘린더',
+                    onClick: () => router.push('/calendar'),
+                    className: 'text-gray-700'
+                  },
+                  {
+                    label: '로그아웃',
+                    onClick: handleLogout,
+                    className: 'text-red-600'
+                  }
+                ]}
+              />
             </div>
           </div>
 
@@ -957,43 +957,39 @@ export default function AdminPage() {
             <div className="flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
-                  activeTab === 'dashboard'
-                    ? 'bg-purple-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'dashboard'
+                  ? 'bg-purple-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
               >
                 <span>대시보드</span>
               </button>
               {(currentUserRole === 'admin' || currentUserRole === 'manager') && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
-                    activeTab === 'users'
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'users'
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
                 >
                   <span>사용자</span>
                 </button>
               )}
               <button
                 onClick={() => setActiveTab('leave')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
-                  activeTab === 'leave'
-                    ? 'bg-red-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'leave'
+                  ? 'bg-red-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
               >
                 <span>연차/체휴</span>
               </button>
               <button
                 onClick={() => setActiveTab('list')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
-                  activeTab === 'list'
-                    ? 'bg-orange-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${activeTab === 'list'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
               >
                 <span>근태목록</span>
               </button>
@@ -1004,227 +1000,226 @@ export default function AdminPage() {
         <div className="p-6 md:p-8 lg:p-12 space-y-8">
           {/* 대시보드 */}
           {activeTab === 'dashboard' && (
-          <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center gap-2 py-2 mb-2">
-              <span className="text-3xl">📊</span>
-              <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
-            </div>
+            <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-purple-200 shadow-lg">
+              <div className="flex items-center gap-2 py-2 mb-2">
+                <span className="text-3xl">📊</span>
+                <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
+              </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-8">
-              {/* 총 사용자 수 */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-4 py-2 border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-blue-600">총 사용자</p>
-                    <p className="text-2xl font-bold text-blue-900">{users.length}</p>
+              <div className="grid grid-cols-2 gap-2 mb-8">
+                {/* 총 사용자 수 */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-4 py-2 border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-blue-600">총 사용자</p>
+                      <p className="text-2xl font-bold text-blue-900">{users.length}</p>
+                    </div>
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                </div>
+
+                {/* 오늘 근태 현황 */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg px-4 py-2 border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-green-600">오늘 근태</p>
+                      <p className="text-2xl font-bold text-green-900">
+                        {(() => {
+                          const today = dayjs().format('YYYY-MM-DD');
+                          const todayAttendances = attendances.filter(a => {
+                            const dateMatch = a.date === today;
+                            const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
+                            return dateMatch && userMatch;
+                          });
+                          const uniqueUsers = new Set(todayAttendances.map(a => a.userId));
+                          return uniqueUsers.size;
+                        })()}
+                      </p>
+                      <p className="text-xs text-green-600">근태자 수</p>
+                    </div>
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 이번 달 근태 기록 수 */}
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg px-4 py-2 border border-yellow-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-yellow-600">{dayjs().format('M월')} 기록</p>
+                      <p className="text-2xl font-bold text-yellow-900">
+                        {(() => {
+                          const currentMonthStr = dayjs().format('YYYY-MM');
+                          return attendances.filter(a => {
+                            const dateMatch = a.date.startsWith(currentMonthStr);
+                            const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
+                            return dateMatch && userMatch;
+                          }).length;
+                        })()}
+                      </p>
+                      <p className="text-xs text-yellow-600">총 근태 수</p>
+                    </div>
+                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 연차 사용 현황 */}
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg px-4 py-2 border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-orange-600">연차 잔여</p>
+                      <p className="text-2xl font-bold text-orange-900">
+                        {(() => {
+                          const currentYear = new Date().getFullYear();
+                          return users.reduce((total, user) => total + (user.annualLeaveRemaining || 0), 0);
+                        })()}
+                      </p>
+                      <p className="text-xs text-orange-600">총 잔여 일수</p>
+                    </div>
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 오늘 근태 현황 */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg px-4 py-2 border border-green-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-green-600">오늘 근태</p>
-                    <p className="text-2xl font-bold text-green-900">
-                      {(() => {
-                        const today = dayjs().format('YYYY-MM-DD');
-                        const todayAttendances = attendances.filter(a => {
-                          const dateMatch = a.date === today;
-                          const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
-                          return dateMatch && userMatch;
-                        });
-                        const uniqueUsers = new Set(todayAttendances.map(a => a.userId));
-                        return uniqueUsers.size;
-                      })()}
-                    </p>
-                    <p className="text-xs text-green-600">근태자 수</p>
-                  </div>
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              {/* 최근 근태 기록 */}
+              <div className="border-t border-gray-200 mt-8 pt-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {(() => {
+                    const recentAttendances = filteredAttendances
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .slice(0, 10);
 
-              {/* 이번 달 근태 기록 수 */}
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg px-4 py-2 border border-yellow-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-yellow-600">{dayjs().format('M월')} 기록</p>
-                    <p className="text-2xl font-bold text-yellow-900">
-                      {(() => {
-                        const currentMonthStr = dayjs().format('YYYY-MM');
-                        return attendances.filter(a => {
-                          const dateMatch = a.date.startsWith(currentMonthStr);
-                          const userMatch = selectedUserFilter === 'all' || a.userName === selectedUserFilter;
-                          return dateMatch && userMatch;
-                        }).length;
-                      })()}
-                    </p>
-                    <p className="text-xs text-yellow-600">총 근태 수</p>
-                  </div>
-                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* 연차 사용 현황 */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg px-4 py-2 border border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-orange-600">연차 잔여</p>
-                    <p className="text-2xl font-bold text-orange-900">
-                      {(() => {
-                        const currentYear = new Date().getFullYear();
-                        return users.reduce((total, user) => total + (user.annualLeaveRemaining || 0), 0);
-                      })()}
-                    </p>
-                    <p className="text-xs text-orange-600">총 잔여 일수</p>
-                  </div>
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 최근 근태 기록 */}
-            <div className="border-t border-gray-200 mt-8 pt-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 근태 기록</h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {(() => {
-                  const recentAttendances = filteredAttendances
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    .slice(0, 10);
-
-                  return recentAttendances.map((attendance) => {
-                    const user = users.find(u => u.id === attendance.userId);
-                    return (
-                      <div key={`${attendance.userId}-${attendance.date}-${attendance.type}`} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3 py-2">
-                          <div className={`w-3 h-3 rounded-full ${
-                            attendance.type === '연차' ? 'bg-red-500' :
-                            attendance.type === '결근' ? 'bg-rose-500' :
-                            attendance.type === '오전반차' ? 'bg-orange-500' :
-                            attendance.type === '연장근무' ? 'bg-amber-500' :
-                            attendance.type === '체휴' ? 'bg-yellow-500' :
-                            attendance.type === '오후반차' ? 'bg-lime-500' :
-                            attendance.type === '출장' ? 'bg-green-500' :
-                            attendance.type === '교육' ? 'bg-emerald-500' :
-                            attendance.type === '휴식' ? 'bg-teal-500' :
-                            attendance.type === '팀장대행' ? 'bg-cyan-500' :
-                            attendance.type === '동석(코칭)' ? 'bg-blue-500' :
-                            attendance.type === '반반차' ? 'bg-indigo-500' :
-                            attendance.type === '장애' ? 'bg-violet-500' :
-                            attendance.type === '기타' ? 'bg-purple-500' :
-                            'bg-gray-500'
-                          }`}></div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{user?.name || '알 수 없음'}</p>
-                            <p className="text-xs text-gray-500">{attendance.date} - {attendance.type}</p>
+                    return recentAttendances.map((attendance) => {
+                      const user = users.find(u => u.id === attendance.userId);
+                      return (
+                        <div key={`${attendance.userId}-${attendance.date}-${attendance.type}`} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3 py-2">
+                            <div className={`w-3 h-3 rounded-full ${attendance.type === '연차' ? 'bg-red-500' :
+                              attendance.type === '결근' ? 'bg-rose-500' :
+                                attendance.type === '오전반차' ? 'bg-orange-500' :
+                                  attendance.type === '연장근무' ? 'bg-amber-500' :
+                                    attendance.type === '체휴' ? 'bg-yellow-500' :
+                                      attendance.type === '오후반차' ? 'bg-lime-500' :
+                                        attendance.type === '출장' ? 'bg-green-500' :
+                                          attendance.type === '교육' ? 'bg-emerald-500' :
+                                            attendance.type === '휴식' ? 'bg-teal-500' :
+                                              attendance.type === '팀장대행' ? 'bg-cyan-500' :
+                                                attendance.type === '동석(코칭)' ? 'bg-blue-500' :
+                                                  attendance.type === '반반차' ? 'bg-indigo-500' :
+                                                    attendance.type === '장애' ? 'bg-violet-500' :
+                                                      attendance.type === '기타' ? 'bg-purple-500' :
+                                                        'bg-gray-500'
+                              }`}></div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{user?.name || '알 수 없음'}</p>
+                              <p className="text-xs text-gray-500">{attendance.date} - {attendance.type}</p>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {attendance.reason ? attendance.reason.substring(0, 20) + (attendance.reason.length > 20 ? '...' : '') : '사유 없음'}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {attendance.reason ? attendance.reason.substring(0, 20) + (attendance.reason.length > 20 ? '...' : '') : '사유 없음'}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
+                      );
+                    });
+                  })()}
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* 사용자 관리 섹션 */}
           {activeTab === 'users' && (currentUserRole === 'admin' || currentUserRole === 'manager') && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-blue-200 shadow-lg">
-            <div className="flex items-center gap-2 py-2 mb-2">
-              <span className="text-3xl">👥</span>
-              <h2 className="text-xl font-bold text-gray-900">사용자 관리</h2>
-            </div>
-
-            {/* 사용자 등록 - 관리자만 표시 */}
-            {currentUserRole === 'admin' && (
-              <div className="space-y-1 mb-8">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  사용자 등록
-                </h3>
-              <div className="grid grid-cols-2 gap-2 py-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    사번
-                  </label>
-                  <input
-                    type="text"
-                    value={newUserUsername}
-                    onChange={(e) => setNewUserUsername(e.target.value)}
-                    placeholder="사번을 입력하세요"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    이름
-                  </label>
-                  <input
-                    type="text"
-                    value={newUserName}
-                    onChange={(e) => setNewUserName(e.target.value)}
-                    placeholder="이름을 입력하세요"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    소속
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowDepartmentModal(true)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
-                  >
-                    <span>
-                      {newUserDepartment || '소속'}
-                    </span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    권한
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowRoleModal(true)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
-                  >
-                    <span>
-                      {newUserRole === 'user' ? '사용자' :
-                       newUserRole === 'manager' ? '중간관리자' :
-                       '관리자'}
-                    </span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
+              <div className="flex items-center gap-2 py-2 mb-2">
+                <span className="text-3xl">👥</span>
+                <h2 className="text-xl font-bold text-gray-900">사용자 관리</h2>
               </div>
-              {/* <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
+
+              {/* 사용자 등록 - 관리자만 표시 */}
+              {currentUserRole === 'admin' && (
+                <div className="space-y-1 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    사용자 등록
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2 py-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        사번
+                      </label>
+                      <input
+                        type="text"
+                        value={newUserUsername}
+                        onChange={(e) => setNewUserUsername(e.target.value)}
+                        placeholder="사번을 입력하세요"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        이름
+                      </label>
+                      <input
+                        type="text"
+                        value={newUserName}
+                        onChange={(e) => setNewUserName(e.target.value)}
+                        placeholder="이름을 입력하세요"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        소속
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowDepartmentModal(true)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
+                      >
+                        <span>
+                          {newUserDepartment || '소속'}
+                        </span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        권한
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowRoleModal(true)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white text-left flex items-center justify-between hover:bg-gray-50"
+                      >
+                        <span>
+                          {newUserRole === 'user' ? '사용자' :
+                            newUserRole === 'manager' ? '중간관리자' :
+                              '관리자'}
+                        </span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  {/* <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
                 <div className="text-sm text-blue-700">
                   <div className="font-medium mb-1">자동 생성 비밀번호:</div>
                   <div className="text-lg font-mono font-bold">
@@ -1235,71 +1230,70 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div> */}
-                <button
-                  onClick={handleAddUser}
-                  className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
-                >
-                  사용자 추가
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={handleAddUser}
+                    className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                  >
+                    사용자 추가
+                  </button>
+                </div>
+              )}
 
-            {/* 사용자 리스트 - 중간관리자도 표시 */}
-            <div className={`${currentUserRole === 'admin' ? 'mt-8 border-t border-blue-200 pt-6' : 'mt-0'}`}>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                등록된 사용자
-              </h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
-                {users.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    등록된 사용자가 없습니다
-                  </div>
-                ) : (
-                  users.map((user) => (
-                    <div
-                      key={user.id}
-                      className="bg-white rounded-lg px-4 py-2 border border-blue-100 hover:border-blue-200 transition cursor-pointer"
-                      onClick={() => {
-                        setSelectedUserForAction(user);
-                        setShowUserActionModal(true);
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={getAvatarImage(user.id)}
-                          alt={user.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{user.username}</h4>
-                          <p className="text-sm text-gray-500">{user.name}</p>
-                          {user.department && (
-                            <p className="text-sm text-gray-600">{user.department}</p>
-                          )}
-                          <div className="flex gap-2 mt-1">
-                            <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${
-                              user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
-                              user.role === 'manager' ? 'bg-green-100 text-green-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {user.role === 'admin' ? '관리자' :
-                               user.role === 'manager' ? '중간관리자' :
-                               '사용자'}
-                            </span>
-                            {user.isTempPassword && (
-                              <span className="inline-flex px-3 py-2 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
-                                임시비밀번호
-                              </span>
+              {/* 사용자 리스트 - 중간관리자도 표시 */}
+              <div className={`${currentUserRole === 'admin' ? 'mt-8 border-t border-blue-200 pt-6' : 'mt-0'}`}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  등록된 사용자
+                </h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
+                  {users.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      등록된 사용자가 없습니다
+                    </div>
+                  ) : (
+                    users.map((user) => (
+                      <div
+                        key={user.id}
+                        className="bg-white rounded-lg px-4 py-2 border border-blue-100 hover:border-blue-200 transition cursor-pointer"
+                        onClick={() => {
+                          setSelectedUserForAction(user);
+                          setShowUserActionModal(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={getAvatarImage(user.id)}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{user.username}</h4>
+                            <p className="text-sm text-gray-500">{user.name}</p>
+                            {user.department && (
+                              <p className="text-sm text-gray-600">{user.department}</p>
                             )}
+                            <div className="flex gap-2 mt-1">
+                              <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${user.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                                user.role === 'manager' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                {user.role === 'admin' ? '관리자' :
+                                  user.role === 'manager' ? '중간관리자' :
+                                    '사용자'}
+                              </span>
+                              {user.isTempPassword && (
+                                <span className="inline-flex px-3 py-2 rounded-md text-xs font-medium bg-orange-100 text-orange-700">
+                                  임시비밀번호
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* 사용자 액션 모달 */}
@@ -1378,313 +1372,312 @@ export default function AdminPage() {
           {/* 사용자 연차/체휴 설정 - 관리자만 표시 */}
           {activeTab === 'leave' && (
             <div className="bg-white rounded-xl p-6 md:p-8 lg:p-10 border-2 border-red-200 shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 py-2">
-                <span className="text-3xl">📅</span>
-                <h2 className="text-xl font-bold text-gray-900">연차/체휴</h2>
-              </div>
-              {currentUserRole === 'admin' && (
-                <button
-                  onClick={() => setShowBulkCreateModal(true)}
-                  className="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  일괄 생성
-                </button>
-              )}
-            </div>
-            <div className="space-y-2 max-h-[800px] overflow-y-auto scrollbar-hide">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className={`bg-white rounded-xl px-3 py-2 border border-gray-200 hover:border-gray-300 transition ${
-                    currentUserRole === 'admin' ? 'cursor-pointer' : ''
-                  }`}
-                  onClick={() => {
-                    if (currentUserRole === 'admin') {
-                      setEditingUser(user);
-                      setAnnualLeaveTotal(user.annualLeaveTotal.toString());
-                      setCompLeaveTotal(user.compLeaveTotal.toString());
-                    }
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{user.username}</h3>
-                      <p className="text-xs text-gray-500">{user.name}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 py-2">
-                    <div className="bg-red-50 border border-red-100 rounded-lg p-2">
-                      <div className="text-xs text-red-600 font-medium mb-1">연차</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg font-bold text-red-700">
-                          {user.annualLeaveRemaining}
-                        </div>
-                        <div className="text-xs text-red-500">
-                          / {user.annualLeaveTotal}일
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2">
-                      <div className="text-xs text-yellow-600 font-medium mb-1">체휴</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg font-bold text-yellow-700">
-                          {user.compLeaveRemaining}
-                        </div>
-                        <div className="text-xs text-yellow-500">
-                          / {user.compLeaveTotal}일
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 py-2">
+                  <span className="text-3xl">📅</span>
+                  <h2 className="text-xl font-bold text-gray-900">연차/체휴</h2>
                 </div>
-              ))}
-            </div>
-
-            {/* 수정 모달 */}
-            {editingUser && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
-                <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
-                  {/* 헤더 */}
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3">
-                    <div className="flex items-center gap-2 py-2">
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </div>
+                {currentUserRole === 'admin' && (
+                  <button
+                    onClick={() => setShowBulkCreateModal(true)}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    일괄 생성
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2 max-h-[800px] overflow-y-auto scrollbar-hide">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className={`bg-white rounded-xl px-3 py-2 border border-gray-200 hover:border-gray-300 transition ${currentUserRole === 'admin' ? 'cursor-pointer' : ''
+                      }`}
+                    onClick={() => {
+                      if (currentUserRole === 'admin') {
+                        setEditingUser(user);
+                        setAnnualLeaveTotal(user.annualLeaveTotal.toString());
+                        setCompLeaveTotal(user.compLeaveTotal.toString());
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-lg font-bold text-white">연차/체휴</h3>
-                        <p className="text-green-100 text-sm">{editingUser.name}님의 휴가 정보를 수정하세요</p>
+                        <h3 className="font-semibold text-gray-900">{user.username}</h3>
+                        <p className="text-xs text-gray-500">{user.name}</p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* 내용 */}
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {/* 사용자 정보 */}
-                      <div className="px-4 py-2 bg-green-50 rounded-lg border border-green-100">
-                        <div className="flex items-center gap-2 py-2">
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                    <div className="grid grid-cols-2 gap-3 py-2">
+                      <div className="bg-red-50 border border-red-100 rounded-lg p-2">
+                        <div className="text-xs text-red-600 font-medium mb-1">연차</div>
+                        <div className="flex items-baseline gap-1">
+                          <div className="text-lg font-bold text-red-700">
+                            {user.annualLeaveRemaining}
                           </div>
-                          <div>
-                            <p className="text-xs text-green-600 font-medium">수정 대상</p>
-                            <p className="text-sm font-semibold text-green-900">{editingUser.name} ({editingUser.username})</p>
+                          <div className="text-xs text-red-500">
+                            / {user.annualLeaveTotal}일
                           </div>
                         </div>
                       </div>
+                      <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2">
+                        <div className="text-xs text-yellow-600 font-medium mb-1">체휴</div>
+                        <div className="flex items-baseline gap-1">
+                          <div className="text-lg font-bold text-yellow-700">
+                            {user.compLeaveRemaining}
+                          </div>
+                          <div className="text-xs text-yellow-500">
+                            / {user.compLeaveTotal}일
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-                      {/* 입력 필드들 */}
-                      <div className="grid grid-cols-2 gap-2 py-2">
+              {/* 수정 모달 */}
+              {editingUser && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
+                  <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                    {/* 헤더 */}
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3">
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            연차 총 수
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              value={annualLeaveTotal}
-                              onChange={(e) => setAnnualLeaveTotal(e.target.value)}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
-                              placeholder="0"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                              일
+                          <h3 className="text-lg font-bold text-white">연차/체휴</h3>
+                          <p className="text-green-100 text-sm">{editingUser.name}님의 휴가 정보를 수정하세요</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 내용 */}
+                    <div className="p-6">
+                      <div className="space-y-4">
+                        {/* 사용자 정보 */}
+                        <div className="px-4 py-2 bg-green-50 rounded-lg border border-green-100">
+                          <div className="flex items-center gap-2 py-2">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-xs text-green-600 font-medium">수정 대상</p>
+                              <p className="text-sm font-semibold text-green-900">{editingUser.name} ({editingUser.username})</p>
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            체휴 총 수
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              value={compLeaveTotal}
-                              onChange={(e) => setCompLeaveTotal(e.target.value)}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
-                              placeholder="0"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                              일
+
+                        {/* 입력 필드들 */}
+                        <div className="grid grid-cols-2 gap-2 py-2">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              연차 총 수
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={annualLeaveTotal}
+                                onChange={(e) => setAnnualLeaveTotal(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                                placeholder="0"
+                              />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                일
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              체휴 총 수
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={compLeaveTotal}
+                                onChange={(e) => setCompLeaveTotal(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-gray-900 transition-colors duration-200"
+                                placeholder="0"
+                              />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                                일
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 현재 정보 표시 */}
-                      <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-xs text-gray-500 font-medium">현재 정보</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 py-2 text-sm">
-                          <div>
-                            <p className="text-gray-500">연차</p>
-                            <p className="font-semibold text-gray-900">{editingUser.annualLeaveTotal}일 (사용: {editingUser.annualLeaveUsed}일)</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">체휴</p>
-                            <p className="font-semibold text-gray-900">{editingUser.compLeaveTotal}일 (사용: {editingUser.compLeaveUsed}일)</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 버튼들 */}
-                      <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
-                        <button
-                          onClick={() => {
-                            setEditingUser(null);
-                            setAnnualLeaveTotal('');
-                            setCompLeaveTotal('');
-                          }}
-                          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          취소
-                        </button>
-                        <button
-                          onClick={() => handleUpdateUserLeave(editingUser.id)}
-                          className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          저장
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 일괄 생성 모달 */}
-            {showBulkCreateModal && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
-                <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
-                  {/* 헤더 */}
-                  <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-3">
-                    <div className="flex items-center gap-2 py-2">
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">연차/체휴 일괄 생성</h3>
-                        <p className="text-red-100 text-sm">전직원에게 휴가를 일괄 생성합니다</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 내용 */}
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {/* 생성 정보 */}
-                      <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-2 py-2">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {/* 현재 정보 표시 */}
+                        <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
+                            <p className="text-xs text-gray-500 font-medium">현재 정보</p>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm text-blue-900 font-medium mb-2">생성될 휴가 정보</p>
-                            <div className="grid grid-cols-3 gap-2 py-2 text-sm">
-                              <div className="text-center">
-                                <p className="text-blue-600 font-semibold">연차</p>
-                                <p className="text-blue-800">15일</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-blue-600 font-semibold">체휴</p>
-                                <p className="text-blue-800">5일</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-blue-600 font-semibold">대상</p>
-                                <p className="text-blue-800">전직원</p>
-                              </div>
+                          <div className="grid grid-cols-2 gap-2 py-2 text-sm">
+                            <div>
+                              <p className="text-gray-500">연차</p>
+                              <p className="font-semibold text-gray-900">{editingUser.annualLeaveTotal}일 (사용: {editingUser.annualLeaveUsed}일)</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">체휴</p>
+                              <p className="font-semibold text-gray-900">{editingUser.compLeaveTotal}일 (사용: {editingUser.compLeaveUsed}일)</p>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 경고 메시지 */}
-                      <div className="px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
-                        <div className="flex items-start gap-2">
-                          <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          <p className="text-xs text-amber-800">
-                            이미 휴가가 생성된 사용자는 건너뜁니다. 기존 휴가에 영향을 주지 않습니다.
-                          </p>
+                        {/* 버튼들 */}
+                        <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
+                          <button
+                            onClick={() => {
+                              setEditingUser(null);
+                              setAnnualLeaveTotal('');
+                              setCompLeaveTotal('');
+                            }}
+                            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={() => handleUpdateUserLeave(editingUser.id)}
+                            className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            저장
+                          </button>
                         </div>
-                      </div>
-
-                      {/* 년도 입력 */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          생성 년도
-                        </label>
-                        <input
-                          type="number"
-                          value={bulkCreateYear}
-                          onChange={(e) => setBulkCreateYear(e.target.value)}
-                          min="2020"
-                          max="2030"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-gray-900 transition-colors duration-200"
-                          placeholder={new Date().getFullYear().toString()}
-                        />
-                      </div>
-
-                      {/* 버튼들 */}
-                      <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
-                        <button
-                          onClick={() => {
-                            setShowBulkCreateModal(false);
-                            setBulkCreateYear(new Date().getFullYear().toString());
-                          }}
-                          disabled={bulkCreateLoading}
-                          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
-                        >
-                          취소
-                        </button>
-                        <button
-                          onClick={handleBulkCreateLeave}
-                          disabled={bulkCreateLoading}
-                          className="flex-1 px-3 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                          {bulkCreateLoading ? (
-                            <>
-                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              생성 중...
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                              실행
-                            </>
-                          )}
-                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* 일괄 생성 모달 */}
+              {showBulkCreateModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 py-2">
+                  <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                    {/* 헤더 */}
+                    <div className="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-3">
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">연차/체휴 일괄 생성</h3>
+                          <p className="text-red-100 text-sm">전직원에게 휴가를 일괄 생성합니다</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 내용 */}
+                    <div className="p-6">
+                      <div className="space-y-4">
+                        {/* 생성 정보 */}
+                        <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-start gap-2 py-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm text-blue-900 font-medium mb-2">생성될 휴가 정보</p>
+                              <div className="grid grid-cols-3 gap-2 py-2 text-sm">
+                                <div className="text-center">
+                                  <p className="text-blue-600 font-semibold">연차</p>
+                                  <p className="text-blue-800">15일</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-blue-600 font-semibold">체휴</p>
+                                  <p className="text-blue-800">5일</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-blue-600 font-semibold">대상</p>
+                                  <p className="text-blue-800">전직원</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 경고 메시지 */}
+                        <div className="px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
+                          <div className="flex items-start gap-2">
+                            <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <p className="text-xs text-amber-800">
+                              이미 휴가가 생성된 사용자는 건너뜁니다. 기존 휴가에 영향을 주지 않습니다.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 년도 입력 */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            생성 년도
+                          </label>
+                          <input
+                            type="number"
+                            value={bulkCreateYear}
+                            onChange={(e) => setBulkCreateYear(e.target.value)}
+                            min="2020"
+                            max="2030"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none text-gray-900 transition-colors duration-200"
+                            placeholder={new Date().getFullYear().toString()}
+                          />
+                        </div>
+
+                        {/* 버튼들 */}
+                        <div className="flex gap-2 py-2 pt-4 border-t border-gray-200">
+                          <button
+                            onClick={() => {
+                              setShowBulkCreateModal(false);
+                              setBulkCreateYear(new Date().getFullYear().toString());
+                            }}
+                            disabled={bulkCreateLoading}
+                            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={handleBulkCreateLeave}
+                            disabled={bulkCreateLoading}
+                            className="flex-1 px-3 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {bulkCreateLoading ? (
+                              <>
+                                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                생성 중...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                실행
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* 캘린더 모달 */}
@@ -1772,251 +1765,228 @@ export default function AdminPage() {
 
           {/* Attendance List */}
           {activeTab === 'list' && (
-          <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 py-2">
-              <span className="text-3xl">📋</span>
-              <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={downloadXLSX}
-                  className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
-                >
-                  <FiDownload className="w-4 h-4" />
-                  Excel
-                </button>
-              </div>
-            </div>
-
-            {/* 필터링 컨트롤 */}
-            <div className="mb-8 px-4 py-2 bg-gray-50 rounded-lg">
-              {/* 필터 타입 토글 */}
-              <div className="mb-4">
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 py-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="filterType"
-                      checked={!useDateRange}
-                      onChange={() => setUseDateRange(false)}
-                      className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                    />
-                    <span className="text-sm font-medium text-gray-700">월별 조회</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer ml-4">
-                    <input
-                      type="radio"
-                      name="filterType"
-                      checked={useDateRange}
-                      onChange={() => setUseDateRange(true)}
-                      className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
-                    />
-                    <span className="text-sm font-medium text-gray-700">일자 범위 조회</span>
-                  </label>
+                  <span className="text-3xl">📋</span>
+                  <h2 className="text-xl font-bold text-gray-900">근태 목록</h2>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2">
-                {!useDateRange ? (
-                  // 월 선택
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      월 선택
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowMonthPicker(true)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                    >
-                      <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
-                      <FiCalendar className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                ) : (
-                  // 일자 범위 선택
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        시작일자
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowStartDatePicker(true)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                      >
-                        <span>{startDateFilter || '선택하세요'}</span>
-                        <FiCalendar className="w-4 h-4 text-gray-400" />
-                      </button>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        종료일자
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowEndDatePicker(true)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
-                      >
-                        <span>{endDateFilter || '선택하세요'}</span>
-                        <FiCalendar className="w-4 h-4 text-gray-400" />
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    사용자 필터
-                  </label>
+                <div className="flex gap-2">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setTempSelectedUserFilter(selectedUserFilter);
-                      setShowUserFilter(true);
-                    }}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    onClick={downloadXLSX}
+                    className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition"
                   >
-                  <span>
-                    {selectedUserFilter === 'all'
-                      ? '전체 사용자'
-                      : users.find(u => u.username === selectedUserFilter)?.username || '전체 사용자'
-                    }
-                  </span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <FiDownload className="w-4 h-4" />
+                    Excel
                   </button>
                 </div>
               </div>
 
-              {/* 뷰 모드 토글 (월별 조회일 때만) */}
-              {!useDateRange && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+              {/* 필터링 컨트롤 */}
+              <div className="mb-8 px-4 py-2 bg-gray-50 rounded-lg">
+                {/* 필터 타입 토글 */}
+                <div className="mb-4">
                   <div className="flex items-center gap-2 py-2">
-                    
-                    <div className="flex gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="filterType"
+                        checked={!useDateRange}
+                        onChange={() => setUseDateRange(false)}
+                        className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
+                      />
+                      <span className="text-sm font-medium text-gray-700">월별 조회</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer ml-4">
+                      <input
+                        type="radio"
+                        name="filterType"
+                        checked={useDateRange}
+                        onChange={() => setUseDateRange(true)}
+                        className="w-4 h-4 text-orange-600 focus:ring-orange-500 accent-orange-600 cursor-pointer"
+                      />
+                      <span className="text-sm font-medium text-gray-700">일자 범위 조회</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2">
+                  {!useDateRange ? (
+                    // 월 선택
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        월 선택
+                      </label>
                       <button
-                        onClick={() => setViewMode('calendar')}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          viewMode === 'calendar'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                        type="button"
+                        onClick={() => setShowMonthPicker(true)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
                       >
-                        캘린더
-                      </button>
-                      <button
-                        onClick={() => setViewMode('timeslot')}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          viewMode === 'timeslot'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        타임슬롯
-                      </button>
-                      <button
-                        onClick={() => setViewMode('table')}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          viewMode === 'table'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        테이블
+                        <span>{dayjs(selectedMonth).format('YYYY년 M월')}</span>
+                        <FiCalendar className="w-4 h-4 text-gray-400" />
                       </button>
                     </div>
+                  ) : (
+                    // 일자 범위 선택
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          시작일자
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowStartDatePicker(true)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        >
+                          <span>{startDateFilter || '선택하세요'}</span>
+                          <FiCalendar className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          종료일자
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowEndDatePicker(true)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                        >
+                          <span>{endDateFilter || '선택하세요'}</span>
+                          <FiCalendar className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      사용자 필터
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempSelectedUserFilter(selectedUserFilter);
+                        setShowUserFilter(true);
+                      }}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none flex items-center justify-between hover:bg-gray-50 text-gray-900"
+                    >
+                      <span>
+                        {selectedUserFilter === 'all'
+                          ? '전체 사용자'
+                          : users.find(u => u.username === selectedUserFilter)?.username || '전체 사용자'
+                        }
+                      </span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 뷰 모드 토글 (월별 조회일 때만) */}
+                {!useDateRange && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 py-2">
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setViewMode('calendar')}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'calendar'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                        >
+                          캘린더
+                        </button>
+                        <button
+                          onClick={() => setViewMode('timeslot')}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'timeslot'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                        >
+                          타임슬롯
+                        </button>
+                        <button
+                          onClick={() => setViewMode('table')}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'table'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                        >
+                          테이블
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 text-sm text-gray-600">
+                  총 {filteredAttendances.length}개의 근태 기록이 필터링되었습니다.
+                </div>
+              </div>
+              {/* 테이블 뷰 */}
+              {viewMode === 'table' && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사용자</th>
+                          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">날짜</th>
+                          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">유형</th>
+                          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사유</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAttendances.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-22 text-center text-sm text-gray-400">
+                              필터링된 근태 기록이 없습니다
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredAttendances.map((attendance) => {
+                            const user = users.find(u => u.username === attendance.userName);
+                            return (
+                              <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onClick={() => handleViewAttendance(attendance)}>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <div className="font-medium">{user?.username || attendance.userName}</div>
+                                  {user && (
+                                    <div className="text-xs text-gray-500">({user.name})</div>
+                                  )}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-600">{attendance.date}</td>
+                                <td className="px-4 py-2">
+                                  <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${attendance.type === '연차' ? 'bg-red-100 text-red-700' :
+                                    (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
+                                      attendance.type === '반반차' ? 'bg-gray-100 text-gray-700' :
+                                        attendance.type === '체휴' ? 'bg-yellow-100 text-yellow-700' :
+                                          'bg-purple-100 text-purple-700'
+                                    }`}>
+                                    {attendance.type}
+                                    {attendance.startTime && attendance.endTime && (
+                                      <span className="text-xs ml-1">
+                                        ({formatTimeDisplay(attendance.startTime)}~{formatTimeDisplay(attendance.endTime)})
+                                      </span>
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
+                                  {attendance.reason || '-'}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
 
-              <div className="mt-3 text-sm text-gray-600">
-                총 {filteredAttendances.length}개의 근태 기록이 필터링되었습니다.
-              </div>
-            </div>
-            {/* 테이블 뷰 */}
-            {viewMode === 'table' && (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사용자</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">날짜</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">유형</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">사유</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAttendances.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="px-4 py-22 text-center text-sm text-gray-400">
-                            필터링된 근태 기록이 없습니다
-                          </td>
-                        </tr>
-                      ) : (
-                      filteredAttendances.map((attendance) => {
-                        const user = users.find(u => u.username === attendance.userName);
-                        return (
-                          <tr key={attendance.id} className="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onClick={() => handleViewAttendance(attendance)}>
-                            <td className="px-4 py-2 text-sm text-gray-900">
-                              <div className="font-medium">{user?.username || attendance.userName}</div>
-                              {user && (
-                                <div className="text-xs text-gray-500">({user.name})</div>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-gray-600">{attendance.date}</td>
-                            <td className="px-4 py-2">
-                              <span className={`inline-flex px-3 py-2 rounded-md text-xs font-medium ${
-                                attendance.type === '연차' ? 'bg-red-100 text-red-700' :
-                                (attendance.type === '오전반차' || attendance.type === '오후반차') ? 'bg-green-100 text-green-700' :
-                                attendance.type === '반반차' ? 'bg-gray-100 text-gray-700' :
-                                attendance.type === '체휴' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-purple-100 text-purple-700'
-                              }`}>
-                                {attendance.type}
-                                {attendance.startTime && attendance.endTime && (
-                                  <span className="text-xs ml-1">
-                                    ({formatTimeDisplay(attendance.startTime)}~{formatTimeDisplay(attendance.endTime)})
-                                  </span>
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2 text-sm text-gray-600 max-w-xs truncate" title={attendance.reason || ''}>
-                              {attendance.reason || '-'}
-                            </td>
-                        </tr>
-                        );
-                      })
-                    )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* 캘린더 뷰 (월별 조회일 때만) */}
-            {viewMode === 'calendar' && !useDateRange && (
-              <MonthlyAttendanceCalendar
-                selectedMonth={selectedMonth}
-                attendances={filteredAttendances}
-                users={filteredUsers}
-                onDeleteAttendance={handleDeleteAttendance}
-                onViewAttendance={handleViewAttendance}
-                onMultipleAttendances={() => {
-                  setAlertTitle('다중 근태 확인');
-                  setAlertMessage('선택한 날짜에 근태가 여러 개 입력되어 있습니다.\n테이블 뷰에서 상세하게 확인할 수 있습니다.');
-                  setAlertType('info');
-                  setAlertModalOpen(true);
-                }}
-                viewMode="calendar"
-              />
-            )}
-
-            {/* 타임슬롯 뷰 (월별 조회일 때만) */}
-            {viewMode === 'timeslot' && !useDateRange && (
-              <div className="mt-6">
+              {/* 캘린더 뷰 (월별 조회일 때만) */}
+              {viewMode === 'calendar' && !useDateRange && (
                 <MonthlyAttendanceCalendar
                   selectedMonth={selectedMonth}
                   attendances={filteredAttendances}
@@ -2029,12 +1999,31 @@ export default function AdminPage() {
                     setAlertType('info');
                     setAlertModalOpen(true);
                   }}
-                  viewMode="timeslot"
+                  viewMode="calendar"
                 />
-                <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* 타임슬롯 뷰 (월별 조회일 때만) */}
+              {viewMode === 'timeslot' && !useDateRange && (
+                <div className="mt-6">
+                  <MonthlyAttendanceCalendar
+                    selectedMonth={selectedMonth}
+                    attendances={filteredAttendances}
+                    users={filteredUsers}
+                    onDeleteAttendance={handleDeleteAttendance}
+                    onViewAttendance={handleViewAttendance}
+                    onMultipleAttendances={() => {
+                      setAlertTitle('다중 근태 확인');
+                      setAlertMessage('선택한 날짜에 근태가 여러 개 입력되어 있습니다.\n테이블 뷰에서 상세하게 확인할 수 있습니다.');
+                      setAlertType('info');
+                      setAlertModalOpen(true);
+                    }}
+                    viewMode="timeslot"
+                  />
+                  <p className="text-xs text-gray-500 mt-3">시간 슬롯을 클릭하면 해당 근태의 상세정보를 볼 수 있습니다. 각 칸의 작은 바는 30분 단위를 나타냅니다.</p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* 근태 상세 정보 모달 */}
@@ -2240,8 +2229,8 @@ export default function AdminPage() {
                           <p className="text-xs text-gray-500">권한</p>
                           <p className="font-semibold text-gray-900">{
                             userToDelete.role === 'admin' ? '관리자' :
-                            userToDelete.role === 'manager' ? '중간관리자' :
-                            '사용자'
+                              userToDelete.role === 'manager' ? '중간관리자' :
+                                '사용자'
                           }</p>
                         </div>
                       </div>
@@ -2324,7 +2313,7 @@ export default function AdminPage() {
                       setShowStartDatePicker(false);
                     }}
                     selectedColor="orange"
-                    onEndDateSelect={() => {}}
+                    onEndDateSelect={() => { }}
                     onClose={() => setShowStartDatePicker(false)}
                     initialSelectingStart={true}
                     showConfirmButton={false}
@@ -2368,7 +2357,7 @@ export default function AdminPage() {
                   <DatePickerCalendar
                     startDate={startDateFilter ? dayjs(startDateFilter) : null}
                     endDate={endDateFilter ? dayjs(endDateFilter) : null}
-                    onStartDateSelect={() => {}}
+                    onStartDateSelect={() => { }}
                     onEndDateSelect={(date) => {
                       setEndDateFilter(date.format('YYYY-MM-DD'));
                       setShowEndDatePicker(false);
@@ -2445,11 +2434,10 @@ export default function AdminPage() {
                               setSelectedMonth(`${currentYear}-${month.toString().padStart(2, '0')}`);
                               setShowMonthPicker(false);
                             }}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                              isSelected
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${isSelected
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
                           >
                             {month}월
                           </button>
@@ -2514,11 +2502,10 @@ export default function AdminPage() {
                               setSelectedMonth(`${year}-${currentMonth.toString().padStart(2, '0')}`);
                               setShowYearPicker(false);
                             }}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                              isSelected
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${isSelected
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
                           >
                             {year}년
                           </button>
@@ -2578,11 +2565,10 @@ export default function AdminPage() {
                             setSelectedUserId(user.id);
                             setShowUserModal(false);
                           }}
-                          className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                            selectedUserId === user.id
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                          className={`w-full px-4 py-2 text-left rounded-lg transition ${selectedUserId === user.id
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
                         >
                           <div className="flex items-center gap-2 py-2">
                             <img
@@ -2594,22 +2580,21 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            <span className={`text-xs px-3 py-2 rounded-full ${
-                              selectedUserId === user.id
-                                ? user.role === 'admin'
-                                  ? 'bg-white/20 text-white'
-                                  : user.role === 'manager'
+                            <span className={`text-xs px-3 py-2 rounded-full ${selectedUserId === user.id
+                              ? user.role === 'admin'
+                                ? 'bg-white/20 text-white'
+                                : user.role === 'manager'
                                   ? 'bg-green-100/50 text-green-200'
                                   : 'bg-gray-100/50 text-gray-200'
-                                : user.role === 'admin'
+                              : user.role === 'admin'
                                 ? 'bg-blue-100 text-blue-700'
                                 : user.role === 'manager'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}>
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}>
                               {user.role === 'admin' ? '관리자' :
-                               user.role === 'manager' ? '중간관리자' :
-                               '사용자'}
+                                user.role === 'manager' ? '중간관리자' :
+                                  '사용자'}
                             </span>
                           </div>
                         </button>
@@ -2669,11 +2654,10 @@ export default function AdminPage() {
                         setNewUserRole('user');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserRole === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserRole === 'user'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <img
@@ -2693,11 +2677,10 @@ export default function AdminPage() {
                         setNewUserRole('manager');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserRole === 'manager'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserRole === 'manager'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <img
@@ -2717,11 +2700,10 @@ export default function AdminPage() {
                         setNewUserRole('admin');
                         setShowRoleModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserRole === 'admin'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserRole === 'admin'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <img
@@ -2778,11 +2760,10 @@ export default function AdminPage() {
                         setNewUserDepartment('모바일화상상담(청주)');
                         setShowDepartmentModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserDepartment === '모바일화상상담(청주)'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserDepartment === '모바일화상상담(청주)'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -2802,11 +2783,10 @@ export default function AdminPage() {
                         setNewUserDepartment('모바일화상상담(서울)');
                         setShowDepartmentModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserDepartment === '모바일화상상담(서울)'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserDepartment === '모바일화상상담(서울)'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -2826,11 +2806,10 @@ export default function AdminPage() {
                         setNewUserDepartment('디지털데스크화상상담');
                         setShowDepartmentModal(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        newUserDepartment === '디지털데스크화상상담'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${newUserDepartment === '디지털데스크화상상담'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -2894,11 +2873,10 @@ export default function AdminPage() {
                             }
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '연차'
-                              ? 'bg-red-400 text-white'
-                              : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '연차'
+                            ? 'bg-red-400 text-white'
+                            : 'bg-red-50 text-red-900 border border-red-200 hover:bg-red-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">✈️</span>
@@ -2917,11 +2895,10 @@ export default function AdminPage() {
                             }
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '체휴'
-                              ? 'bg-yellow-400 text-white'
-                              : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '체휴'
+                            ? 'bg-yellow-400 text-white'
+                            : 'bg-yellow-50 text-yellow-900 border border-yellow-200 hover:bg-yellow-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">🏠</span>
@@ -2942,11 +2919,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '결근'
-                              ? 'bg-blue-400 text-white'
-                              : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '결근'
+                            ? 'bg-blue-400 text-white'
+                            : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">❌</span>
@@ -2968,11 +2944,10 @@ export default function AdminPage() {
                             }
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '오전반차'
-                              ? 'bg-orange-400 text-white'
-                              : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '오전반차'
+                            ? 'bg-orange-400 text-white'
+                            : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">🌅</span>
@@ -2991,11 +2966,10 @@ export default function AdminPage() {
                             }
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '오후반차'
-                              ? 'bg-green-400 text-white'
-                              : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '오후반차'
+                            ? 'bg-green-400 text-white'
+                            : 'bg-green-50 text-green-900 border border-green-200 hover:bg-green-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">🌆</span>
@@ -3016,11 +2990,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '반반차'
-                              ? 'bg-purple-400 text-white'
-                              : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '반반차'
+                            ? 'bg-purple-400 text-white'
+                            : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">🌄</span>
@@ -3044,11 +3017,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '팀장대행'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '팀장대행'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">👔</span>
@@ -3069,11 +3041,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '동석(코칭)'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '동석(코칭)'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">👨‍🏫</span>
@@ -3094,11 +3065,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '교육'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '교육'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">📚</span>
@@ -3122,11 +3092,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '휴식'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '휴식'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">😴</span>
@@ -3147,11 +3116,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '출장'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '출장'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">🏢</span>
@@ -3172,11 +3140,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '장애'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '장애'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">⚠️</span>
@@ -3200,11 +3167,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '기타'
-                                ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '기타'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">❓</span>
@@ -3225,11 +3191,10 @@ export default function AdminPage() {
                             setEndTime('');
                             setShowTypeModal(false);
                           }}
-                          className={`p-2 text-left rounded transition ${
-                            selectedType === '연장근무'
-                              ? 'bg-gray-400 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                          className={`p-2 text-left rounded transition ${selectedType === '연장근무'
+                            ? 'bg-gray-400 text-white'
+                            : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">⏰</span>
@@ -3345,15 +3310,14 @@ export default function AdminPage() {
                             }
                           }}
                           disabled={isDisabled}
-                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${
-                            (attendanceDetailModalOpen && isEditingAttendance ? editStartTime : startTime) === timeString
-                              ? 'bg-violet-500 text-white'
-                              : isDisabled
+                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${(attendanceDetailModalOpen && isEditingAttendance ? editStartTime : startTime) === timeString
+                            ? 'bg-violet-500 text-white'
+                            : isDisabled
                               ? isTimeOccupied
                                 ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                            }`}
                         >
                           {timeString}
                         </button>
@@ -3436,15 +3400,14 @@ export default function AdminPage() {
                             }
                           }}
                           disabled={isDisabled}
-                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${
-                            (attendanceDetailModalOpen && isEditingAttendance ? editEndTime : endTime) === timeString
-                              ? 'bg-violet-500 text-white'
-                              : isDisabled
+                          className={`px-4 py-2 text-center rounded-lg transition text-sm font-medium ${(attendanceDetailModalOpen && isEditingAttendance ? editEndTime : endTime) === timeString
+                            ? 'bg-violet-500 text-white'
+                            : isDisabled
                               ? isTimeOccupied
                                 ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200'
                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                          }`}
+                            }`}
                         >
                           {timeString}
                         </button>
@@ -3495,11 +3458,10 @@ export default function AdminPage() {
                         setSelectedUserFilter('all');
                         setShowUserFilter(false);
                       }}
-                      className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                        tempSelectedUserFilter === 'all'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 text-left rounded-lg transition ${tempSelectedUserFilter === 'all'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <div className="flex items-center gap-2 py-2">
                         <img
@@ -3529,11 +3491,10 @@ export default function AdminPage() {
                             setSelectedUserFilter(user.username);
                             setShowUserFilter(false);
                           }}
-                          className={`w-full px-4 py-2 text-left rounded-lg transition ${
-                            tempSelectedUserFilter === user.username
-                              ? 'bg-orange-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                          className={`w-full px-4 py-2 text-left rounded-lg transition ${tempSelectedUserFilter === user.username
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
                         >
                           <div className="flex items-center gap-2 py-2">
                             <img
@@ -3545,29 +3506,27 @@ export default function AdminPage() {
                               <div className="font-medium">{user.username}</div>
                               <div className="text-xs opacity-75">{user.name}</div>
                             </div>
-                            <span className={`text-xs px-3 py-2 rounded-full ${
-                              tempSelectedUserFilter === user.username
-                                ? user.role === 'admin'
-                                  ? 'bg-white/20 text-white'
-                                  : user.role === 'manager'
+                            <span className={`text-xs px-3 py-2 rounded-full ${tempSelectedUserFilter === user.username
+                              ? user.role === 'admin'
+                                ? 'bg-white/20 text-white'
+                                : user.role === 'manager'
                                   ? 'bg-green-100/50 text-green-200'
                                   : 'bg-gray-100/50 text-gray-200'
-                                : user.role === 'admin'
+                              : user.role === 'admin'
                                 ? 'bg-blue-100 text-blue-700'
                                 : user.role === 'manager'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}>
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}>
                               {user.role === 'admin' ? '관리자' :
-                               user.role === 'manager' ? '중간관리자' :
-                               '사용자'}
+                                user.role === 'manager' ? '중간관리자' :
+                                  '사용자'}
                             </span>
                             {user.isTempPassword && (
-                              <span className={`text-xs px-3 py-2 rounded-full ${
-                                selectedUserFilter === user.username
-                                  ? 'bg-white/20 text-white'
-                                  : 'bg-orange-100 text-orange-700'
-                              }`}>
+                              <span className={`text-xs px-3 py-2 rounded-full ${selectedUserFilter === user.username
+                                ? 'bg-white/20 text-white'
+                                : 'bg-orange-100 text-orange-700'
+                                }`}>
                                 임시비밀번호
                               </span>
                             )}
@@ -3833,9 +3792,8 @@ function MonthlyAttendanceCalendar({
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {/* 캘린더 헤더 */}
-      <div className={`flex items-center justify-between bg-gray-50 border-b border-gray-200 ${
-        viewMode === 'calendar' ? 'p-2' : 'px-4 py-2'
-      }`}>
+      <div className={`flex items-center justify-between bg-gray-50 border-b border-gray-200 ${viewMode === 'calendar' ? 'p-2' : 'px-4 py-2'
+        }`}>
         <motion.button
           onClick={handlePrevMonth}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -3864,17 +3822,15 @@ function MonthlyAttendanceCalendar({
         <div className="min-w-max">
           {/* 일자 헤더 */}
           <div className="grid sticky top-0 z-10 bg-gray-50 border-b border-gray-200" style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 40px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 40px)` : `150px repeat(${daysInMonth}, 80px)` }}>
-            <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${
-              viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
-            }`}>
+            <div className={`sticky left-0 z-20 text-xs font-semibold text-gray-700 border-r border-gray-200 bg-gray-50 ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
+              }`}>
               사용자
             </div>
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
               <div
                 key={day}
-                className={`text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)} ${
-                  viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0' : 'px-3 py-2'
-                }`}
+                className={`text-xs font-semibold text-center border-r border-gray-200 last:border-r-0 ${getDayOfWeekColor(day)} ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-0.5 py-0' : 'px-3 py-2'
+                  }`}
               >
                 <div className="font-bold">{day}</div>
                 <div className="text-xs opacity-75">{getDayOfWeek(day)}</div>
@@ -3890,9 +3846,8 @@ function MonthlyAttendanceCalendar({
               style={{ gridTemplateColumns: viewMode === 'calendar' ? `70px repeat(${daysInMonth}, 40px)` : viewMode === 'timeslot' ? `70px repeat(${daysInMonth}, 40px)` : `150px repeat(${daysInMonth}, 80px)` }}
             >
               {/* 사용자 이름 - 고정 */}
-              <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 ${
-                viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
-              }`}>
+              <div className={`sticky left-0 z-10 text-sm font-medium text-gray-900 border-r border-gray-200 bg-gray-50 ${viewMode === 'calendar' || viewMode === 'timeslot' ? 'px-1 py-0.5' : 'px-4 py-2'
+                }`}>
                 <div className="font-medium">{user.username}</div>
                 <div className="text-xs text-gray-500">({user.name})</div>
               </div>
@@ -3908,11 +3863,9 @@ function MonthlyAttendanceCalendar({
                   <motion.button
                     key={day}
                     onClick={() => handleDayClick(user.id, dateStr, dayAttendances)}
-                    className={`text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 ${
-                      viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[0.75rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[6rem]' : 'px-1 py-2 min-h-[7rem]'
-                    } ${
-                      dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
-                    } border-r border-gray-100 last:border-r-0`}
+                    className={`text-xs text-center rounded border transition-all duration-200 bg-white hover:bg-gray-50 ${viewMode === 'calendar' ? 'px-0.5 py-0 min-h-[0.75rem]' : viewMode === 'timeslot' ? 'px-0.5 py-0 min-h-[6rem]' : 'px-1 py-2 min-h-[7rem]'
+                      } ${dayAttendances.length > 0 ? 'hover:shadow-sm' : 'cursor-default'
+                      } border-r border-gray-100 last:border-r-0`}
                     whileHover={dayAttendances.length > 0 ? { scale: 1.02 } : {}}
                     whileTap={dayAttendances.length > 0 ? { scale: 0.98 } : {}}
                     title={dayAttendances.length > 0 ? dayAttendances.map(a => `${a.type}${a.startTime && a.endTime ? ` [${formatTimeDisplay(a.startTime)}~${formatTimeDisplay(a.endTime)}]` : ''}${a.reason ? `(${a.reason})` : ''}`).join('\n') : ''}
@@ -3931,41 +3884,39 @@ function MonthlyAttendanceCalendar({
                               }
                             }
                           }}
-                          className={`h-1 w-full rounded-sm ${slot.color} border border-gray-200 ${
-                            slot.attendanceId ? 'cursor-pointer hover:opacity-75 transition-opacity' : ''
-                          }`}
+                          className={`h-1 w-full rounded-sm ${slot.color} border border-gray-200 ${slot.attendanceId ? 'cursor-pointer hover:opacity-75 transition-opacity' : ''
+                            }`}
                           title={`${9 + Math.floor(index / 2)}:${index % 2 === 0 ? '00' : '30'}${slot.attendanceId ? ' (클릭하여 상세정보)' : ''}`}
                         />
                       ))}
 
                       {/* 근태 텍스트 (항상 표시) */}
                       <div className={`${viewMode === 'calendar' ? 'min-h-[2rem]' : viewMode === 'timeslot' ? 'min-h-[1.5rem]' : 'min-h-[3rem]'} flex items-center justify-center`}>
-                    {text && (
-                          <div className={`text-xs leading-tight text-center break-words whitespace-pre-line px-1 py-0.5 rounded ${
-                            dayAttendances.length === 1 ? (() => {
-                              const attendanceType = dayAttendances[0].type;
-                              switch (attendanceType) {
-                                case '연차': return 'bg-red-100 text-red-800';
-                                case '결근': return 'bg-rose-100 text-rose-800';
-                                case '오전반차': return 'bg-orange-100 text-orange-800';
-                                case '연장근무': return 'bg-amber-100 text-amber-800';
-                                case '체휴': return 'bg-yellow-100 text-yellow-800';
-                                case '오후반차': return 'bg-lime-100 text-lime-800';
-                                case '출장': return 'bg-green-100 text-green-800';
-                                case '교육': return 'bg-emerald-100 text-emerald-800';
-                                case '휴식': return 'bg-teal-100 text-teal-800';
-                                case '팀장대행': return 'bg-cyan-100 text-cyan-800';
-                                case '동석(코칭)': return 'bg-blue-100 text-blue-800';
-                                case '반반차': return 'bg-indigo-100 text-indigo-800';
-                                case '장애': return 'bg-violet-100 text-violet-800';
-                                case '기타': return 'bg-purple-100 text-purple-800';
-                                default: return 'text-gray-700';
-                              }
-                            })() : 'text-gray-700'
-                          }`}>
-                        {text}
-                      </div>
-                    )}
+                        {text && (
+                          <div className={`text-xs leading-tight text-center break-words whitespace-pre-line px-1 py-0.5 rounded ${dayAttendances.length === 1 ? (() => {
+                            const attendanceType = dayAttendances[0].type;
+                            switch (attendanceType) {
+                              case '연차': return 'bg-red-100 text-red-800';
+                              case '결근': return 'bg-rose-100 text-rose-800';
+                              case '오전반차': return 'bg-orange-100 text-orange-800';
+                              case '연장근무': return 'bg-amber-100 text-amber-800';
+                              case '체휴': return 'bg-yellow-100 text-yellow-800';
+                              case '오후반차': return 'bg-lime-100 text-lime-800';
+                              case '출장': return 'bg-green-100 text-green-800';
+                              case '교육': return 'bg-emerald-100 text-emerald-800';
+                              case '휴식': return 'bg-teal-100 text-teal-800';
+                              case '팀장대행': return 'bg-cyan-100 text-cyan-800';
+                              case '동석(코칭)': return 'bg-blue-100 text-blue-800';
+                              case '반반차': return 'bg-indigo-100 text-indigo-800';
+                              case '장애': return 'bg-violet-100 text-violet-800';
+                              case '기타': return 'bg-purple-100 text-purple-800';
+                              default: return 'text-gray-700';
+                            }
+                          })() : 'text-gray-700'
+                            }`}>
+                            {text}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.button>
@@ -3981,75 +3932,75 @@ function MonthlyAttendanceCalendar({
         <div className="flex flex-col gap-2 py-2">
           {/* 시간 슬롯 색상 범례 (타임슬롯 모드에서만 표시) */}
           {viewMode === 'timeslot' && (
-          <div>
-            <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
-        <div className="flex flex-wrap gap-2 py-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 border border-gray-300 rounded"></div>
-                <span>연차</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-rose-500 border border-gray-300 rounded"></div>
-                <span>결근</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 border border-gray-300 rounded"></div>
-                <span>오전반차</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-amber-500 border border-gray-300 rounded"></div>
-                <span>연장근무</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-500 border border-gray-300 rounded"></div>
-                <span>체휴</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-lime-500 border border-gray-300 rounded"></div>
-                <span>오후반차</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 border border-gray-300 rounded"></div>
-                <span>출장</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 border border-gray-300 rounded"></div>
-                <span>교육</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-teal-500 border border-gray-300 rounded"></div>
-                <span>휴식</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-cyan-500 border border-gray-300 rounded"></div>
-                <span>팀장대행</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 border border-gray-300 rounded"></div>
-                <span>동석(코칭)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-indigo-500 border border-gray-300 rounded"></div>
-                <span>반반차</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-violet-500 border border-gray-300 rounded"></div>
-                <span>장애</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-purple-500 border border-gray-300 rounded"></div>
-                <span>기타</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
-                <span>근태 없음</span>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 mb-3">시간 슬롯 색상</h3>
+              <div className="flex flex-wrap gap-2 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 border border-gray-300 rounded"></div>
+                  <span>연차</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-rose-500 border border-gray-300 rounded"></div>
+                  <span>결근</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-orange-500 border border-gray-300 rounded"></div>
+                  <span>오전반차</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-amber-500 border border-gray-300 rounded"></div>
+                  <span>연장근무</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 border border-gray-300 rounded"></div>
+                  <span>체휴</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-lime-500 border border-gray-300 rounded"></div>
+                  <span>오후반차</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 border border-gray-300 rounded"></div>
+                  <span>출장</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-emerald-500 border border-gray-300 rounded"></div>
+                  <span>교육</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-teal-500 border border-gray-300 rounded"></div>
+                  <span>휴식</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-cyan-500 border border-gray-300 rounded"></div>
+                  <span>팀장대행</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 border border-gray-300 rounded"></div>
+                  <span>동석(코칭)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-indigo-500 border border-gray-300 rounded"></div>
+                  <span>반반차</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-violet-500 border border-gray-300 rounded"></div>
+                  <span>장애</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-purple-500 border border-gray-300 rounded"></div>
+                  <span>기타</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                  <span>근태 없음</span>
+                </div>
               </div>
             </div>
-          </div>
           )}
         </div>
 
-        </div>
+      </div>
 
     </div>
   );
