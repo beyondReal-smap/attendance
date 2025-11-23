@@ -23,10 +23,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // DB에서 데이터 가져오기
+    // DB에서 데이터 가져오기
+    const users = await sql`
+      SELECT id, name, department, username, role
+      FROM atnd_users
+    `;
+
+    const leaveBalances = await sql`
+      SELECT user_id, year, leave_type, total, used, remaining
+      FROM leave_balances
+    `;
+
+    const attendances = await sql`
+      SELECT user_id, date, type, reason, start_time, end_time
+      FROM atnd_attendance
+      ORDER BY date DESC
+      LIMIT 100
+    `;
+
+    // 데이터 조합 (user_id 기준)
+    const aggregatedData = users.rows.map((user: any) => {
+      const userLeaveBalances = leaveBalances.rows.filter((lb: any) => lb.user_id === user.id);
+      const userAttendances = attendances.rows.filter((a: any) => a.user_id === user.id);
+
+      return {
+        ...user,
+        leave_balances: userLeaveBalances,
+        attendance_history: userAttendances
+      };
+    });
+
+    console.log(aggregatedData);
+
+    const systemPrompt = `
+      당신은 근태 관리 시스템의 AI 어시스턴트입니다.
+      다음은 현재 시스템의 데이터입니다. 각 사용자의 정보와 연차/체휴 현황, 그리고 근태 기록이 포함되어 있습니다.
+      이 데이터를 바탕으로 사용자의 질문에 답변해주세요.
+      
+      데이터:
+      ${JSON.stringify(aggregatedData, null, 2)}
+    `;
+
     try {
       const result = await streamText({
         // model: 'meituan/longcat-flash-chat',
         model: 'google/gemini-2.5-flash-lite',
+        system: systemPrompt,
         prompt: message,
       });
 
