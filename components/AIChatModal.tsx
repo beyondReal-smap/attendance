@@ -143,7 +143,7 @@ export default function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
-                        <h3 className="text-lg font-semibold text-white">AI 챗</h3>
+                        <h3 className="text-lg font-semibold text-white">AI 근태 채팅 봇</h3>
                     </div>
                     <button
                         onClick={onClose}
@@ -174,8 +174,8 @@ export default function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
                             >
                                 <div
                                     className={`max-w-[70%] rounded-lg px-3 py-2 ${message.role === 'user'
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-100 text-gray-900'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 text-gray-900'
                                         }`}
                                 >
                                     {message.role === 'user' ? (

@@ -257,7 +257,7 @@ export default function CalendarPage() {
                     className: 'text-gray-600'
                   }] : []),
                   {
-                    label: 'AI 챗',
+                    label: 'AI 근태 채팅 봇',
                     onClick: () => setAiChatModalOpen(true),
                     className: 'text-gray-600'
                   },
