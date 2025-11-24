@@ -1266,8 +1266,9 @@ export default function AdminPage() {
                             className="w-10 h-10 rounded-full object-cover"
                           />
                           <div>
-                            <h4 className="font-semibold text-gray-900">{user.username}</h4>
-                            <p className="text-sm text-gray-500">{user.name}</p>
+                            <h4 className="font-semibold text-gray-900">
+                              {user.username} <span className="text-sm font-normal text-gray-500">({user.name})</span>
+                            </h4>
                             {user.department && (
                               <p className="text-sm text-gray-600">{user.department}</p>
                             )}
@@ -1405,8 +1406,9 @@ export default function AdminPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold text-gray-900">{user.username}</h3>
-                        <p className="text-xs text-gray-500">{user.name}</p>
+                        <h3 className="font-semibold text-gray-900">
+                          {user.username} <span className="text-sm font-normal text-gray-500">({user.name})</span>
+                        </h3>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 py-2">
