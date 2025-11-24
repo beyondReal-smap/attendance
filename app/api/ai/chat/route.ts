@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { getSession } from '@/lib/auth';
 import { sql } from '@/lib/db';
 
@@ -73,9 +74,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const result = await streamText({
-        // model: 'meituan/longcat-flash-chat',
-        model: 'google/gemini-2.5-flash-lite',
-        // model: 'google/gemini-1.5-flash',
+        model: google('gemini-2.0-flash-lite'),
         system: systemPrompt,
         prompt: message,
       });
