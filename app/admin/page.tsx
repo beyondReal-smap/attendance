@@ -938,7 +938,7 @@ export default function AdminPage() {
               <HamburgerMenu
                 items={[
                   {
-                    label: '캘린더',
+                    label: '근태입력',
                     onClick: () => router.push('/calendar'),
                     className: 'text-gray-700'
                   },
